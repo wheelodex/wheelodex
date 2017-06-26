@@ -1,3 +1,4 @@
+# Python ~= 3.4
 beautifulsoup4
 headerparser>=0.2.0.dev1
 packaging>=16
