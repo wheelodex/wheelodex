@@ -58,7 +58,7 @@
                 # Various statistics for determining what to support etc.:
                 # - list of files in dist-info
                 # - whether metadata.json/pydist.json is present
-                # - JSON `metadata_version`
+                # - JSON `metadata_version`?
                 # - whether signed
                 # - whether tags (and name & version?) in filename match those
                 #   in WHEEL
@@ -69,6 +69,7 @@
                 # - whether keywords are space- or comma-separated
                 # - whether Description is a header field or the body
                 # - types of namespace packages used
+                # - whether there's a license file in dist-info?
             }
 
             /pydist.json - On-demand creation of metadata 3.0 file ???
