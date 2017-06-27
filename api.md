@@ -8,7 +8,7 @@
     /latest - redirect to highest-numbered non-prerelease version
 
     /<version>
-        list of wheels (including Requires-Python field)
+        list of wheels (including tags and Requires-Python field)
         Support filtering by Python version and other wheel compatibility tags?
         Redirect to the normalized version string if necessary
 
@@ -17,6 +17,10 @@
                 package:  # normalized?
                 version:  # normalized
                 wheel_name:  # filename
+
+                _links:
+                    package
+                    version
 
                 file:
                     url:
@@ -91,8 +95,11 @@
     # Search by all module names?
     # Search by namespace packages?
     # Search by keywords, classifiers, etc.?
-    # Search by files outside dist-info
+    # Search by files outside (or inside?) dist-info (with glob support)
     # Search by wheels that define certain metadata fields or have certain tags?
 
-    /entry_points?name=<NAME>&type<console_scripts|...>
+    # Give all of these parameters for restricting by wheel tag?
+    /entry_points?name=<NAME>&type=<console_scripts|...>
         # at least one of `name` and `type` must be supplied
+    /keywords?kw=<query array>
+        # Returns wheels with all of the given keywords

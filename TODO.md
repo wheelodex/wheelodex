@@ -3,6 +3,11 @@ Architecture
 - getting configuration from config file
 - fetching & parsing wheels and adding data to database
     - fetching wheels
+        - fetching all wheels uploaded to PyPI since some point in the past
+            - initial fetch
+        - fetching all wheels for a given project and all recursive
+          dependencies
+        - fetching all wheels from PyPI
     - parsing wheels
         - Use `distlib` to verify wheels' RECORDs and discard invalid wheels?
         - `METADATA`
