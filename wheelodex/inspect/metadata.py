@@ -5,7 +5,7 @@ import textwrap
 from   headerparser           import HeaderParser
 from   packaging.requirements import Requirement
 from   packaging.specifiers   import SpecifierSet
-from   .flags                 import Flags
+from   ..flags                import Flags
 
 def strfield(s):
     return None if s is None or s.strip() in ('', 'UNKNOWN') else s
@@ -53,6 +53,7 @@ for field in 'Author Author-email Description Download-URL Home-page License'\
 for field in 'Classifier Obsoletes Obsoletes-Dist Platform Provides'\
              ' Provides-Dist Provides-Extra Requires Requires-External'\
              ' Supported-Platform'.split():
+    ### TODO: Don't store UNKNOWN fields in the list
     metaparser.add_field(field, type=strfield, multiple=True)
 
 metaparser.add_additional(
@@ -74,6 +75,7 @@ def parse_metadata(fp):
     md = metaparser.parse_file(fp)
     metadata = {k.lower().replace('-', '_'): v for k,v in md.items()}
     ### Log extra_fields?
+    ### Remove null/empty fields???
     flags = set()
 
     if metadata.get('keywords'):

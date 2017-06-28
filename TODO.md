@@ -1,3 +1,5 @@
+- Write a JSON Schema for the API's representation of wheels
+
 Architecture
 ------------
 - getting configuration from config file
@@ -23,6 +25,8 @@ Architecture
         - signatures?
     - Reject wheels with non-PEP440 version numbers?
     - storing in database
+        - updating reverse dependencies?
+        - updating latest version of a project?
 - JSON REST API
     - getting data from database
     - searching

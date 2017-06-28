@@ -99,7 +99,11 @@
     # Search by wheels that define certain metadata fields or have certain tags?
 
     # Give all of these parameters for restricting by wheel tag?
+    # Add sorting options?
     /entry_points?name=<NAME>&type=<console_scripts|...>
         # at least one of `name` and `type` must be supplied
     /keywords?kw=<query array>
         # Returns wheels with all of the given keywords
+
+    # Give each /search subpage a /qty subpage that just returns the numbers of
+    # matching projects, versions, and wheels?
