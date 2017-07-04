@@ -19,6 +19,7 @@ Architecture
         - `RECORD` / list of files?
             - Should file hashes & sizes be recorded?
         - entry points
+            - Record extras upon which individual entry points depend
         - `top_level.txt`
         - `namespace_packages.txt`
         - other namespace packages?
@@ -49,7 +50,7 @@ Architecture
   assuming anyone's ever used this feature, support it
 - Obsoletes-Dist, Provides-Dist, Provides-Extra, and Requires-External are
   technically structured, but the payoff from parsing them isn't worth the
-  work.  Do it anyway.
+  work.  Do it anyway (eventually).
 - Support `Description-Content-Type` (same syntax as a regular `Content-Type`
   field)
 - Convert markers to a `dict` representation (This will require `packaging` to

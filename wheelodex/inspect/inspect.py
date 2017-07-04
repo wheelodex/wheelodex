@@ -1,29 +1,35 @@
-from   collections import defaultdict
+from   collections   import defaultdict
 import csv
 import io
-from   zipfile     import ZipFile
-from   .metadata   import parse_metadata
-from   .wheel_info import parse_wheel_info
+from   zipfile       import ZipFile
+from   pkg_resources import EntryPoint, yield_lines
+from   .metadata     import parse_metadata
+from   .wheel_info   import parse_wheel_info
 
 def parse_record(fp):
     # Defined in PEP 376?
-    return (
-        [path for path, _, _ in csv.reader(fp, delimiter=',', quotechar='"')],
-        set(),
-    )
+    return ([
+        path for path, _, _ in csv.reader(fp, delimiter=',', quotechar='"')
+    ], set())
+
+def parse_entry_points(fp):
+    return ({
+        gr: list(eps.keys()) for gr, eps in EntryPoint.parse_map(fp).items()
+    }, set())
 
 def readlines(fp):
-    return fp.read().splitlines(), set()
+    return list(yield_lines(fp)), set()
 
 DIST_INFO_FILES = [
     # file name, handler function, result dict key
     ('METADATA', parse_metadata, 'metadata'),
-    ('WHEEL', parse_wheel_info, 'wheel'),
     ('RECORD', parse_record, 'contents'),
-    ###('entry_points.txt', ???, 'entry_points'),
-    ('top_level.txt', readlines, 'top_level'),
-    ('namespace_packages.txt', readlines, 'namespace_packages'),
+    ('WHEEL', parse_wheel_info, 'wheel'),
+    # <https://setuptools.readthedocs.io/en/latest/formats.html>:
     ('dependency_links.txt', readlines, 'dependency_links'),
+    ('entry_points.txt', parse_entry_points, 'entry_points'),
+    ('namespace_packages.txt', readlines, 'namespace_packages'),
+    ('top_level.txt', readlines, 'top_level'),
 
     ### metadata.json?
     ### pydist.json?
