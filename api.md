@@ -16,7 +16,8 @@
             {
                 package:  # normalized?
                 version:  # normalized
-                wheel_name:  # filename
+                filename: <str>
+                scanned: <timestamp>  # date added to this database
 
                 _links:
                     package
@@ -54,13 +55,11 @@
 
                 # metadata.json ???
 
-                # list of all module names?
-                # list of all files outside dist-info / parsed RECORD ?
+                # list of all files in wheel
 
-                scanned: <timestamp>  # date added to this database
+                # list of all module names?
 
                 # Various statistics for determining what to support etc.:
-                # - list of files in dist-info
                 # - whether metadata.json/pydist.json is present
                 # - JSON `metadata_version`?
                 # - whether signed
@@ -78,16 +77,6 @@
 
             /pydist.json - On-demand creation of metadata 3.0 file ???
 
-            /dist-info/METADATA
-            /dist-info/WHEEL
-            /dist-info/RECORD
-            /dist-info/top_level.txt
-            /dist-info/metadata.json
-            /dist-info/DESCRIPTION.rst
-            /dist-info/entry_points.txt
-            /dist-info/LICENSE.txt  # ?
-            # etc.
-
 
 /api/search
     # Search by top level packages
@@ -95,8 +84,10 @@
     # Search by all module names?
     # Search by namespace packages?
     # Search by keywords, classifiers, etc.?
-    # Search by files outside (or inside?) dist-info (with glob support)
+    # Search by files (outside or inside dist-info), with glob support
     # Search by wheels that define certain metadata fields or have certain tags?
+    # Search by contents of various metadata fields? (Metadata-Version,
+    #    Wheel-Version, Generator, everything???)
 
     # Give all of these parameters for restricting by wheel tag?
     # Add sorting options?

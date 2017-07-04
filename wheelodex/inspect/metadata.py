@@ -1,5 +1,4 @@
 # cf. PEP 345 and <https://packaging.python.org/specifications/>
-### cf. pkginfo?
 import re
 import textwrap
 from   headerparser           import HeaderParser

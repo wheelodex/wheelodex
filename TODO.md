@@ -1,4 +1,5 @@
 - Write a JSON Schema for the API's representation of wheels
+- Expand README
 
 Architecture
 ------------
@@ -35,6 +36,7 @@ Architecture
     - Items displayed on the page for a given wheel:
         - metadata
             - links to dependencies
+            - list of extras with their dependencies listed under them
         - links to reverse dependencies (specifically, those projects whose
           highest-numbered non-prerelease versions depend upon some version of
           the project to which the wheel belongs, regardless of platform etc.
@@ -51,3 +53,5 @@ Architecture
   field)
 - Convert markers to a `dict` representation (This will require `packaging` to
   first expose markers' structured information)
+    - One this is done, extras' dependencies can be split out from
+      `Requires-Dist`

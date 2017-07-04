@@ -1,38 +1,52 @@
+from   collections import defaultdict
 import io
-from   zipfile   import ZipFile
-from   .metadata import parse_metadata
+from   zipfile     import ZipFile
+from   .metadata   import parse_metadata
+from   .wheel_info import parse_wheel_info
 
-def unzip_text(zpf, fname):
-    return io.TextIOWrapper(zpf.open(fname), 'utf-8')
+def readlines(fp):
+    return fp.read().splitlines(), set()
+
+DIST_INFO_FILES = [
+    # file name, handler function, result dict key
+    ('METADATA', parse_metadata, 'metadata'),
+    ('WHEEL', parse_wheel_info, 'wheel'),
+    ###('RECORD', ???, ???),
+    ###('entry_points.txt', ???, 'entry_points'),
+    ('top_level.txt', readlines, 'top_level'),
+    ('namespace_packages.txt', readlines, 'namespace_packages'),
+    ('dependency_links.txt', readlines, 'dependency_links'),
+
+    ### metadata.json?
+    ### pydist.json?
+    ### signatures?
+]
 
 def inspect_wheel(fp):
     whl = ZipFile(fp)
-    ### Verify
+    ### TODO: Verify wheel
 
-    #try:
-    dist_info, = set(
-        filter(
-            lambda s: s.endswith('.dist-info'),
-            (fname.split('/')[0] for fname in whl.namelist()),
-        )
-    )
-    #except ValueError:
-    #    ### Custom error message?
+    dist_info_folder = defaultdict(set)
+    for fname in whl.namelist():
+        dirname, _, basename = fname.partition('/')
+        if dirname.endswidth('.dist-info') and basename:
+            dist_info_folder[dirname].add(basename)
+    try:
+        (dist_info_name, dist_info_contents), = dist_info_folder.items()
+    except ValueError:
+        raise ValueError('no unique *.dist-info/ directory in wheel')
 
-    metadata, flags = parse_metadata(unzip_text(whl, dist_info + '/METADATA'))
-    return metadata
+    about = {"flags": set()}
+    for fname, parser, key in DIST_INFO_FILES:
+        if fname in dist_info_contents:
+            with whl.open(dist_info_name + '/' + fname) as fp:
+                about[key], flags = parser(io.TextIOWrapper(fp, 'utf-8'))
+                about["flags"].update(flags)
+        else:
+            about[key] = None
 
-    ### WHEEL
-    ### tags
-    ### Compare data in WHEEL with data in filename
+    ### Compare data in WHEEL with data in filename?
     ### Reject wheels with non-PEP440 version numbers?
+    ### Do something with signatures?
 
-    ### RECORD
-    ### entry_points.txt
-    ### `top_level.txt`
-    ### `namespace_packages.txt`
-    ### dependency links
-    ### `metadata.json` / `pydist.json` ???
-    ### signatures?
-
-    ### return JSON object (with flags merged in)
+    return about
