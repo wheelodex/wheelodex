@@ -73,8 +73,8 @@ def parse_metadata(fp):
 
     md = metaparser.parse_file(fp)
     metadata = {k.lower().replace('-', '_'): v for k,v in md.items()}
-    ### Log extra_fields?
-    ### Remove null/empty fields???
+    ### TODO: Log extra_fields?
+    ### TODO: Remove null/empty fields???
     flags = set()
 
     if metadata.get('keywords'):
@@ -85,13 +85,11 @@ def parse_metadata(fp):
         # <https://pydigger.com/keywords>):
         if ',' in metadata['keywords']:
             keywords = metadata['keywords'].split(',')
-            ### Strip whitespace?  Discard empty keywords?
+            ### TODO: Strip whitespace?  Discard empty keywords?
             flags.add(Flags.COMMA_SEPARATED_KEYWORDS)
-            ### Log this?
         else:
             keywords = metadata['keywords'].split()
             flags.add(Flags.SPACE_SEPARATED_KEYWORDS)
-            ### Log this?
         metadata['keywords'] = keywords
 
     body = strfield(md.body)
@@ -104,7 +102,6 @@ def parse_metadata(fp):
             # Does this dedent correctly?
         flags.add(Flags.DESCRIPTION_IN_HEADERS)
         if body is not None and metadata['description'].strip() != body.strip():
-            ### Log something?
             flags.add(Flags.CONFLICTING_DESCRIPTIONS)
 
     return metadata, flags

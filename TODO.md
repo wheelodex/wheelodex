@@ -1,5 +1,5 @@
-- Write a JSON Schema for the API's representation of wheels
 - Expand README
+- Write a JSON Schema for the API's representation of wheels
 
 Architecture
 ------------
@@ -8,26 +8,22 @@ Architecture
     - fetching wheels
         - fetching all wheels uploaded to PyPI since some point in the past
             - initial fetch
-        - fetching all wheels for a given project and all recursive
-          dependencies
+        - fetching all wheels for a given project and (optionally?) all
+          recursive dependencies
         - fetching all wheels from PyPI
     - parsing wheels
-        - Use `distlib` to verify wheels' RECORDs and discard invalid wheels?
-        - `METADATA`
-        - `WHEEL`
-            - tags? (PEP 425 and PEP 513)
-        - `RECORD` / list of files?
-            - Should file hashes & sizes be recorded?
-        - entry points
-            - Record extras upon which individual entry points depend
-        - `top_level.txt`
-        - `namespace_packages.txt`
-        - other namespace packages?
-        - dependency links
-        - `metadata.json` / `pydist.json` ???
-        - signatures?
+        - Use `distlib` to verify wheels' RECORDs and discard invalid wheels
+        - Compare data in `*.dist-info/` with data in filename?
+        - Record file hashes & sizes in RECORD?
+        - Record extras upon which individual entry points depend
+        - determine namespace packages other than those listed in
+          `namespace_packages.txt`?
+            - cf. <https://github.com/takluyver/wheeldex>?
+        - Do something with `metadata.json` and `pydist.json`?
+        - Do something with wheel signatures?
     - Reject wheels with non-PEP440 version numbers?
     - storing in database
+        - replacing pre-existing database entries
         - updating reverse dependencies?
         - updating latest version of a project?
 - JSON REST API

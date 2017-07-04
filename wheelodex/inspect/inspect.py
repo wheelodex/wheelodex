@@ -30,16 +30,11 @@ DIST_INFO_FILES = [
     ('entry_points.txt', parse_entry_points, 'entry_points'),
     ('namespace_packages.txt', readlines, 'namespace_packages'),
     ('top_level.txt', readlines, 'top_level'),
-
-    ### metadata.json?
-    ### pydist.json?
-    ### signatures?
 ]
 
 def inspect_wheel(fp):
     whl = ZipFile(fp)
     ### TODO: Verify wheel
-
     dist_info_folder = defaultdict(set)
     for fname in whl.namelist():
         dirname, _, basename = fname.partition('/')
@@ -49,18 +44,13 @@ def inspect_wheel(fp):
         (dist_info_name, dist_info_contents), = dist_info_folder.items()
     except ValueError:
         raise ValueError('no unique *.dist-info/ directory in wheel')
-
     about = {"flags": set()}
     for fname, parser, key in DIST_INFO_FILES:
         if fname in dist_info_contents:
             with whl.open(dist_info_name + '/' + fname) as fp:
                 about[key], flags = parser(io.TextIOWrapper(fp, 'utf-8'))
                 about["flags"].update(flags)
+                ### TODO: Log all flags? (Here or when set?)
         else:
             about[key] = None
-
-    ### Compare data in WHEEL with data in filename?
-    ### Reject wheels with non-PEP440 version numbers?
-    ### Do something with signatures?
-
     return about
