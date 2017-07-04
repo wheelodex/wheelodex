@@ -1,8 +1,16 @@
 from   collections import defaultdict
+import csv
 import io
 from   zipfile     import ZipFile
 from   .metadata   import parse_metadata
 from   .wheel_info import parse_wheel_info
+
+def parse_record(fp):
+    # Defined in PEP 376?
+    return (
+        [path for path, _, _ in csv.reader(fp, delimiter=',', quotechar='"')],
+        set(),
+    )
 
 def readlines(fp):
     return fp.read().splitlines(), set()
@@ -11,7 +19,7 @@ DIST_INFO_FILES = [
     # file name, handler function, result dict key
     ('METADATA', parse_metadata, 'metadata'),
     ('WHEEL', parse_wheel_info, 'wheel'),
-    ###('RECORD', ???, ???),
+    ('RECORD', parse_record, 'contents'),
     ###('entry_points.txt', ???, 'entry_points'),
     ('top_level.txt', readlines, 'top_level'),
     ('namespace_packages.txt', readlines, 'namespace_packages'),

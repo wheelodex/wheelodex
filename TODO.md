@@ -17,6 +17,7 @@ Architecture
         - `WHEEL`
             - tags? (PEP 425 and PEP 513)
         - `RECORD` / list of files?
+            - Should file hashes & sizes be recorded?
         - entry points
         - `top_level.txt`
         - `namespace_packages.txt`
