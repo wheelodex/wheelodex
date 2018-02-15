@@ -59,20 +59,17 @@
 
                 # list of all module names?
 
-                # Various statistics for determining what to support etc.:
-                # - whether metadata.json/pydist.json is present
+                # Various statistics about irregularities etc. that cannot be
+                # (easily) derived from the other fields:
                 # - JSON `metadata_version`?
+                # - fields present in JSON metadata?
                 # - whether signed
                 # - whether tags (and name & version?) in filename match those
                 #   in WHEEL
-                # - whether certain obscure metadata fields are set?
-                #   (Requires-Python, Description-Content-Type, Project-URL,
-                #   etc.)
-                # - fields present in JSON metadata?
                 # - whether keywords are space- or comma-separated
                 # - whether Description is a header field or the body
+                # - whether the README renders properly
                 # - types of namespace packages used
-                # - whether there's a license file in dist-info?
             }
 
             /pydist.json - On-demand creation of metadata 3.0 file ???

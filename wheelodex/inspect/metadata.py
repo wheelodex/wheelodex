@@ -44,9 +44,6 @@ metaparser.add_field('Project-URL', type=project_url, multiple=True)
 
 for field in 'Author Author-email Description Download-URL Home-page License'\
              ' Maintainer Maintainer-email Keywords'.split():
-    # "Description" _should_ be in the body, but this doesn't actually seem to
-    # be specified in any PEPs, so accept it in the headers instead just to be
-    # sure.
     metaparser.add_field(field, type=strfield)
 
 for field in 'Classifier Obsoletes Obsoletes-Dist Platform Provides'\

@@ -7,6 +7,7 @@ Not Supported
 - Wheel v1.9 (PEP 491, still in draft)
 - wheels with invalid or non-UTF-8 metadata
 - large wheels
+- PEP 561 (still in draft)
 
 Related Prior Art
 =================

@@ -1,5 +1,8 @@
 - Expand README
 - Write a JSON Schema for the API's representation of wheels
+- Add logging
+- Set a custom User-Agent when interacting with PyPI
+- Update for PEP 566 (especially the JSONification section)
 
 Architecture
 ------------
@@ -8,9 +11,13 @@ Architecture
     - fetching wheels
         - fetching all wheels uploaded to PyPI since some point in the past
             - initial fetch
-        - fetching all wheels for a given project and (optionally?) all
+        - fetching all wheels for a given project and optionally all of its
           recursive dependencies
         - fetching all wheels from PyPI
+        - entry points for performing all of the above and storing the parsed
+          wheel data in the database (with an option for whether or not to
+          refetch & update wheels already in the database) and/or outputting
+          said data as JSON
     - parsing wheels
         - Use `distlib` to verify wheels' RECORDs and discard invalid wheels
         - Compare data in `*.dist-info/` with data in filename?
