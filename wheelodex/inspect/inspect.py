@@ -38,7 +38,7 @@ def inspect_wheel(fp):
     dist_info_folder = defaultdict(set)
     for fname in whl.namelist():
         dirname, _, basename = fname.partition('/')
-        if dirname.endswidth('.dist-info') and basename:
+        if dirname.endswith('.dist-info') and basename:
             dist_info_folder[dirname].add(basename)
     try:
         (dist_info_name, dist_info_contents), = dist_info_folder.items()
