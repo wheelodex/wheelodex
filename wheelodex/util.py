@@ -1,5 +1,6 @@
 import collections
 from   datetime import datetime
+from   enum     import Enum
 
 def for_json(obj):
     # For use as the `default` argument to `json.dump`
@@ -16,6 +17,8 @@ def for_json(obj):
     elif isinstance(obj, (collections.Iterator, tuple, set, frozenset)):
         ### Sort sets and frozensets?
         return list(obj)
+    elif isinstance(obj, Enum):
+        return str(obj)
     else:
         try:
             data = vars(obj).copy()
