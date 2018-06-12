@@ -1,6 +1,6 @@
-import collections
-from   datetime import datetime
-from   enum     import Enum
+from collections.abc import Iterator, Mapping
+from datetime        import datetime
+from enum            import Enum
 
 def for_json(obj):
     # For use as the `default` argument to `json.dump`
@@ -12,9 +12,9 @@ def for_json(obj):
         return obj._asdict()
     elif isinstance(obj, datetime):
         return obj.isoformat()
-    elif isinstance(obj, collections.Mapping):
+    elif isinstance(obj, Mapping):
         return dict(obj)
-    elif isinstance(obj, (collections.Iterator, tuple, set, frozenset)):
+    elif isinstance(obj, (Iterator, tuple, set, frozenset)):
         ### Sort sets and frozensets?
         return list(obj)
     elif isinstance(obj, Enum):
