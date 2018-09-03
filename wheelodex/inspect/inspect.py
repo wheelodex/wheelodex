@@ -30,6 +30,7 @@ DIST_INFO_FILES = [
     ('entry_points.txt', parse_entry_points, 'entry_points'),
     ('namespace_packages.txt', readlines, 'namespace_packages'),
     ('top_level.txt', readlines, 'top_level'),
+    ### TODO: Do something with `zip-safe` file? (seen in python-dateutil wheel)
 ]
 
 def inspect_wheel(fp):

@@ -3,6 +3,7 @@
 - Add logging
 - Set a custom User-Agent when interacting with PyPI
 - Update for PEP 566 (especially the JSONification section)
+- Add tests for `inspect_wheel()`
 
 Architecture
 ------------
