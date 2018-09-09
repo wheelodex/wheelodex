@@ -1,0 +1,68 @@
+filename: str
+project: str  # normalized
+version: str  # normalized
+[other fields extractable from wheel filename]
+is_purelib: bool  # ?
+
+file:
+    size:
+    digests:
+        md5:
+        sha256:
+
+pypi:
+    download_url:
+    uploaded: timestamp
+    project_url:
+    release_url:
+    # Don't record has_sig, as PyPI doesn't expose that anymore.
+
+wheelodex:
+    scanned: <timestamp>  # date added to this database
+    wheelodex_version:  # for ease of rescanning on wheelodex updates
+
+dist_info:
+    metadata:
+        # Straight JSONification of METADATA (cf. PEP 566)
+        # Include long description? (or bool to save space?)
+        # Include list of unknown fields (here?)
+    wheel:  # information from WHEEL
+    description: str  # or bool (or dict with "length" field?) to save space?
+    entry_points:
+        $key: [str]
+    record: ...
+    # wheel signatures?
+    # metadata.json ???
+    # license?
+
+    # dist-info files copied from egg-info
+    # <https://setuptools.readthedocs.io/en/latest/formats.html>:
+    top_level: [str]
+    namespace_packages: ???
+    dependency_links: ???
+
+    __other__: # list of files in .dist-info/ that code doesn't know how to handle
+
+trivia:
+    # Various statistics about irregularities etc. that cannot be (easily)
+    # derived from the other fields:
+    # - JSON `metadata_version`?
+    # - fields present in JSON metadata?
+    # - whether signed
+    # - whether tags (and name & version?) in filename match those in WHEEL
+    # - whether keywords are space- or comma-separated
+    # - whether Description is a header field or the body
+    # - whether the README renders properly
+    # - types of namespace packages used
+
+    readme_renders: bool
+    # flags as boolean fields
+
+_links:  # API-only; does this belong here?
+    package
+    version
+
+# list of all module names?
+# list of all files in wheel?  [cf. RECORD]
+
+# vim:set et sts=4:
