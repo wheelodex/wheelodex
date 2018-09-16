@@ -8,7 +8,7 @@
     "author_email": "qypi@varonathe.org",
     "license": "MIT",
     "keywords": "pypi,warehouse,search,packages,pip",
-    "platform": null,
+    "platform": [],
     "classifier": [
         "Development Status :: 4 - Beta",
         "Programming Language :: Python :: 3 :: Only",

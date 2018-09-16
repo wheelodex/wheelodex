@@ -6,7 +6,7 @@ from   wheelodex.inspect import parse_entry_points, parse_metadata, parse_record
 
 @pytest.mark.parametrize('mdfile', [
     p for p in (Path(__file__).with_name('data') / 'metadata').iterdir()
-      if p.suffix == 'metadata'
+      if p.suffix == '.metadata'
 ])
 def test_parse_metadata(mdfile):
     with open(str(mdfile.with_suffix('.json'))) as fp:
@@ -16,7 +16,7 @@ def test_parse_metadata(mdfile):
 
 @pytest.mark.parametrize('epfile', [
     p for p in (Path(__file__).with_name('data') / 'entry_points').iterdir()
-      if p.suffix == 'txt'
+      if p.suffix == '.txt'
 ])
 def test_parse_entry_points(epfile):
     with open(str(epfile.with_suffix('.json'))) as fp:

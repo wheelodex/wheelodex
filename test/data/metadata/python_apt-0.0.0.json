@@ -7,6 +7,6 @@
     "author": "APT Development Team",
     "author_email": "deity@lists.debian.org",
     "license": "GNU GPL",
-    "platform": "posix",
+    "platform": ["posix"],
     "BODY": null
 }

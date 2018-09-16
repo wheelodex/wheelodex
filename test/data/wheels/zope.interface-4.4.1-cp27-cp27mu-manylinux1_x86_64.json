@@ -27,7 +27,7 @@
             "author-email": "zope-dev@zope.org",
             "license": "ZPL 2.1",
             "keywords": "interface,components,plugins",
-            "platform": null,
+            "platform": [],
             "classifier": [
                 "Development Status :: 5 - Production/Stable",
                 "Intended Audience :: Developers",

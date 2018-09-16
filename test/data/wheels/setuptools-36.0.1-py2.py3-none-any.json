@@ -27,7 +27,7 @@
             "author_email": "distutils-sig@python.org",
             "license": null,
             "keywords": "CPAN PyPI distutils eggs package management",
-            "platform": null,
+            "platform": [],
             "classifier": [
                 "Development Status :: 5 - Production/Stable",
                 "Intended Audience :: Developers",

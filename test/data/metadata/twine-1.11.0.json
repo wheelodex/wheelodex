@@ -20,7 +20,7 @@
             "url": "https://github.com/pypa/twine/"
         }
     ],
-    "platform": null,
+    "platform": [],
     "classifier": [
         "Intended Audience :: Developers",
         "License :: OSI Approved :: Apache Software License",

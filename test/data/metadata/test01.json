@@ -1,0 +1,6 @@
+{
+    "name": "testing",
+    "unknown_field": ["foo", "baz"],
+    "another_field": ["bar"],
+    "null": []
+}
