@@ -1,10 +1,12 @@
+from   packaging.requirements import Requirement
+
 def extract_dependencies(requires_dist):
     """
     Given a list of :mailheader:`Requires-Dist` field values, return a list of
     the names of all packages specified as dependencies therein (whether
     conditional or required), sorted and with duplicates removed
     """
-    raise NotImplementedError
+    return sorted({Requirement(rd).name for rd in requires_dist})
 
 def extract_modules(filelist):
     raise NotImplementedError
