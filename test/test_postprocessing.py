@@ -5,11 +5,11 @@ from   wheelodex.inspect.util import extract_dependencies, extract_modules, \
 @pytest.mark.parametrize('kwstr,expected', [
     (
         'pypi,warehouse,search,packages,pip',
-        (['pypi', 'warehouse', 'search', 'pip'], ','),
+        (['pypi', 'warehouse', 'search', 'packages', 'pip'], ','),
     ),
     (
         'pypi warehouse search packages pip',
-        (['pypi', 'warehouse', 'search', 'pip'], ' '),
+        (['pypi', 'warehouse', 'search', 'packages', 'pip'], ' '),
     ),
     (
         "pypi,pep503,simple repository api,packages,pip",
