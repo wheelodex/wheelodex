@@ -1,0 +1,6 @@
+{
+    "wheel_version": "1.0",
+    "generator": "bdist_wheel (0.29.0)",
+    "root_is_purelib": false,
+    "tag": ["cp27-cp27mu-manylinux1_x86_64"]
+}

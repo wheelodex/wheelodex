@@ -1,0 +1,10 @@
+{
+    "wheel_version": "1.0",
+    "generator": "bdist_wheel (0.29.0)",
+    "root_is_purelib": true,
+    "tag": ["py3-none-any"],
+    "unknown_field": ["foo", "baz"],
+    "another_field": ["bar"],
+    "null": [],
+    "BODY": "This is a body.\n"
+}

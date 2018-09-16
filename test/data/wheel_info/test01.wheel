@@ -1,0 +1,10 @@
+Wheel-Version: 1.0
+Generator: bdist_wheel (0.29.0)
+Root-Is-Purelib: true
+Tag: py3-none-any
+Unknown-Field: foo
+Another-Field: bar
+UNKNOWN_FIELD: baz
+NULL: UNKNOWN
+
+This is a body.

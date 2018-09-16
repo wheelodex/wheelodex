@@ -1,9 +1,7 @@
 # cf. PEP 345 and <https://packaging.python.org/specifications/>
 import re
 from   headerparser import HeaderParser
-
-def strfield(s):
-    return None if s is None or s.strip() in ('', 'UNKNOWN') else s
+from   .util        import fieldnorm, strfield
 
 def project_url(s):
     try:
@@ -12,7 +10,7 @@ def project_url(s):
         label, url = None, s
     return {"label": label, "url": url}
 
-metaparser = HeaderParser(normalizer=lambda s: s.lower().replace('-', '_'))
+metaparser = HeaderParser(normalizer=fieldnorm)
 metaparser.add_field('Metadata-Version')
 metaparser.add_field('Name')
 metaparser.add_field('Version')
@@ -35,11 +33,10 @@ metaparser.add_additional(multiple=True, type=strfield)
 
 def parse_metadata(fp):
     md = metaparser.parse_file(fp)
-    metadata = {}
-    for k,v in md.items():
+    metadata = md.normalized_dict()
+    for k,v in metadata.items():
         if isinstance(v, list):
-            v = [u for u in v if u is not None]
-        metadata[k.lower().replace('-', '_')] = v
+            metadata[k] = [u for u in v if u is not None]
     if md.body is not None:
         metadata["BODY"] = strfield(md.body)
     return metadata

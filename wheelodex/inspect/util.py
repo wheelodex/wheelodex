@@ -25,3 +25,9 @@ def split_keywords(kwstr):
         ### TODO: Strip whitespace?  Discard empty keywords?
     else:
         return (kwstr.split(), ' ')
+
+def strfield(s):
+    return None if s is None or s.strip() in ('', 'UNKNOWN') else s
+
+def fieldnorm(s):
+    return s.lower().replace('-', '_')
