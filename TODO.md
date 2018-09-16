@@ -5,7 +5,7 @@
 - Update for PEP 566 (especially the JSONification section)
 - Add tests
     - Add tests for `inspect_wheel()`
-- Support PEP 561?
+- Support PEP 561?  [Is this a typo for PEP 566?]
 
 Architecture
 ------------

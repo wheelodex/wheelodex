@@ -24,16 +24,16 @@ wheelodex:
 dist_info:
     metadata:
         # Straight JSONification of METADATA (cf. PEP 566)
-        # Include long description? (or bool to save space?)
-        # Include list of unknown fields (here?)
+        # `keywords` is a string
+        # `description` is a dict with a "length" key (to save space)
+        # Unknown fields are included
     wheel:  # information from WHEEL
-    description: str  # or bool (or dict with "length" field?) to save space?
+        # If this has a body, it's stored in a BODY field (possibly converted
+        # to a dict with "length"?)
     entry_points:
         $key: [str]
     record: ...
     # wheel signatures?
-    # metadata.json ???
-    # license?
 
     # dist-info files copied from egg-info
     # <https://setuptools.readthedocs.io/en/latest/formats.html>:
@@ -41,20 +41,17 @@ dist_info:
     namespace_packages: ???
     dependency_links: ???
 
-    __other__: # list of files in .dist-info/ that code doesn't know how to handle
-
 trivia:
     # Various statistics about irregularities etc. that cannot be (easily)
     # derived from the other fields:
-    # - JSON `metadata_version`?
-    # - fields present in JSON metadata?
     # - whether signed
     # - whether tags (and name & version?) in filename match those in WHEEL
     # - whether keywords are space- or comma-separated
     # - whether Description is a header field or the body
     # - whether the README renders properly
-    # - types of namespace packages used
+    # - whether RECORD is accurate? (cf. distlib's Wheel.verify())
 
+    keyword_separator: ',' | ' ' | null  # null = no keywords field
     readme_renders: bool
     # flags as boolean fields
 
@@ -64,5 +61,6 @@ _links:  # API-only; does this belong here?
 
 # list of all module names?
 # list of all files in wheel?  [cf. RECORD]
+# list of projects that this wheel depends on, either conditionally or unconditionally?
 
 # vim:set et sts=4:
