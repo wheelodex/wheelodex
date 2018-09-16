@@ -1,8 +1,8 @@
 filename: str
-project: str  # normalized
-version: str  # normalized
+project: str  # normalized?
+version: str  # normalized?
 [other fields extractable from wheel filename]
-is_purelib: bool  # ?
+verifies: bool  # whether RECORD is accurate (cf. distlib's Wheel.verify())
 
 file:
     size:
@@ -40,27 +40,28 @@ dist_info:
     top_level: [str]
     namespace_packages: ???
     dependency_links: ???
+    zip_safe: ???
 
-trivia:
+derived:
     # Various statistics about irregularities etc. that cannot be (easily)
     # derived from the other fields:
-    # - whether signed
-    # - whether tags (and name & version?) in filename match those in WHEEL
+    # - whether tags (and name & version?) in filename match those in WHEEL?
     # - whether keywords are space- or comma-separated
     # - whether Description is a header field or the body
     # - whether the README renders properly
-    # - whether RECORD is accurate? (cf. distlib's Wheel.verify())
 
+    keywords:  # split list of keywords
     keyword_separator: ',' | ' ' | null  # null = no keywords field
     readme_renders: bool
     # flags as boolean fields
 
+    # list of all module names
+    # list of projects that this wheel depends on, either conditionally or unconditionally
+    # list of extras?
+
+
 _links:  # API-only; does this belong here?
     package
     version
-
-# list of all module names?
-# list of all files in wheel?  [cf. RECORD]
-# list of projects that this wheel depends on, either conditionally or unconditionally?
 
 # vim:set et sts=4:

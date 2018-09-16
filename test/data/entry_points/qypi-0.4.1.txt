@@ -1,0 +1,3 @@
+[console_scripts]
+qypi = qypi.__main__:qypi
+

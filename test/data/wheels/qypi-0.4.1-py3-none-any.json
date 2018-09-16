@@ -6,6 +6,7 @@
     "pyver": ["py3"],
     "abi": ["none"],
     "arch": ["any"],
+    "verifies": true,
 
     "file": {
         "size": 16158,
@@ -59,14 +60,7 @@
         },
         "top_level": ["qypi"],
         "entry_points": {
-            "console_scripts": [
-                {
-                    "name": "qypi",
-                    "module": "qypi.__main__",
-                    "attr": "qypi",
-                    "extras": []
-                }
-            ]
+            "console_scripts": ["qypi"]
         },
         "record": [
             {
@@ -158,7 +152,6 @@
         "readme_renders": true,
         "description_in_body": true,
         "description_in_headers": false,
-        "has_license_file": true,
         "keywords": [
             "pypi",
             "warehouse",
@@ -172,7 +165,6 @@
             "packaging",
             "requests"
         ],
-        "commands": ["qypi"],
         "modules": [
             "qypi",
             "qypi.__main__",

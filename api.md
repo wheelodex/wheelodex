@@ -7,13 +7,15 @@
 
     /latest - redirect to highest-numbered non-prerelease version
 
-    /<version>
+    /v<version>
         list of wheels (including tags and Requires-Python field)
         Support filtering by Python version and other wheel compatibility tags?
         Redirect to the normalized version string if necessary
 
         /<wheel_filename> - See wheel-schema.txt
             ### Add an endpoint for getting just PEP 566-compatible JSON metadata?
+
+    /rdepends - list of projects that depend on this project
 
 
 /api/search

@@ -7,15 +7,17 @@ from   .metadata     import parse_metadata
 from   .wheel_info   import parse_wheel_info
 
 def parse_record(fp):
-    # Defined in PEP 376?
-    return ([
-        path for path, _, _ in csv.reader(fp, delimiter=',', quotechar='"')
-    ], set())
+    # Defined in PEP 376
+    return [{
+        "path": path,
+        "digests": dict([digests.split('=', 1)]) if digests else {},
+        "size": int(size) if size else None,
+    } for path, digests, size in csv.reader(fp, delimiter=',', quotechar='"')]
 
 def parse_entry_points(fp):
-    return ({
-        gr: list(eps.keys()) for gr, eps in EntryPoint.parse_map(fp).items()
-    }, set())
+    return {
+        gr: sorted(eps.keys()) for gr, eps in EntryPoint.parse_map(fp).items()
+    }
 
 def readlines(fp):
     return list(yield_lines(fp)), set()
