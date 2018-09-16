@@ -49,7 +49,7 @@ def test_extract_modules():
             "zipfile36; python_version in \"3.3 3.4 3.5\""
         ],
         ["docutils", "requests", "requests_download", "zipfile36"],
-    )
+    ),
 
     (
         [

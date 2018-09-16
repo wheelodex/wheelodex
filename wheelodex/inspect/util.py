@@ -5,3 +5,9 @@ def extract_dependencies(requires_dist):
     conditional or required), sorted and with duplicates removed
     """
     raise NotImplementedError
+
+def extract_modules(filelist):
+    raise NotImplementedError
+
+def split_keywords(kwstr):
+    raise NotImplementedError
