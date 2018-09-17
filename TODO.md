@@ -2,11 +2,15 @@
 - Write a JSON Schema for the API's representation of wheels
 - Add logging
 - Set a custom User-Agent when interacting with PyPI
-- Update for PEP 566 (especially the JSONification section)
 - Add tests
-    - Add tests for `inspect_wheel()`
 - Support PEP 561?  [Is this a typo for PEP 566?]
 - Parse `Description-Content-Type` into a structured `dict`?
+- Parse `Requires-Dist` and similar fields into structured `dict`s?
+- Should entry points' modules, attrs, and extras be kept?
+- Should RECORD entries' digests and sizes be discarded?
+- Should flat modules inside packages be discarded from `.derived.modules`?
+- Compare `extract_modules()` with <https://github.com/takluyver/wheeldex>
+- Does `extract_modules()` need to take compiled library files into account?
 
 Architecture
 ------------
@@ -53,4 +57,12 @@ Architecture
     - pages listing all defined entry points and all projects that define each
       entry point
     - page for searching for wheels that contain a given module
-    - page for search for wheels that contain a given file?
+    - page for searching for wheels that contain a given file
+    - pages of various statistics:
+        - wheel generators
+        - keywords
+        - Project URL labels
+        - description content types?
+        - license files?
+        - metadata versions?
+        - "Platform" values

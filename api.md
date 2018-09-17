@@ -16,6 +16,7 @@
     /rdepends - list of projects that depend on this project
 
 /api/wheel/<wheel_basename>.json - See wheel-schema.txt
+    ### Add an endpoint for getting just PEP 566-compatible JSON metadata?
 
 
 /api/search

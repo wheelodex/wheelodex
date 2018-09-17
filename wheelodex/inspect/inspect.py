@@ -9,9 +9,9 @@ from   distlib.wheel       import DistlibException, Wheel
 from   pkg_resources       import EntryPoint, yield_lines
 from   readme_renderer.rst import render
 from   .metadata           import parse_metadata
-from   .wheel_info         import parse_wheel_info
 from   .util               import extract_dependencies, extract_modules, \
                                     split_keywords
+from   .wheel_info         import parse_wheel_info
 
 DIGEST_CHUNK_SIZE = 65535
 

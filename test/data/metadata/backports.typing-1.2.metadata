@@ -1,0 +1,69 @@
+Metadata-Version: 2.0
+Name: backports.typing
+Version: 1.2
+Summary: Backport wrapper of standard typing module
+Home-page: https://github.com/jaraco/backports.typing
+Author: Jason R. Coombs
+Author-email: jaraco@jaraco.com
+License: UNKNOWN
+Platform: UNKNOWN
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: License :: OSI Approved :: Python Software Foundation License
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Requires-Python: >=2.7
+Requires-Dist: typing; python_version=="2.7" or python_version=="3.2" or python_version=="3.3" or python_version=="3.4"
+Provides-Extra: docs
+Requires-Dist: jaraco.packaging (>=3.2); extra == 'docs'
+Requires-Dist: rst.linker (>=1.9); extra == 'docs'
+Requires-Dist: sphinx; extra == 'docs'
+Provides-Extra: testing
+Requires-Dist: pytest (>=2.8); extra == 'testing'
+Requires-Dist: pytest-sugar; extra == 'testing'
+
+.. image:: https://img.shields.io/pypi/v/backports.typing.svg
+   :target: https://pypi.org/project/backports.typing
+
+.. image:: https://img.shields.io/pypi/pyversions/backports.typing.svg
+
+.. image:: https://img.shields.io/pypi/dm/backports.typing.svg
+
+.. image:: https://img.shields.io/travis/jaraco/backports.typing/master.svg
+   :target: http://travis-ci.org/jaraco/backports.typing
+
+
+`Backport <https://pypi.python.org/pypi/backports>`_ of the typing module
+as found in Python 3.5, but made available for Python 3.3 and later.
+
+Since the inception of this package, a new, more authoritative backport
+has been released as `typing <https://pypi.io/project/typing>`_. This
+project selectively installs that package on the relevant platforms.
+
+For the dependencies to be installed properly, Pip 6.0+ is required
+(or Setuptools 0.7+ if using easy_install).
+
+License
+=======
+
+This package is licensed under the OSI MIT License, but the bundled
+typing module is licensed under the Python Software Foundation License.
+
+Usage
+=====
+
+Simply import the typing module as you would on Python 3.5+.
+
+    import typing
+
+This module additionally bundles late versions of the module as
+published in the ``typing`` package as backports.typing, such that
+later releases of ``typing`` can be loaded on earlier versions
+of Python 3.5 and later by importing from the backports namespace.
+
+    from backports import typing
+
+Note that the bundled version currently only supports Python 3.2+.
+
+
