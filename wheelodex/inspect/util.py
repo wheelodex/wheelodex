@@ -9,7 +9,18 @@ def extract_dependencies(requires_dist):
     return sorted({Requirement(rd).name for rd in requires_dist})
 
 def extract_modules(filelist):
-    raise NotImplementedError
+    modules = set()
+    for fname in filelist:
+        parts = fname.split('/')
+        if not parts or not parts[-1].lower().endswith('.py'):
+            continue
+        parts[-1] = parts[-1][:-3]
+        if not all(p.isidentifier() for p in parts):
+            continue
+        if parts[-1] == '__init__' and len(parts) > 1:
+            parts.pop()
+        modules.add('.'.join(parts))
+    return sorted(modules)
 
 def split_keywords(kwstr):
     # cf. `format_tags()` in Warehouse <https://git.io/fA1AT>, which seems to
