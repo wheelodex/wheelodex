@@ -1,5 +1,6 @@
 import logging
 from   xmlrpc.client import ServerProxy
+from   ..db          import QueuedWheel
 from   ..util        import latest_version
 
 log = logging.getLogger(__name__)
@@ -32,15 +33,15 @@ def queue_all_wheels(db: 'WheelDatabase', latest_only=True, max_size=None):
                              asset["filename"], asset["size"])
                 else:
                     log.info('Asset %s: queuing', asset["filename"])
-                    db.add_wheel_to_queue(
+                    db.queue_wheel(QueuedWheel(
                         filename = asset["filename"],
                         url      = asset["url"],
                         project  = pkg,
                         version  = v,
                         size     = asset["size"],
                         digests  = asset["digests"],
-                        uploaded = asset["upload_time"],
-                    )
+                        uploaded = str(asset["upload_time"]),
+                    ))
     db.serial = serial
     log.info('END queue_all_wheels')
 
@@ -71,16 +72,16 @@ def queue_wheels_since(db, since, max_size=None):
                                  asset["filename"], asset["size"])
                     else:
                         log.info('Asset %s: queuing', asset["filename"])
-                        db.add_wheel_to_queue(
+                        db.queue_wheel(QueuedWheel(
                             filename = asset["filename"],
                             url      = asset["url"],
                             project  = proj,
                             version  = rel,
                             size     = asset["size"],
                             digests  = asset["digests"],
-                            uploaded = asset["upload_time"],
+                            uploaded = str(asset["upload_time"]),
                             serial   = serial,
-                        )
+                        ))
             ### TODO: Log if no wheel is found
         elif actwords[:2] == ['remove', 'file'] and len(actwords) == 3 and \
                 actwords[2].endswith('.whl'):

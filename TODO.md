@@ -18,25 +18,16 @@ Architecture
 - fetching & parsing wheels and adding data to database
     - fetching wheels
         - fetching all wheels uploaded to PyPI since some point in the past
-            - initial fetch
-        - fetching all wheels for a given project and optionally all of its
-          recursive dependencies
-        - fetching all wheels from PyPI
+        - initial fetch / fetching all wheels from PyPI
         - entry points for performing all of the above and storing the parsed
           wheel data in the database (with an option for whether or not to
           refetch & update wheels already in the database) and/or outputting
           said data as JSON
     - parsing wheels
-        - Use `distlib` to verify wheels' RECORDs and discard invalid wheels
-        - Compare data in `*.dist-info/` with data in filename?
-        - Record file hashes & sizes in RECORD?
         - Record extras upon which individual entry points depend
         - determine namespace packages other than those listed in
           `namespace_packages.txt`?
             - cf. <https://github.com/takluyver/wheeldex>?
-        - Do something with `metadata.json` and `pydist.json`?
-        - Do something with wheel signatures?
-    - Reject wheels with non-PEP440 version numbers?
     - storing in database
         - replacing pre-existing database entries
         - updating reverse dependencies?

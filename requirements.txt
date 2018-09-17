@@ -1,7 +1,8 @@
 # Python ~= 3.4
-distlib         ~= 0.2.7
-headerparser    ~= 0.2.0
-packaging       >= 16
-readme_renderer ~= 21.0
-requests        == 2.*
-setuptools      >= 36  # for pkg_resources
+distlib           ~= 0.2.7
+headerparser      ~= 0.2.0
+packaging         >= 16
+readme_renderer   ~= 21.0
+requests          == 2.*
+requests_download ~= 0.1.2
+setuptools        >= 36  # for pkg_resources
