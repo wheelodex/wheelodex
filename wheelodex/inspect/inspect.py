@@ -1,10 +1,19 @@
-from   collections   import defaultdict
+from   cgi                 import parse_header
+from   collections         import defaultdict
 import csv
+import hashlib
 import io
-from   zipfile       import ZipFile
-from   pkg_resources import EntryPoint, yield_lines
-from   .metadata     import parse_metadata
-from   .wheel_info   import parse_wheel_info
+import os.path
+from   zipfile             import ZipFile
+from   distlib.wheel       import DistlibException, Wheel
+from   pkg_resources       import EntryPoint, yield_lines
+from   readme_renderer.rst import render
+from   .metadata           import parse_metadata
+from   .wheel_info         import parse_wheel_info
+from   .util               import extract_dependencies, extract_modules, \
+                                    split_keywords
+
+DIGEST_CHUNK_SIZE = 65535
 
 def parse_record(fp):
     # Defined in PEP 376
@@ -20,26 +29,53 @@ def parse_entry_points(fp):
     }
 
 def readlines(fp):
-    return list(yield_lines(fp)), set()
+    return list(yield_lines(fp))
 
 DIST_INFO_FILES = [
     # file name, handler function, result dict key
     ('METADATA', parse_metadata, 'metadata'),
-    ('RECORD', parse_record, 'contents'),
+    ('RECORD', parse_record, 'record'),
     ('WHEEL', parse_wheel_info, 'wheel'),
     # <https://setuptools.readthedocs.io/en/latest/formats.html>:
     ('dependency_links.txt', readlines, 'dependency_links'),
     ('entry_points.txt', parse_entry_points, 'entry_points'),
     ('namespace_packages.txt', readlines, 'namespace_packages'),
     ('top_level.txt', readlines, 'top_level'),
-    ### TODO: Do something with `zip-safe` file? (seen in python-dateutil wheel)
 ]
 
-def inspect_wheel(fp):
-    whl = ZipFile(fp)
-    ### TODO: Verify wheel
+def inspect_wheel(fname):
+    whl = Wheel(fname)
+    about = {
+        "filename": os.path.basename(fname),
+        "project": whl.name,
+        "version": whl.version,
+        "buildver": whl.buildver,
+        "pyver": whl.pyver,
+        "abi": whl.abi,
+        "arch": whl.arch,
+    }
+    try:
+        whl.verify()
+    except DistlibException:
+        about["verifies"] = False
+    else:
+        about["verifies"] = True
+
+    about["file"] = {"size": os.path.getsize(fname)}
+    digests = {
+        "md5": hashlib.md5(),
+        "sha256": hashlib.sha256(),
+    }
+    with open(fname, 'rb') as fp:
+        for chunk in iter(lambda: fp.read(DIGEST_CHUNK_SIZE), b''):
+            for d in digests.values():
+                d.update(chunk)
+    about["file"]["digests"] = {k: v.hexdigest() for k,v in digests.items()}
+
+    about["dist_info"] = {}
+    whlzip = ZipFile(fname)
     dist_info_folder = defaultdict(set)
-    for fname in whl.namelist():
+    for fname in whlzip.namelist():
         dirname, _, basename = fname.partition('/')
         if dirname.endswith('.dist-info') and basename:
             dist_info_folder[dirname].add(basename)
@@ -47,13 +83,47 @@ def inspect_wheel(fp):
         (dist_info_name, dist_info_contents), = dist_info_folder.items()
     except ValueError:
         raise ValueError('no unique *.dist-info/ directory in wheel')
-    about = {"flags": set()}
     for fname, parser, key in DIST_INFO_FILES:
         if fname in dist_info_contents:
-            with whl.open(dist_info_name + '/' + fname) as fp:
-                about[key], flags = parser(io.TextIOWrapper(fp, 'utf-8'))
-                about["flags"].update(flags)
-                ### TODO: Log all flags? (Here or when set?)
+            with whlzip.open(dist_info_name + '/' + fname) as fp:
+                about["dist_info"][key] = parser(io.TextIOWrapper(fp, 'utf-8'))
+    if 'zip-safe' in dist_info_contents:
+        about["dist_info"]["zip_safe"] = True
+    elif 'not-zip-safe' in dist_info_contents:
+        about["dist_info"]["zip_safe"] = False
+
+    md = about["dist_info"].get("metadata", {})
+    about["derived"] = {
+        "description_in_body": "BODY" in md,
+        "description_in_headers": "description" in md,
+    }
+
+    if "BODY" in md and "description" not in md:
+        md["description"] = md["BODY"]
+    md.pop("BODY", None)
+    readme = md.get("description")
+    if readme is not None:
+        md["description"] = {"length": len(md["description"])}
+        dct = md.get("description_content_type")
+        if dct is None or parse_header(dct)[0] == 'text/x-rst':
+            about["derived"]["readme_renders"] = render(readme) is not None
         else:
-            about[key] = None
+            about["derived"]["readme_renders"] = True
+    else:
+        about["derived"]["readme_renders"] = None
+
+    if md.get("keywords") is not None:
+        about["derived"]["keywords"], about["derived"]["keyword_separator"] \
+            = split_keywords(md["keywords"])
+    else:
+        about["derived"]["keywords"], about["derived"]["keyword_separator"] \
+            = [], None
+
+    about["derived"]["dependencies"] \
+        = extract_dependencies(md.get("requires_dist", []))
+
+    about["derived"]["modules"] = extract_modules([
+        rec["path"] for rec in about["dist_info"].get("record", [])
+    ])
+
     return about

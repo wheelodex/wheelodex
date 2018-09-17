@@ -1,4 +1,4 @@
 {
     "console_scripts": ["twine"],
-    "twine.registered_commands": ["register", "upload"],
+    "twine.registered_commands": ["register", "upload"]
 }

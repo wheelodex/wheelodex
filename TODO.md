@@ -6,6 +6,7 @@
 - Add tests
     - Add tests for `inspect_wheel()`
 - Support PEP 561?  [Is this a typo for PEP 566?]
+- Parse `Description-Content-Type` into a structured `dict`?
 
 Architecture
 ------------
@@ -49,17 +50,7 @@ Architecture
           highest-numbered non-prerelease versions depend upon some version of
           the project to which the wheel belongs, regardless of platform etc.
           compatibility)
-
-`METADATA` Parser
------------------
-- PEP 345 says that Classifiers and Requires-Python fields can have markers;
-  assuming anyone's ever used this feature, support it
-- Obsoletes-Dist, Provides-Dist, Provides-Extra, and Requires-External are
-  technically structured, but the payoff from parsing them isn't worth the
-  work.  Do it anyway (eventually).
-- Support `Description-Content-Type` (same syntax as a regular `Content-Type`
-  field)
-- Convert markers to a `dict` representation (This will require `packaging` to
-  first expose markers' structured information)
-    - One this is done, extras' dependencies can be split out from
-      `Requires-Dist`
+    - pages listing all defined entry points and all projects that define each
+      entry point
+    - page for searching for wheels that contain a given module
+    - page for search for wheels that contain a given file?

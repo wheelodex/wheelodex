@@ -18,13 +18,13 @@
 
     "dist_info": {
         "metadata": {
-            "metadata-version": "2.0",
+            "metadata_version": "2.0",
             "name": "zope.interface",
             "version": "4.4.1",
             "summary": "Interfaces for Python",
             "home_page": "https://github.com/zopefoundation/zope.interface",
             "author": "Zope Foundation and Contributors",
-            "author-email": "zope-dev@zope.org",
+            "author_email": "zope-dev@zope.org",
             "license": "ZPL 2.1",
             "keywords": "interface,components,plugins",
             "platform": [],
@@ -473,7 +473,6 @@
             "setuptools",
             "zope.event"
         ],
-        "commands": [],
         "modules": [
             "zope.interface",
             "zope.interface._compat",

@@ -20,7 +20,8 @@ metaparser.add_field('Requires-Python')
 metaparser.add_field('Project-URL', type=project_url, multiple=True)
 
 for field in 'Author Author-email Description Download-URL Home-page License'\
-             ' Maintainer Maintainer-email Keywords'.split():
+             ' Maintainer Maintainer-email Keywords Description-Content-Type'\
+             .split():
     ### TODO: Dedent Description (et alii?)?
     metaparser.add_field(field, type=strfield)
 

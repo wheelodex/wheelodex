@@ -1,5 +1,6 @@
 from   io                import StringIO
 import json
+from   operator          import attrgetter
 from   pathlib           import Path
 import pytest
 from   wheelodex.inspect import parse_entry_points, parse_metadata, \
@@ -8,7 +9,7 @@ from   wheelodex.inspect import parse_entry_points, parse_metadata, \
 @pytest.mark.parametrize('mdfile', [
     p for p in (Path(__file__).with_name('data') / 'metadata').iterdir()
       if p.suffix == '.metadata'
-])
+], ids=attrgetter("name"))
 def test_parse_metadata(mdfile):
     with open(str(mdfile.with_suffix('.json'))) as fp:
         expected = json.load(fp)
@@ -18,7 +19,7 @@ def test_parse_metadata(mdfile):
 @pytest.mark.parametrize('epfile', [
     p for p in (Path(__file__).with_name('data') / 'entry_points').iterdir()
       if p.suffix == '.txt'
-])
+], ids=attrgetter("name"))
 def test_parse_entry_points(epfile):
     with open(str(epfile.with_suffix('.json'))) as fp:
         expected = json.load(fp)
@@ -28,7 +29,7 @@ def test_parse_entry_points(epfile):
 @pytest.mark.parametrize('wifile', [
     p for p in (Path(__file__).with_name('data') / 'wheel_info').iterdir()
       if p.suffix == '.wheel'
-])
+], ids=attrgetter("name"))
 def test_parse_wheel_info(wifile):
     with open(str(wifile.with_suffix('.json'))) as fp:
         expected = json.load(fp)

@@ -4,5 +4,6 @@ import nox
 def test(session):
     session.install('-r', 'requirements.txt')
     session.install('-r', 'test-requirements.txt')
-    # The `python -m` is required here; see <https://docs.pytest.org/en/latest/usage.html#cmdline>
+    # The `python -m` is needed here so that the current directory is added to
+    # `sys.path`:
     session.run('python', '-m', 'pytest', *session.posargs, 'wheelodex', 'test')
