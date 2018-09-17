@@ -13,8 +13,6 @@ file:
 pypi:
     download_url:
     uploaded: timestamp
-    project_url:
-    release_url:
     # Don't record has_sig, as PyPI doesn't expose that anymore.
 
 wheelodex:
