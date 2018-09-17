@@ -29,7 +29,8 @@ def process_queue(db: 'WheelDatabase'):
                     filename = whl.filename,
                     url      = whl.url,
                     size     = whl.size,
-                    digests  = whl.digests,
+                    md5      = whl.md5,
+                    sha256   = whl.sha256,
                     uploaded = whl.uploaded,
                     tmpdir   = tmpdir,
                 )
@@ -39,9 +40,9 @@ def process_queue(db: 'WheelDatabase'):
             else:
                 db.add_wheel_entry(about)
             finally:
-                db.unqueue_wheel(whl.filename)
+                db.unqueue_wheel(whl)
 
-def process_wheel(filename, url, size, digests, uploaded, tmpdir):
+def process_wheel(filename, url, size, md5, sha256, uploaded, tmpdir):
     fpath = os.path.join(tmpdir, filename)
     log.info('Downloading %s from %s ...', filename, url)
     # Write "user-agent" in lowercase so it overrides requests_download's
@@ -55,22 +56,21 @@ def process_wheel(filename, url, size, digests, uploaded, tmpdir):
                   size, about["file"]["size"])
         raise ValueError('Size mismatch: PyPI reports {}, got {}'
                          .format(size, about["file"]["size"]))
-    for alg in ("md5", "sha256"):
-        if alg in digests:
-            if digests[alg].lower() != about["file"]["digests"][alg]:
-                log.error(
-                    'Wheel %s: %s hash mismatch: PyPI reports %s, got %s',
+    for alg, expected in [("md5", md5), ("sha256", sha256)]:
+        if expected is not None and expected != about["file"]["digests"][alg]:
+            log.error(
+                'Wheel %s: %s hash mismatch: PyPI reports %s, got %s',
+                alg,
+                expected,
+                about["file"]["digests"][alg],
+            )
+            raise ValueError(
+                '{} hash mismatch: PyPI reports {}, got {}'.format(
                     alg,
-                    digests[alg].lower(),
+                    expected,
                     about["file"]["digests"][alg],
                 )
-                raise ValueError(
-                    '{} hash mismatch: PyPI reports {}, got {}'.format(
-                        alg,
-                        digests[alg].lower(),
-                        about["file"]["digests"][alg],
-                    )
-                )
+            )
     about["pypi"] = {
         "download_url": url,
         "uploaded": uploaded,

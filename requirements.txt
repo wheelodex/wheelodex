@@ -6,3 +6,7 @@ readme_renderer   ~= 21.0
 requests          == 2.*
 requests_download ~= 0.1.2
 setuptools        >= 36  # for pkg_resources
+SQLAlchemy        ~= 1.1
+#SQLAlchemy-Utils  ~= 0.33.4
+
+#psycopg2-binary   ~= 2.7

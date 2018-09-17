@@ -39,7 +39,8 @@ def queue_all_wheels(db: 'WheelDatabase', latest_only=True, max_size=None):
                         project  = pkg,
                         version  = v,
                         size     = asset["size"],
-                        digests  = asset["digests"],
+                        md5      = asset["digests"].get("md5").lower(),
+                        sha256   = asset["digests"].get("sha256").lower(),
                         uploaded = str(asset["upload_time"]),
                     ))
     db.serial = serial
@@ -78,10 +79,10 @@ def queue_wheels_since(db, since, max_size=None):
                             project  = proj,
                             version  = rel,
                             size     = asset["size"],
-                            digests  = asset["digests"],
+                            md5      = asset["digests"].get("md5").lower(),
+                            sha256   = asset["digests"].get("sha256").lower(),
                             uploaded = str(asset["upload_time"]),
-                            serial   = serial,
-                        ))
+                        ), serial=serial)
             ### TODO: Log if no wheel is found
         elif actwords[:2] == ['remove', 'file'] and len(actwords) == 3 and \
                 actwords[2].endswith('.whl'):
