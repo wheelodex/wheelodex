@@ -62,8 +62,12 @@ def inspect_wheel(fname):
     }
     try:
         whl.verify()
-    except DistlibException:
+    except Exception as e:
         about["verifies"] = False
+        about["verify_error"] = {
+            "type": type(e).__name__,
+            "str": str(e),
+        }
     else:
         about["verifies"] = True
 
