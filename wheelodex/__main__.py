@@ -4,7 +4,7 @@ from   types                  import SimpleNamespace
 import click
 from   .                      import __version__
 from   .db                    import WheelDatabase
-from   .download.queue_wheels import queue_all_wheels
+from   .download.queue_wheels import queue_all_wheels, queue_wheels_since
 from   .util                  import parse_memory
 
 @click.group()
@@ -45,6 +45,15 @@ def queue_init(obj):
             latest_only = obj.latest_only,
             max_size    = obj.max_size,
         )
+
+@main.command()
+### TODO: Add a command-line option for setting `max_size`
+@click.pass_obj
+def queue_update(obj):
+    with obj.db:
+        if obj.db.serial is None:
+            raise click.UsageError('No saved state to update')
+        queue_wheels_since(obj.db, obj.db.serial, max_size=obj.max_size)
 
 if __name__ == '__main__':
     main()
