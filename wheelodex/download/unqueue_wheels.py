@@ -24,24 +24,24 @@ USER_AGENT = 'wheelodex/{} ({}) requests/{} requests_download/{} {}/{}'.format(
 def process_queue(db: 'WheelDatabase'):
     with TemporaryDirectory() as tmpdir:
         for whl in db.iterqueue():
-            with db:
-                try:
-                    about = process_wheel(
-                        filename = whl.filename,
-                        url      = whl.url,
-                        size     = whl.size,
-                        md5      = whl.md5,
-                        sha256   = whl.sha256,
-                        uploaded = whl.uploaded,
-                        tmpdir   = tmpdir,
-                    )
-                except Exception:
-                    log.exception('Error processing %s', whl.filename)
-                    db.queue_error(whl, traceback.format_exc())
-                else:
-                    db.add_wheel_entry(about)
-                finally:
-                    db.unqueue_wheel(whl)
+            try:
+                about = process_wheel(
+                    filename = whl.filename,
+                    url      = whl.url,
+                    size     = whl.size,
+                    md5      = whl.md5,
+                    sha256   = whl.sha256,
+                    uploaded = whl.uploaded,
+                    tmpdir   = tmpdir,
+                )
+            except Exception:
+                log.exception('Error processing %s', whl.filename)
+                db.queue_error(whl, traceback.format_exc())
+            else:
+                db.add_wheel_entry(about)
+            finally:
+                db.unqueue_wheel(whl)
+                db.session.commit()
 
 def process_wheel(filename, url, size, md5, sha256, uploaded, tmpdir):
     fpath = os.path.join(tmpdir, filename)
