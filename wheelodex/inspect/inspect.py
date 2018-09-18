@@ -25,7 +25,13 @@ def parse_record(fp):
 
 def parse_entry_points(fp):
     return {
-        gr: sorted(eps.keys()) for gr, eps in EntryPoint.parse_map(fp).items()
+        gr: {
+            k: {
+                "module": e.module_name,
+                "attr": '.'.join(e.attrs) if e.attrs else None,
+                "extras": list(e.extras),
+            } for k,e in eps.items()
+        } for gr, eps in EntryPoint.parse_map(fp).items()
     }
 
 def readlines(fp):

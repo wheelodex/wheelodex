@@ -1,3 +1,9 @@
 {
-    "console_scripts": ["qypi"]
+    "console_scripts": {
+        "qypi": {
+            "module": "qypi.__main__",
+            "attr": "qypi",
+            "extras": []
+        }
+    }
 }

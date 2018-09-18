@@ -6,13 +6,13 @@
 - Support PEP 561?  [Is this a typo for PEP 566?]
 - Parse `Description-Content-Type` into a structured `dict`?
 - Parse `Requires-Dist` and similar fields into structured `dict`s?
-- Should entry points' modules, attrs, and extras be kept?
-- Should RECORD entries' digests and sizes be discarded?
 - Should flat modules inside packages be discarded from `.derived.modules`?
 - Compare `extract_modules()` with <https://github.com/takluyver/wheeldex>
 - Does `extract_modules()` need to take compiled library files into account?
 - `config.ini`: Either use the `long_descriptions` and `[pypi.urls]` options or
   get rid of them
+- Replace the wheel queue with a table of *all* wheels in PyPI, with a flag
+  column added for whether to download them?
 
 Architecture
 ------------
@@ -47,8 +47,12 @@ Architecture
           highest-numbered non-prerelease versions depend upon some version of
           the project to which the wheel belongs, regardless of platform etc.
           compatibility)
+        - list of files in the wheel
+        - list of commands and other entry points defined by the wheel
     - pages listing all defined entry points and all projects that define each
       entry point
+        - Where possible, include a description of each entry point, including
+          what project consumes it
     - page for searching for wheels that contain a given module
     - page for searching for wheels that contain a given file
     - pages of various statistics:

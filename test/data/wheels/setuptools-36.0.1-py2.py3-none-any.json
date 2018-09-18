@@ -69,65 +69,286 @@
         "top_level": ["easy_install", "pkg_resources", "setuptools"],
         "zip_safe": true,
         "entry_points": {
-            "console_scripts": ["easy_install", "easy_install-3.6"],
-            "distutils.commands": [
-                "alias",
-                "bdist_egg",
-                "bdist_rpm",
-                "bdist_wininst",
-                "build_clib",
-                "build_ext",
-                "build_py",
-                "develop",
-                "easy_install",
-                "egg_info",
-                "install",
-                "install_egg_info",
-                "install_lib",
-                "install_scripts",
-                "register",
-                "rotate",
-                "saveopts",
-                "sdist",
-                "setopt",
-                "test",
-                "upload",
-                "upload_docs"
-            ],
-            "distutils.setup_keywords": [
-                "convert_2to3_doctests",
-                "dependency_links",
-                "eager_resources",
-                "entry_points",
-                "exclude_package_data",
-                "extras_require",
-                "include_package_data",
-                "install_requires",
-                "namespace_packages",
-                "package_data",
-                "packages",
-                "python_requires",
-                "setup_requires",
-                "test_loader",
-                "test_runner",
-                "test_suite",
-                "tests_require",
-                "use_2to3",
-                "use_2to3_exclude_fixers",
-                "use_2to3_fixers",
-                "zip_safe"
-            ],
-            "egg_info.writers": [
-                "PKG-INFO",
-                "dependency_links.txt",
-                "depends.txt",
-                "eager_resources.txt",
-                "entry_points.txt",
-                "namespace_packages.txt",
-                "requires.txt",
-                "top_level.txt"
-            ],
-            "setuptools.installation": ["eggsecutable"]
+            "console_scripts": {
+                "easy_install": {
+                    "module": "setuptools.command.easy_install",
+                    "attr": "main",
+                    "extras": []
+                },
+                "easy_install-3.6": {
+                    "module": "setuptools.command.easy_install",
+                    "attr": "main",
+                    "extras": []
+                }
+            },
+            "distutils.commands": {
+                "alias": {
+                    "module": "setuptools.command.alias",
+                    "attr": "alias",
+                    "extras": []
+                },
+                "bdist_egg": {
+                    "module": "setuptools.command.bdist_egg",
+                    "attr": "bdist_egg",
+                    "extras": []
+                },
+                "bdist_rpm": {
+                    "module": "setuptools.command.bdist_rpm",
+                    "attr": "bdist_rpm",
+                    "extras": []
+                },
+                "bdist_wininst": {
+                    "module": "setuptools.command.bdist_wininst",
+                    "attr": "bdist_wininst",
+                    "extras": []
+                },
+                "build_clib": {
+                    "module": "setuptools.command.build_clib",
+                    "attr": "build_clib",
+                    "extras": []
+                },
+                "build_ext": {
+                    "module": "setuptools.command.build_ext",
+                    "attr": "build_ext",
+                    "extras": []
+                },
+                "build_py": {
+                    "module": "setuptools.command.build_py",
+                    "attr": "build_py",
+                    "extras": []
+                },
+                "develop": {
+                    "module": "setuptools.command.develop",
+                    "attr": "develop",
+                    "extras": []
+                },
+                "easy_install": {
+                    "module": "setuptools.command.easy_install",
+                    "attr": "easy_install",
+                    "extras": []
+                },
+                "egg_info": {
+                    "module": "setuptools.command.egg_info",
+                    "attr": "egg_info",
+                    "extras": []
+                },
+                "install": {
+                    "module": "setuptools.command.install",
+                    "attr": "install",
+                    "extras": []
+                },
+                "install_egg_info": {
+                    "module": "setuptools.command.install_egg_info",
+                    "attr": "install_egg_info",
+                    "extras": []
+                },
+                "install_lib": {
+                    "module": "setuptools.command.install_lib",
+                    "attr": "install_lib",
+                    "extras": []
+                },
+                "install_scripts": {
+                    "module": "setuptools.command.install_scripts",
+                    "attr": "install_scripts",
+                    "extras": []
+                },
+                "register": {
+                    "module": "setuptools.command.register",
+                    "attr": "register",
+                    "extras": []
+                },
+                "rotate": {
+                    "module": "setuptools.command.rotate",
+                    "attr": "rotate",
+                    "extras": []
+                },
+                "saveopts": {
+                    "module": "setuptools.command.saveopts",
+                    "attr": "saveopts",
+                    "extras": []
+                },
+                "sdist": {
+                    "module": "setuptools.command.sdist",
+                    "attr": "sdist",
+                    "extras": []
+                },
+                "setopt": {
+                    "module": "setuptools.command.setopt",
+                    "attr": "setopt",
+                    "extras": []
+                },
+                "test": {
+                    "module": "setuptools.command.test",
+                    "attr": "test",
+                    "extras": []
+                },
+                "upload": {
+                    "module": "setuptools.command.upload",
+                    "attr": "upload",
+                    "extras": []
+                },
+                "upload_docs": {
+                    "module": "setuptools.command.upload_docs",
+                    "attr": "upload_docs",
+                    "extras": []
+                }
+            },
+            "distutils.setup_keywords": {
+                "convert_2to3_doctests": {
+                    "module": "setuptools.dist",
+                    "attr": "assert_string_list",
+                    "extras": []
+                },
+                "dependency_links": {
+                    "module": "setuptools.dist",
+                    "attr": "assert_string_list",
+                    "extras": []
+                },
+                "eager_resources": {
+                    "module": "setuptools.dist",
+                    "attr": "assert_string_list",
+                    "extras": []
+                },
+                "entry_points": {
+                    "module": "setuptools.dist",
+                    "attr": "check_entry_points",
+                    "extras": []
+                },
+                "exclude_package_data": {
+                    "module": "setuptools.dist",
+                    "attr": "check_package_data",
+                    "extras": []
+                },
+                "extras_require": {
+                    "module": "setuptools.dist",
+                    "attr": "check_extras",
+                    "extras": []
+                },
+                "include_package_data": {
+                    "module": "setuptools.dist",
+                    "attr": "assert_bool",
+                    "extras": []
+                },
+                "install_requires": {
+                    "module": "setuptools.dist",
+                    "attr": "check_requirements",
+                    "extras": []
+                },
+                "namespace_packages": {
+                    "module": "setuptools.dist",
+                    "attr": "check_nsp",
+                    "extras": []
+                },
+                "package_data": {
+                    "module": "setuptools.dist",
+                    "attr": "check_package_data",
+                    "extras": []
+                },
+                "packages": {
+                    "module": "setuptools.dist",
+                    "attr": "check_packages",
+                    "extras": []
+                },
+                "python_requires": {
+                    "module": "setuptools.dist",
+                    "attr": "check_specifier",
+                    "extras": []
+                },
+                "setup_requires": {
+                    "module": "setuptools.dist",
+                    "attr": "check_requirements",
+                    "extras": []
+                },
+                "test_loader": {
+                    "module": "setuptools.dist",
+                    "attr": "check_importable",
+                    "extras": []
+                },
+                "test_runner": {
+                    "module": "setuptools.dist",
+                    "attr": "check_importable",
+                    "extras": []
+                },
+                "test_suite": {
+                    "module": "setuptools.dist",
+                    "attr": "check_test_suite",
+                    "extras": []
+                },
+                "tests_require": {
+                    "module": "setuptools.dist",
+                    "attr": "check_requirements",
+                    "extras": []
+                },
+                "use_2to3": {
+                    "module": "setuptools.dist",
+                    "attr": "assert_bool",
+                    "extras": []
+                },
+                "use_2to3_exclude_fixers": {
+                    "module": "setuptools.dist",
+                    "attr": "assert_string_list",
+                    "extras": []
+                },
+                "use_2to3_fixers": {
+                    "module": "setuptools.dist",
+                    "attr": "assert_string_list",
+                    "extras": []
+                },
+                "zip_safe": {
+                    "module": "setuptools.dist",
+                    "attr": "assert_bool",
+                    "extras": []
+                }
+            },
+            "egg_info.writers": {
+                "PKG-INFO": {
+                    "module": "setuptools.command.egg_info",
+                    "attr": "write_pkg_info",
+                    "extras": []
+                },
+                "dependency_links.txt": {
+                    "module": "setuptools.command.egg_info",
+                    "attr": "overwrite_arg",
+                    "extras": []
+                },
+                "depends.txt": {
+                    "module": "setuptools.command.egg_info",
+                    "attr": "warn_depends_obsolete",
+                    "extras": []
+                },
+                "eager_resources.txt": {
+                    "module": "setuptools.command.egg_info",
+                    "attr": "overwrite_arg",
+                    "extras": []
+                },
+                "entry_points.txt": {
+                    "module": "setuptools.command.egg_info",
+                    "attr": "write_entries",
+                    "extras": []
+                },
+                "namespace_packages.txt": {
+                    "module": "setuptools.command.egg_info",
+                    "attr": "overwrite_arg",
+                    "extras": []
+                },
+                "requires.txt": {
+                    "module": "setuptools.command.egg_info",
+                    "attr": "write_requirements",
+                    "extras": []
+                },
+                "top_level.txt": {
+                    "module": "setuptools.command.egg_info",
+                    "attr": "write_toplevel_names",
+                    "extras": []
+                }
+            },
+            "setuptools.installation": {
+                "eggsecutable": {
+                    "module": "setuptools.command.easy_install",
+                    "attr": "bootstrap",
+                    "extras": []
+                }
+            }
         },
         "record": [
             {

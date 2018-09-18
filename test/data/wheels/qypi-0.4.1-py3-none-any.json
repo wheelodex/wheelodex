@@ -60,7 +60,13 @@
         },
         "top_level": ["qypi"],
         "entry_points": {
-            "console_scripts": ["qypi"]
+            "console_scripts": {
+                "qypi": {
+                    "module": "qypi.__main__",
+                    "attr": "qypi",
+                    "extras": []
+                }
+            }
         },
         "record": [
             {
