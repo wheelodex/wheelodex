@@ -1,11 +1,12 @@
-from   configparser           import ConfigParser
+from   configparser             import ConfigParser
 import logging
-from   types                  import SimpleNamespace
+from   types                    import SimpleNamespace
 import click
-from   .                      import __version__
-from   .db                    import WheelDatabase
-from   .download.queue_wheels import queue_all_wheels, queue_wheels_since
-from   .util                  import parse_memory
+from   .                        import __version__
+from   .db                      import WheelDatabase
+from   .download.queue_wheels   import queue_all_wheels, queue_wheels_since
+from   .download.unqueue_wheels import process_queue
+from   .util                    import parse_memory
 
 @click.group()
 @click.option(
@@ -54,6 +55,12 @@ def queue_update(obj):
         if obj.db.serial is None:
             raise click.UsageError('No saved state to update')
         queue_wheels_since(obj.db, obj.db.serial, max_size=obj.max_size)
+
+@main.command('process_queue')
+@click.pass_obj
+def process_queue_cmd(obj):
+    with obj.db:
+        process_queue(obj.db)
 
 if __name__ == '__main__':
     main()
