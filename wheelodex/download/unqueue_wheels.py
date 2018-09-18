@@ -21,7 +21,7 @@ USER_AGENT = 'wheelodex/{} ({}) requests/{} requests_download/{} {}/{}'.format(
     platform.python_version(),
 )
 
-def process_queue(db: 'WheelDatabase'):
+def process_queue(db):
     with TemporaryDirectory() as tmpdir:
         for whl in db.iterqueue():
             try:

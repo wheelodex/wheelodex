@@ -7,7 +7,7 @@ log = logging.getLogger(__name__)
 
 ENDPOINT = 'https://pypi.org/pypi'
 
-def queue_all_wheels(db: 'WheelDatabase', latest_only=True, max_size=None):
+def queue_all_wheels(db, latest_only=True, max_size=None):
     log.info('BEGIN queue_all_wheels')
     pypi = ServerProxy(ENDPOINT, use_builtin_types=True)
     serial = pypi.changelog_last_serial()

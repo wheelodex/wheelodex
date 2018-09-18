@@ -57,7 +57,7 @@ class WheelDatabase:
                         .filter(QueuedWheel.filename == filename)\
                         .delete()
 
-    def iterqueue(self) -> 'Iterator[QueuedWheel]':
+    def iterqueue(self):  # -> 'Iterator[QueuedWheel]'
         ### Would leaving off the ".all()" give an iterable that plays well
         ### with unqueue_wheel()?
         return self.session.query(QueuedWheel).all()
