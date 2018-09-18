@@ -50,8 +50,10 @@ def process_wheel(filename, url, size, md5, sha256, uploaded, tmpdir):
     # header correctly:
     download(url, fpath, headers={"user-agent": USER_AGENT})
     log.info('Inspecting %s ...', filename)
-    about = inspect_wheel(fpath)
-    os.remove(fpath)
+    try:
+        about = inspect_wheel(fpath)
+    finally:
+        os.remove(fpath)
     if about["file"]["size"] != size:
         log.error('Wheel %s: size mismatch: PyPI reports %d, got %d',
                   size, about["file"]["size"])
