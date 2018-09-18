@@ -9,6 +9,11 @@ def test(session):
     session.run('python', '-m', 'pytest', *session.posargs, 'wheelodex', 'test')
 
 @nox.session(reuse_venv=True)
+def run(session):
+    session.install('-r', 'requirements.txt')
+    session.run('python', '-m', 'wheelodex', *session.posargs)
+
+@nox.session(reuse_venv=True)
 def inspect(session):
     session.install('-r', 'requirements.txt')
     session.run('python', '-m', 'wheelodex.inspect', *session.posargs)

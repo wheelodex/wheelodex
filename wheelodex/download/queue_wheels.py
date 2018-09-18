@@ -14,7 +14,7 @@ def queue_all_wheels(db: 'WheelDatabase', latest_only=True, max_size=None):
     log.info('changlog_last_serial() = %d', serial)
     for pkg in pypi.list_packages():
         log.info('Queuing wheels for project %r', pkg)
-        versions = pypi.package_releases(pkg)
+        versions = pypi.package_releases(pkg, True)
         log.info('Available versions: %r', versions)
         if latest_only:
             versions = [latest_version(versions)]

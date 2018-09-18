@@ -1,0 +1,15 @@
+---
+version: '2'
+
+services:
+    db:
+        image: postgres:9.6
+        restart: always
+        ports:
+            - 127.0.0.1:6000:5432
+        environment:
+            POSTGRES_DB: wheelodex
+            POSTGRES_USER: wheelodex
+            POSTGRES_PASSWORD: wheelodex
+        #volumes:
+        #    - ./postgres:/var/lib/postgres/data
