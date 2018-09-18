@@ -11,10 +11,10 @@ class WheelDatabase:
     def __init__(self, dburl_params):
         self.engine = S.create_engine(S.engine.url.URL(**dburl_params))
         Base.metadata.create_all(self.engine)
-        self.session = None
+        self.session = sessionmaker(bind=self.engine)()
 
     def __enter__(self):
-        self.session = sessionmaker(bind=self.engine)()
+        self.session.begin_nested()
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -22,7 +22,6 @@ class WheelDatabase:
             self.session.commit()
         else:
             self.session.rollback()
-        self.session.close()
         return False
 
     @property

@@ -11,6 +11,8 @@
 - Should flat modules inside packages be discarded from `.derived.modules`?
 - Compare `extract_modules()` with <https://github.com/takluyver/wheeldex>
 - Does `extract_modules()` need to take compiled library files into account?
+- `config.ini`: Either use the `long_descriptions` and `[pypi.urls]` options or
+  get rid of them
 
 Architecture
 ------------
