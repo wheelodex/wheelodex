@@ -5,7 +5,7 @@ import hashlib
 import io
 import os.path
 from   zipfile             import ZipFile
-from   distlib.wheel       import DistlibException, Wheel
+from   distlib.wheel       import Wheel
 from   pkg_resources       import EntryPoint, yield_lines
 from   readme_renderer.rst import render
 from   .metadata           import parse_metadata

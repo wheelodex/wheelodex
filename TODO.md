@@ -1,18 +1,23 @@
 - Expand README
 - Write a JSON Schema for the API's representation of wheels
-- Add logging
-- Set a custom User-Agent when interacting with PyPI
-- Add tests
 - Support PEP 561?  [Is this a typo for PEP 566?]
-- Parse `Description-Content-Type` into a structured `dict`?
-- Parse `Requires-Dist` and similar fields into structured `dict`s?
-- Should flat modules inside packages be discarded from `.derived.modules`?
-- Compare `extract_modules()` with <https://github.com/takluyver/wheeldex>
-- Does `extract_modules()` need to take compiled library files into account?
+- Wheel inspection:
+    - Parse `Description-Content-Type` into a structured `dict`?
+    - Parse `Requires-Dist` and similar fields into structured `dict`s?
+    - Should flat modules inside packages be discarded from `.derived.modules`?
+    - Compare `extract_modules()` with <https://github.com/takluyver/wheeldex>
+    - Does `extract_modules()` need to take compiled library files into
+      account?
+    - Include the results of testing manylinux1 wheels with `auditwheel`?
 - `config.ini`: Either use the `long_descriptions` and `[pypi.urls]` options or
   get rid of them
-- Replace the wheel queue with a table of *all* wheels in PyPI, with a flag
-  column added for whether to download them?
+- Make `queue_all_wheels()` less all-or-nothing:
+    - Don't add any wheels to the database that are already in there (but do
+      update their `queued` attributes)
+    - Commit the session after processing each project?
+    - Add an option for only scanning projects that aren't already in the
+      database?
+- Rename the functions & commands with "queue" in their names?
 
 Architecture
 ------------
@@ -47,6 +52,7 @@ Architecture
           highest-numbered non-prerelease versions depend upon some version of
           the project to which the wheel belongs, regardless of platform etc.
           compatibility)
+        - list of modules in the wheel (top-level and packages only?)
         - list of files in the wheel
         - list of commands and other entry points defined by the wheel
     - pages listing all defined entry points and all projects that define each

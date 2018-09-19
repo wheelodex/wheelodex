@@ -3,7 +3,6 @@ import os
 import os.path
 import platform
 from   tempfile          import TemporaryDirectory
-import time
 import traceback
 import requests
 from   requests_download import __version__ as rd_version, download
@@ -31,19 +30,18 @@ def process_queue(db):
                     size     = whl.size,
                     md5      = whl.md5,
                     sha256   = whl.sha256,
-                    uploaded = whl.uploaded,
                     tmpdir   = tmpdir,
                 )
             except Exception:
                 log.exception('Error processing %s', whl.filename)
-                db.queue_error(whl, traceback.format_exc())
+                db.add_wheel_error(whl, traceback.format_exc())
             else:
-                db.add_wheel_entry(about)
+                db.add_wheel_data(whl, about)
             finally:
                 db.unqueue_wheel(whl)
                 db.session.commit()
 
-def process_wheel(filename, url, size, md5, sha256, uploaded, tmpdir):
+def process_wheel(filename, url, size, md5, sha256, tmpdir):
     fpath = os.path.join(tmpdir, filename)
     log.info('Downloading %s from %s ...', filename, url)
     # Write "user-agent" in lowercase so it overrides requests_download's
@@ -74,13 +72,5 @@ def process_wheel(filename, url, size, md5, sha256, uploaded, tmpdir):
                     about["file"]["digests"][alg],
                 )
             )
-    about["pypi"] = {
-        "download_url": url,
-        "uploaded": uploaded,
-    }
-    about["wheelodex"] = {
-        "scanned": time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
-        "wheelodex_version": __version__,
-    }
     log.info('Finished inspecting %s', filename)
     return about

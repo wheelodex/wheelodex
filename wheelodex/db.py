@@ -1,7 +1,7 @@
 from   datetime                   import datetime, timezone
 import sqlalchemy as S
 from   sqlalchemy.ext.declarative import declarative_base
-from   sqlalchemy.orm             import sessionmaker
+from   sqlalchemy.orm             import backref, relationship, sessionmaker
 from   sqlalchemy_utils           import JSONType
 from   .                          import __version__
 
@@ -38,89 +38,61 @@ class WheelDatabase:
         else:
             ps.serial = max(ps.serial, value)
 
-    def queue_wheel(self, whl: 'QueuedWheel', serial=None, force=False):
-        if self.session.query(QueuedWheel)\
-                       .filter(QueuedWheel.filename == whl.filename)\
-                       .one_or_none() is None:
-            if force or self.session.query(Wheel)\
-                                    .filter(Wheel.filename == whl.filename)\
-                                    .one_or_none() is None:
-                self.session.add(whl)
+    def add_wheel(self, wheel, serial=None):
+        self.session.add(wheel)
         if serial is not None:
             self.serial = serial
 
-    def unqueue_wheel(self, filename):
-        if isinstance(filename, QueuedWheel):
-            self.session.delete(filename)
+    def unqueue_wheel(self, whl):
+        if isinstance(whl, Wheel):
+            whl.queued = False
         else:
-            self.session.query(QueuedWheel)\
-                        .filter(QueuedWheel.filename == filename)\
-                        .delete()
+            self.session.query(Wheel)\
+                        .filter(Wheel.filename == whl)\
+                        .update({Wheel.queued: False})
 
-    def iterqueue(self):  # -> 'Iterator[QueuedWheel]'
+    def iterqueue(self):
         ### Would leaving off the ".all()" give an iterable that plays well
         ### with unqueue_wheel()?
-        return self.session.query(QueuedWheel).all()
+        return self.session.query(Wheel)\
+                           .filter(Wheel.queued == True)\
+                           .all()  # noqa: E712
 
-    def add_wheel_entry(self, about):
-        self.session.add(Wheel.from_data(about))
+    def add_wheel_data(self, wheel, raw_data):
+        wheel.data = WheelData.from_raw_data(raw_data)
 
     def remove_wheel(self, filename, serial=None):
-        # Remove the given wheel from the database and wheel queue
-        self.unqueue_wheel(filename)
         self.session.query(Wheel)\
                     .filter(Wheel.filename == filename)\
-                    .update({Wheel.active: False})
+                    .delete()
         if serial is not None:
             self.serial = serial
 
     def remove_version(self, project, version, serial=None):
-        # Delete all wheels for the given release from the database and wheel
-        # queue
-        self.session.query(QueuedWheel)\
-                    .filter(QueuedWheel.project == project)\
-                    .filter(QueuedWheel.version == version)\
-                    .delete()
+        # Note that this filters by PyPI project & version, not by wheel
+        # filename project & version, as this method is meant to be called in
+        # response to "remove" events in the PyPI changelog.
         self.session.query(Wheel)\
                     .filter(Wheel.project == project)\
                     .filter(Wheel.version == version)\
-                    .update({Wheel.active: False})
+                    .delete()
         if serial is not None:
             self.serial = serial
 
     def remove_project(self, project, serial=None):
-        # Delete all wheels for the given project from the database and wheel
-        # queue
-        self.session.query(QueuedWheel)\
-                    .filter(QueuedWheel.project == project)\
-                    .delete()
-        self.session.query(Wheel)\
-                    .filter(Wheel.project == project)\
-                    .update({Wheel.active: False})
+        # Note that this filters by PyPI project, not by wheel filename
+        # project, as this method is meant to be called in response to "remove"
+        # events in the PyPI changelog.
+        self.session.query(Wheel).filter(Wheel.project == project).delete()
         if serial is not None:
             self.serial = serial
 
-    def queue_error(self, queued_wheel, errmsg):
-        self.session.add(ProcessingError.from_queued_wheel(
-            queued_wheel,
-            errmsg,
-            datetime.now(timezone.utc),
-            __version__,
+    def add_wheel_error(self, wheel, errmsg):
+        wheel.errors.append(ProcessingError(
+            errmsg            = errmsg,
+            timestamp         = datetime.now(timezone.utc),
+            wheelodex_version = __version__,
         ))
-
-
-class QueuedWheel(Base):
-    __tablename__ = 'queued_wheels'
-
-    id = S.Column(S.Integer, primary_key=True, nullable=False)  # noqa: B001
-    filename = S.Column(S.Unicode(2048), nullable=False, unique=True)
-    url      = S.Column(S.Unicode(2048), nullable=False)
-    project  = S.Column(S.Unicode(2048), nullable=False)
-    version  = S.Column(S.Unicode(2048), nullable=False)
-    size     = S.Column(S.Integer, nullable=False)
-    md5      = S.Column(S.Unicode(32), nullable=True)
-    sha256   = S.Column(S.Unicode(64), nullable=True)
-    uploaded = S.Column(S.Unicode(32), nullable=False)
 
 
 class PyPISerial(Base):
@@ -130,11 +102,20 @@ class PyPISerial(Base):
     serial = S.Column(S.Integer, nullable=False)
 
 
-class ProcessingError(Base):
-    __tablename__ = 'processing_errors'
+class Wheel(Base):
+    """
+    A table of *all* wheels available on PyPI, even ones we're not storing data
+    for.  We store all the wheels so that, if we ever decide to go back and
+    analyze wheels we declined to analyze earlier, we don't have to spend hours
+    scraping the entire XML-RPC API to find them.  Also, the table provides
+    statistics on wheels that can be useful for deciding whether to go back and
+    analyze more wheels in the first place.
+    """
+
+    __tablename__ = 'wheels'
 
     id = S.Column(S.Integer, primary_key=True, nullable=False)  # noqa: B001
-    filename = S.Column(S.Unicode(2048), nullable=False)
+    filename = S.Column(S.Unicode(2048), nullable=False, unique=True)
     url      = S.Column(S.Unicode(2048), nullable=False)
     project  = S.Column(S.Unicode(2048), nullable=False)
     version  = S.Column(S.Unicode(2048), nullable=False)
@@ -142,56 +123,41 @@ class ProcessingError(Base):
     md5      = S.Column(S.Unicode(32), nullable=True)
     sha256   = S.Column(S.Unicode(64), nullable=True)
     uploaded = S.Column(S.Unicode(32), nullable=False)
+    queued   = S.Column(S.Boolean, nullable=False)
 
-    errmsg            = S.Column(S.Unicode(65535), nullable=False)
-    timestamp         = S.Column(S.DateTime(timezone=True), nullable=False)
+
+class ProcessingError(Base):
+    __tablename__ = 'processing_errors'
+
+    id = S.Column(S.Integer, primary_key=True, nullable=False)  # noqa: B001
+    wheel_id  = S.Column(S.Integer, S.ForeignKey('wheels.id'), nullable=False)
+    wheel     = relationship('Wheel', backref='errors')
+    errmsg    = S.Column(S.Unicode(65535), nullable=False)
+    timestamp = S.Column(S.DateTime(timezone=True), nullable=False)
+    wheelodex_version = S.Column(S.Unicode(32), nullable=False)
+
+
+class WheelData(Base):
+    __tablename__ = 'wheel_data'
+
+    id = S.Column(S.Integer, primary_key=True, nullable=False)  # noqa: B001
+    wheel_id  = S.Column(S.Integer, S.ForeignKey('wheels.id'), nullable=False,
+                         unique=True)
+    wheel     = relationship('Wheel', backref=backref('data', uselist=False))
+    raw_data  = S.Column(JSONType, nullable=False)
+    #: The project name as extracted from the wheel filename.  This may differ
+    #: from the project name as reported on PyPI, even after normalization.
+    project   = S.Column(S.Unicode(2048), nullable=False)
+    version   = S.Column(S.Unicode(2048), nullable=False)
+    processed = S.Column(S.DateTime(timezone=True), nullable=False)
     wheelodex_version = S.Column(S.Unicode(32), nullable=False)
 
     @classmethod
-    def from_queued_wheel(cls, qw, errmsg, timestamp, wheelodex_version):
+    def from_raw_data(cls, raw_data):
         return cls(
-            filename = qw.filename,
-            url      = qw.url,
-            project  = qw.project,
-            version  = qw.version,
-            size     = qw.size,
-            md5      = qw.md5,
-            sha256   = qw.sha256,
-            uploaded = qw.uploaded,
-            errmsg            = errmsg,
-            timestamp         = timestamp,
-            wheelodex_version = wheelodex_version,
-        )
-
-    def to_queued_wheel(self):
-        return QueuedWheel(
-            filename = self.filename,
-            url      = self.url,
-            project  = self.project,
-            version  = self.version,
-            size     = self.size,
-            md5      = self.md5,
-            sha256   = self.sha256,
-            uploaded = self.uploaded,
-        )
-
-
-class Wheel(Base):
-    __tablename__ = 'wheels'
-
-    id = S.Column(S.Integer, primary_key=True, nullable=False)  # noqa: B001
-    project  = S.Column(S.Unicode(2048), nullable=False)
-    version  = S.Column(S.Unicode(2048), nullable=False)
-    filename = S.Column(S.Unicode(2048), nullable=False, unique=True)
-    data     = S.Column(JSONType, nullable=False)
-    active   = S.Column(S.Boolean, nullable=False, default=True)
-
-    @classmethod
-    def from_data(cls, data):
-        return cls(
-            project  = data["project"],
-            version  = data["version"],
-            filename = data["filename"],
-            data     = data,
-            active   = True,
+            project           = raw_data["project"],
+            version           = raw_data["version"],
+            raw_data          = raw_data,
+            processed         = datetime.now(timezone.utc),
+            wheelodex_version = __version__,
         )

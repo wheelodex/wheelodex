@@ -39,7 +39,7 @@ def main(ctx, config):
 @main.command()
 ### TODO: Add command-line options for setting `latest_only` and `max_size`
 @click.pass_obj
-def queue_init(obj):
+def queue_all(obj):
     with obj.db:
         queue_all_wheels(
             obj.db,
