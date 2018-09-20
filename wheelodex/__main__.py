@@ -64,4 +64,4 @@ def process_queue_cmd(obj):
         process_queue(obj.db)
 
 if __name__ == '__main__':
-    main()
+    main(prog_name=__package__)
