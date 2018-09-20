@@ -1,7 +1,7 @@
 import logging
+from   .pypi_xmlrpc import PyPIXMLRPC
 from   ..db         import Wheel
 from   ..util       import latest_version
-from   .pypi_xmlrpc import PyPIXMLRPC
 
 log = logging.getLogger(__name__)
 
@@ -10,7 +10,10 @@ def queue_all_wheels(db, latest_only=True, max_size=None):
     pypi = PyPIXMLRPC()
     serial = pypi.changelog_last_serial()
     log.info('changlog_last_serial() = %d', serial)
+    db.serial = serial
+    #projects_seen = set(db.session.query(Wheel.project).distinct())
     for pkg in pypi.list_packages():
+        #if pkg in projects_seen: continue
         log.info('Queuing wheels for project %r', pkg)
         versions = pypi.package_releases(pkg)
         log.info('Available versions: %r', versions)
@@ -20,24 +23,28 @@ def queue_all_wheels(db, latest_only=True, max_size=None):
                 log.info('Preferring latest version: %r', pref_version)
             else:
                 log.info('No non-prerelease versions available')
+        qty_queued = 0
+        qty_unqueued = 0
         for v in versions:
             for asset in pypi.release_urls(pkg, v):
-                if asset["packagetype"] != "bdist_wheel":
-                    # This produces too many irrelevant log entries:
-                    #log.info('Asset %s: not a wheel; skipping',
-                    #         asset["filename"])
+                if not asset["filename"].endswith('.whl'):
+                    log.debug('Asset %s: not a wheel; skipping',
+                              asset["filename"])
                     continue
                 if pref_version is not None and v != pref_version:
-                    log.info('Asset %s: not latest version; not queuing',
-                             asset["filename"])
+                    log.debug('Asset %s: not latest version; not queuing',
+                              asset["filename"])
                     queued = False
+                    qty_unqueued += 1
                 elif max_size is not None and asset["size"] > max_size:
-                    log.info('Asset %s: size %d too large; not queuing',
-                             asset["filename"], asset["size"])
+                    log.debug('Asset %s: size %d too large; not queuing',
+                              asset["filename"], asset["size"])
                     queued = False
+                    qty_unqueued += 1
                 else:
-                    log.info('Asset %s: queuing', asset["filename"])
+                    log.debug('Asset %s: queuing', asset["filename"])
                     queued = True
+                    qty_queued += 1
                 db.add_wheel(Wheel(
                     filename = asset["filename"],
                     url      = asset["url"],
@@ -49,7 +56,10 @@ def queue_all_wheels(db, latest_only=True, max_size=None):
                     uploaded = str(asset["upload_time"]),
                     queued   = queued,
                 ))
-    db.serial = serial
+        log.info('%s: %d wheels queued, %d wheels not queued',
+                 pkg, qty_queued, qty_unqueued)
+        if qty_queued or qty_unqueued:
+            db.session.commit()
     log.info('END queue_all_wheels')
 
 def queue_wheels_since(db, since, max_size=None):
