@@ -11,10 +11,12 @@ class WheelDatabase:
     def __init__(self, dburl_params):
         self.engine = S.create_engine(S.engine.url.URL(**dburl_params))
         Base.metadata.create_all(self.engine)
-        self.session = sessionmaker(bind=self.engine)()
+        self.session = None
 
     def __enter__(self):
-        self.session.begin_nested()
+        assert self.session is None, \
+            'WheelDatabase context manager is not reentrant'
+        self.session = sessionmaker(bind=self.engine)()
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -22,6 +24,8 @@ class WheelDatabase:
             self.session.commit()
         else:
             self.session.rollback()
+        self.session.close()
+        self.session = None
         return False
 
     @property
