@@ -47,13 +47,55 @@
                 "Topic :: Software Development :: Libraries :: Python Modules"
             ],
             "requires_dist": [
-                "setuptools",
-                "Sphinx; extra == 'docs'",
-                "repoze.sphinx.autointerface; extra == 'docs'",
-                "zope.event; extra == 'test'",
-                "coverage; extra == 'testing'",
-                "nose; extra == 'testing'",
-                "zope.event; extra == 'testing'"
+                {
+                    "name": "setuptools",
+                    "url": null,
+                    "extras": [],
+                    "specifier": "",
+                    "marker": null
+                },
+                {
+                    "name": "Sphinx",
+                    "url": null,
+                    "extras": [],
+                    "specifier": "",
+                    "marker": "extra == \"docs\""
+                },
+                {
+                    "name": "repoze.sphinx.autointerface",
+                    "url": null,
+                    "extras": [],
+                    "specifier": "",
+                    "marker": "extra == \"docs\""
+                },
+                {
+                    "name": "zope.event",
+                    "url": null,
+                    "extras": [],
+                    "specifier": "",
+                    "marker": "extra == \"test\""
+                },
+                {
+                    "name": "coverage",
+                    "url": null,
+                    "extras": [],
+                    "specifier": "",
+                    "marker": "extra == \"testing\""
+                },
+                {
+                    "name": "nose",
+                    "url": null,
+                    "extras": [],
+                    "specifier": "",
+                    "marker": "extra == \"testing\""
+                },
+                {
+                    "name": "zope.event",
+                    "url": null,
+                    "extras": [],
+                    "specifier": "",
+                    "marker": "extra == \"testing\""
+                }
             ],
             "provides_extra": [
                 "docs",

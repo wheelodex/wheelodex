@@ -9,8 +9,7 @@ from   distlib.wheel       import Wheel
 from   pkg_resources       import EntryPoint, yield_lines
 from   readme_renderer.rst import render
 from   .metadata           import parse_metadata
-from   .util               import extract_dependencies, extract_modules, \
-                                    split_keywords
+from   .util               import extract_modules, split_keywords
 from   .wheel_info         import parse_wheel_info
 
 DIGEST_CHUNK_SIZE = 65535
@@ -130,7 +129,7 @@ def inspect_wheel(fname):
             = [], None
 
     about["derived"]["dependencies"] \
-        = extract_dependencies(md.get("requires_dist", []))
+        = sorted({req["name"] for req in md.get("requires_dist", [])})
 
     about["derived"]["modules"] = extract_modules([
         rec["path"] for rec in about["dist_info"].get("record", [])

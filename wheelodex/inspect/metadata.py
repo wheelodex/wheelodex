@@ -1,7 +1,18 @@
 # cf. PEP 345 and <https://packaging.python.org/specifications/>
 import re
-from   headerparser import HeaderParser
-from   .util        import fieldnorm, strfield
+from   headerparser           import HeaderParser
+from   packaging.requirements import Requirement
+from   .util                  import fieldnorm, strfield
+
+def requirement(s):
+    req = Requirement(s)
+    return {
+        "name": req.name,
+        "url": req.url,
+        "extras": sorted(req.extras),
+        "specifier": str(req.specifier),
+        "marker": str(req.marker) if req.marker is not None else None,
+    }
 
 def project_url(s):
     try:
@@ -15,7 +26,7 @@ metaparser.add_field('Metadata-Version')
 metaparser.add_field('Name')
 metaparser.add_field('Version')
 metaparser.add_field('Summary', type=strfield)
-metaparser.add_field('Requires-Dist', multiple=True)
+metaparser.add_field('Requires-Dist', type=requirement, multiple=True)
 metaparser.add_field('Requires-Python')
 metaparser.add_field('Project-URL', type=project_url, multiple=True)
 

@@ -44,9 +44,27 @@
             ],
             "requires_python": "~=3.4",
             "requires_dist": [
-                "click (~=6.5)",
-                "packaging (>=16)",
-                "requests (==2.*)"
+                {
+                    "name": "click",
+                    "url": null,
+                    "extras": [],
+                    "specifier": "~=6.5",
+                    "marker": null
+                },
+                {
+                    "name": "packaging",
+                    "url": null,
+                    "extras": [],
+                    "specifier": ">=16",
+                    "marker": null
+                },
+                {
+                    "name": "requests",
+                    "url": null,
+                    "extras": [],
+                    "specifier": "==2.*",
+                    "marker": null
+                }
             ],
             "description": {
                 "length": 11623

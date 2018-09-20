@@ -49,8 +49,20 @@
             "requires_python": ">=2.6,!=3.0.*,!=3.1.*,!=3.2.*",
             "provides_extra": ["certs", "ssl"],
             "requires_dist": [
-                "certifi (==2016.9.26); extra == 'certs'",
-                "wincertstore (==0.2); sys_platform=='win32' and extra == 'ssl'"
+                {
+                    "name": "certifi",
+                    "url": null,
+                    "extras": [],
+                    "specifier": "==2016.9.26",
+                    "marker": "extra == \"certs\""
+                },
+                {
+                    "name": "wincertstore",
+                    "url": null,
+                    "extras": [],
+                    "specifier": "==0.2",
+                    "marker": "sys_platform == \"win32\" and extra == \"ssl\""
+                }
             ],
             "description": {
                 "length": 901
