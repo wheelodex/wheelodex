@@ -55,6 +55,7 @@ def queue_update(obj):
         if obj.db.serial is None:
             raise click.UsageError('No saved state to update')
         queue_wheels_since(obj.db, obj.db.serial, max_size=obj.max_size)
+        obj.db.session.commit()  ### Why is this line necessary here???
 
 @main.command('process_queue')
 @click.pass_obj

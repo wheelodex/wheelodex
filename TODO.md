@@ -12,8 +12,6 @@
 - `config.ini`: Either use the `long_descriptions` and `[pypi.urls]` options or
   get rid of them
 - Make `queue_all_wheels()` less all-or-nothing:
-    - Don't add any wheels to the database that are already in there (but do
-      update their `queued` attributes)
     - Add an option for only scanning projects that aren't already in the
       database?
 - Rename the functions & commands with "queue" in their names?

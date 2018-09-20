@@ -39,7 +39,13 @@ class WheelDatabase:
             ps.serial = max(ps.serial, value)
 
     def add_wheel(self, wheel, serial=None):
-        self.session.add(wheel)
+        whl = self.session.query(Wheel)\
+                          .filter(Wheel.filename == wheel.filename)\
+                          .one_or_none()
+        if whl is None:
+            self.session.add(wheel)
+        else:
+            whl.queued = wheel.queued
         if serial is not None:
             self.serial = serial
 
