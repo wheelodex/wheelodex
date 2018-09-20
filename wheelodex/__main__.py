@@ -15,11 +15,17 @@ from   .util                    import parse_memory
     default      = 'config.ini',
     show_default = True,
 )
+@click.option(
+    '-l', '--log-level',
+    type = click.Choice(['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG']),
+    default      = 'INFO',
+    show_default = True,
+)
 @click.version_option(
     __version__, '-V', '--version', message='%(prog)s %(version)s',
 )
 @click.pass_context
-def main(ctx, config):
+def main(ctx, config, log_level):
     cfg = ConfigParser()
     cfg.read(config)
     ctx.obj = SimpleNamespace()
@@ -33,7 +39,7 @@ def main(ctx, config):
     logging.basicConfig(
         format  = '%(asctime)s %(levelname)s %(name)s %(message)s',
         datefmt = '%Y-%m-%dT%H:%M:%S%z',
-        level   = logging.INFO,
+        level   = getattr(logging, log_level),
     )
 
 @main.command()
