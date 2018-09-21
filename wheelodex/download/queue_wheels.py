@@ -31,7 +31,7 @@ def queue_all_wheels(db, latest_only=True, max_size=None):
                     log.debug('Asset %s: not a wheel; skipping',
                               asset["filename"])
                     continue
-                if pref_version is not None and v != pref_version:
+                if v != pref_version:
                     log.debug('Asset %s: not latest version; not queuing',
                               asset["filename"])
                     queued = False
