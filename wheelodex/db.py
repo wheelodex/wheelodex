@@ -159,18 +159,28 @@ class WheelData(Base):
     #: from the project name as reported on PyPI, even after normalization.
     project   = S.Column(S.Unicode(2048), nullable=False)
     version   = S.Column(S.Unicode(2048), nullable=False)
+    #: The time at which the raw data was extracted from the wheel and added to
+    #: the database
     processed = S.Column(S.DateTime(timezone=True), nullable=False)
+    #: The version of `wheelodex` under which the WheelData's columns and
+    #: relations were filled in
     wheelodex_version = S.Column(S.Unicode(32), nullable=False)
 
     @classmethod
     def from_raw_data(cls, session, raw_data):
         return cls(
-            project           = raw_data["project"],
-            version           = raw_data["version"],
-            raw_data          = raw_data,
-            processed         = datetime.now(timezone.utc),
-            wheelodex_version = __version__,
-            entry_points      = [
+            raw_data  = raw_data,
+            processed = datetime.now(timezone.utc),
+            **cls.parse_raw_data(session, raw_data),
+        )
+
+    @staticmethod
+    def parse_raw_data(session, raw_data):
+        return {
+            "wheelodex_version": __version__,
+            "project": raw_data["project"],
+            "version": raw_data["version"],
+            "entry_points": [
                 EntryPoint(
                     group=EntryPointGroup.from_name(session, group),
                     name=e,
@@ -179,7 +189,18 @@ class WheelData(Base):
                                                        .items()
                 for e in eps
             ],
-        )
+        }
+
+    def update_structure(self, session):
+        """
+        Update the `WheelData` and its subobjects for the current database
+        schema
+        """
+        ### TODO: For subobjects like EntryPoints, try to eliminate replacing
+        ### unchanged subobjects with equal subobjects with new IDs every time
+        ### this method is called
+        for k,v in self.parse_raw_data(session, self.raw_data):
+            setattr(self, k, v)
 
 
 class EntryPointGroup(Base):
