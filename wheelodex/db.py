@@ -69,7 +69,7 @@ class WheelDatabase:
                            .all()  # noqa: E712
 
     def add_wheel_data(self, wheel, raw_data):
-        wheel.data = WheelData.from_raw_data(raw_data)
+        wheel.data = WheelData.from_raw_data(self.session, raw_data)
 
     def remove_wheel(self, filename, serial=None):
         self.session.query(Wheel)\
@@ -163,11 +163,49 @@ class WheelData(Base):
     wheelodex_version = S.Column(S.Unicode(32), nullable=False)
 
     @classmethod
-    def from_raw_data(cls, raw_data):
+    def from_raw_data(cls, session, raw_data):
         return cls(
             project           = raw_data["project"],
             version           = raw_data["version"],
             raw_data          = raw_data,
             processed         = datetime.now(timezone.utc),
             wheelodex_version = __version__,
+            entry_points      = [
+                EntryPoint(
+                    group=EntryPointGroup.from_name(session, group),
+                    name=e,
+                )
+                for group, eps in raw_data["dist_info"].get("entry_points", {})
+                                                       .items()
+                for e in eps
+            ],
         )
+
+
+class EntryPointGroup(Base):
+    __tablename__ = 'entry_point_groups'
+
+    id = S.Column(S.Integer, primary_key=True, nullable=False)  # noqa: B001
+    name        = S.Column(S.Unicode(2048), nullable=False, unique=True)
+    description = S.Column(S.Unicode(65535), nullable=True, default=None)
+
+    @classmethod
+    def from_name(cls, session, name):
+        epg = session.query(cls).filter(cls.name == name).one_or_none()
+        if epg is None:
+            epg = cls(name=name)
+            session.add(epg)
+        return epg
+
+
+class EntryPoint(Base):
+    __tablename__ = 'entry_points'
+
+    id = S.Column(S.Integer, primary_key=True, nullable=False)  # noqa: B001
+    wheel_data_id = S.Column(S.Integer, S.ForeignKey('wheel_data.id'),
+                             nullable=False)
+    wheel_data    = relationship('WheelData', backref=backref('entry_points'))
+    group_id      = S.Column(S.Integer, S.ForeignKey('entry_point_groups.id'),
+                             nullable=False)
+    group         = relationship('EntryPointGroup')
+    name          = S.Column(S.Unicode(2048), nullable=False)
