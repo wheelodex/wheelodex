@@ -1,4 +1,5 @@
 from   datetime                   import datetime, timezone
+from   packaging.utils            import canonicalize_name as normalize
 import sqlalchemy as S
 from   sqlalchemy.ext.declarative import declarative_base
 from   sqlalchemy.orm             import backref, relationship, sessionmaker
@@ -112,6 +113,29 @@ class PyPISerial(Base):
     serial = S.Column(S.Integer, nullable=False)
 
 
+class Project(Base):
+    __tablename__ = 'projects'
+
+    id = S.Column(S.Integer, primary_key=True, nullable=False)  # noqa: B001
+    #: The project's normalized name
+    name            = S.Column(S.Unicode(2048), nullable=False, unique=True)
+    #: The preferred non-normalized form of the project's name
+    display_name    = S.Column(S.Unicode(2048), nullable=False, unique=True)
+    latest_version  = S.Column(S.Unicode(2048), nullable=True, default=None)
+    latest_wheel_id = S.Column(S.Integer, S.ForeignKey('wheels.id'),
+                               nullable=True, default=None)
+    latest_wheel    = relationship('Wheel')
+
+    @classmethod
+    def from_name(cls, session, name):
+        proj = session.query(cls).filter(cls.name == normalize(name))\
+                                 .one_or_none()
+        if proj is None:
+            proj = cls(name=normalize(name), display_name=name)
+            session.add(proj)
+        return proj
+
+
 class Wheel(Base):
     """
     A table of *all* wheels available on PyPI, even ones we're not storing data
@@ -147,6 +171,13 @@ class ProcessingError(Base):
     wheelodex_version = S.Column(S.Unicode(32), nullable=False)
 
 
+dependency_tbl = S.Table('dependency_tbl', Base.metadata,
+    S.Column('wheel_data_id', S.Integer, S.ForeignKey('wheel_data.id'), nullable=False),
+    S.Column('project_id', S.Integer, S.ForeignKey('projects.id'), nullable=False),
+    S.UniqueConstraint('wheel_data_id', 'project_id'),
+)
+
+
 class WheelData(Base):
     __tablename__ = 'wheel_data'
 
@@ -165,6 +196,8 @@ class WheelData(Base):
     #: The version of `wheelodex` under which the WheelData's columns and
     #: relations were filled in
     wheelodex_version = S.Column(S.Unicode(32), nullable=False)
+    dependencies = relationship('Project', secondary=dependency_tbl,
+                                backref='rdepends')
 
     @classmethod
     def from_raw_data(cls, session, raw_data):
@@ -188,6 +221,10 @@ class WheelData(Base):
                 for group, eps in raw_data["dist_info"].get("entry_points", {})
                                                        .items()
                 for e in eps
+            ],
+            "dependencies": [
+                Project.from_name(session, p)
+                for p in raw_data["derived"]["dependencies"]
             ],
         }
 
@@ -225,7 +262,7 @@ class EntryPoint(Base):
     id = S.Column(S.Integer, primary_key=True, nullable=False)  # noqa: B001
     wheel_data_id = S.Column(S.Integer, S.ForeignKey('wheel_data.id'),
                              nullable=False)
-    wheel_data    = relationship('WheelData', backref=backref('entry_points'))
+    wheel_data    = relationship('WheelData', backref='entry_points')
     group_id      = S.Column(S.Integer, S.ForeignKey('entry_point_groups.id'),
                              nullable=False)
     group         = relationship('EntryPointGroup')
