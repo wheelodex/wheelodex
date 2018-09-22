@@ -1,5 +1,4 @@
 - Expand README
-- Write a JSON Schema for the API's representation of wheels
 - Support PEP 561?  [Is this a typo for PEP 566?]
 - Wheel inspection:
     - Parse `Description-Content-Type` into a structured `dict`?
@@ -18,6 +17,11 @@
         - `Requires` - no longer supposed to exist?
         - `Requires-External` - same as `Requires-Dist` but with looser version
           string requirements?
+    - Move `.derived.readme_renders` to inside the
+      `.dist_info.metadata.description` object?
+        - Do likewise for the `.derived.description_in_*` fields?
+    - Eliminate the `"derived"` subobject and only store the data within as
+      structured fields in the database?
 - `config.ini`: Either use the `long_descriptions` and `[pypi.urls]` options or
   get rid of them
 - Make `queue_all_wheels()` less all-or-nothing:
@@ -26,6 +30,9 @@
 - Rename the functions & commands with "queue" in their names?
 - Add docstrings
     - Add `help` strings to commands & their options
+- Add a column to `WheelData` for storing the revision of
+  `wheel-data.schema.json` that `raw_data` conforms to?
+- Upgrade `wheel-data.schema.json` to a more recent JSON Schema draft
 
 Architecture
 ------------
