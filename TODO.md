@@ -33,6 +33,8 @@
 - Add a column to `WheelData` for storing the revision of
   `wheel-data.schema.json` that `raw_data` conforms to?
 - Upgrade `wheel-data.schema.json` to a more recent JSON Schema draft
+- `queue_wheels_since()`: When a wheel from a new version of a project is
+  queued, unqueue wheels for older versions
 
 Architecture
 ------------

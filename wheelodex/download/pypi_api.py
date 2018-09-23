@@ -1,12 +1,13 @@
 import logging
 from   xmlrpc.client import ProtocolError, ServerProxy
+import requests
 from   retrying      import retry
 
 log = logging.getLogger(__name__)
 
 ENDPOINT = 'https://pypi.org/pypi'
 
-def on_exception(method):
+def on_xml_exception(method):
     def on_exc(e):
         if isinstance(e, ProtocolError) and 500 <= e.errcode:
             log.warning('XML-RPC request to %s returned %d; retrying',
@@ -16,12 +17,21 @@ def on_exception(method):
             return False
     return on_exc
 
-class PyPIXMLRPC:
+def on_json_exception(e):
+    if isinstance(e, requests.HTTPError) and 500 <= e.response.status_code:
+        log.warning('JSON API request returned %d; retrying',
+                    e.response.status_code)
+        return True
+    else:
+        return False
+
+class PyPIAPI:
     def __init__(self):
         self.client = ServerProxy(ENDPOINT, use_builtin_types=True)
+        self.s = requests.Session()
 
     @retry(
-        retry_on_exception          = on_exception('changelog_last_serial'),
+        retry_on_exception          = on_xml_exception('changelog_last_serial'),
         wait_exponential_multiplier = 1000,
         wait_exponential_max        = 10000,
     )
@@ -29,7 +39,7 @@ class PyPIXMLRPC:
         return self.client.changelog_last_serial()
 
     @retry(
-        retry_on_exception          = on_exception('list_packages'),
+        retry_on_exception          = on_xml_exception('list_packages'),
         wait_exponential_multiplier = 1000,
         wait_exponential_max        = 10000,
     )
@@ -37,23 +47,20 @@ class PyPIXMLRPC:
         return self.client.list_packages()
 
     @retry(
-        retry_on_exception          = on_exception('package_releases'),
+        retry_on_exception          = on_json_exception,
         wait_exponential_multiplier = 1000,
         wait_exponential_max        = 10000,
     )
-    def package_releases(self, pkg):
-        return self.client.package_releases(pkg, True)
+    def project_data(self, proj):
+        r = self.s.get('{}/{}/json'.format(ENDPOINT, proj))
+        if r.status_code == 404:
+            # Project has no releases
+            return None
+        r.raise_for_status()
+        return r.json()
 
     @retry(
-        retry_on_exception          = on_exception('release_urls'),
-        wait_exponential_multiplier = 1000,
-        wait_exponential_max        = 10000,
-    )
-    def release_urls(self, pkg, version):
-        return self.client.release_urls(pkg, version)
-
-    @retry(
-        retry_on_exception          = on_exception('changelog_since_serial'),
+        retry_on_exception          = on_xml_exception('changelog_since_serial'),
         wait_exponential_multiplier = 1000,
         wait_exponential_max        = 10000,
     )

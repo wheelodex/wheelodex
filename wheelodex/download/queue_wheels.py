@@ -1,13 +1,13 @@
 import logging
-from   .pypi_xmlrpc import PyPIXMLRPC
-from   ..db         import Wheel
-from   ..util       import latest_version
+from   .pypi_api import PyPIAPI
+from   ..db      import Wheel
+from   ..util    import latest_version
 
 log = logging.getLogger(__name__)
 
 def queue_all_wheels(db, latest_only=True, max_size=None):
     log.info('BEGIN queue_all_wheels')
-    pypi = PyPIXMLRPC()
+    pypi = PyPIAPI()
     serial = pypi.changelog_last_serial()
     log.info('changlog_last_serial() = %d', serial)
     db.serial = serial
@@ -15,7 +15,11 @@ def queue_all_wheels(db, latest_only=True, max_size=None):
     for pkg in pypi.list_packages():
         #if pkg in projects_seen: continue
         log.info('Queuing wheels for project %r', pkg)
-        versions = pypi.package_releases(pkg)
+        data = pypi.project_data(pkg)
+        if data is None:
+            log.info('No versions available')
+            continue
+        versions = list(data["releases"].keys())
         log.info('Available versions: %r', versions)
         if latest_only:
             pref_version = latest_version(versions)
@@ -26,7 +30,7 @@ def queue_all_wheels(db, latest_only=True, max_size=None):
         qty_queued = 0
         qty_unqueued = 0
         for v in versions:
-            for asset in pypi.release_urls(pkg, v):
+            for asset in data["releases"][v]:
                 if not asset["filename"].endswith('.whl'):
                     log.debug('Asset %s: not a wheel; skipping',
                               asset["filename"])
@@ -64,7 +68,7 @@ def queue_all_wheels(db, latest_only=True, max_size=None):
 
 def queue_wheels_since(db, since, max_size=None):
     log.info('BEGIN queue_wheels_since(%d)', since)
-    pypi = PyPIXMLRPC()
+    pypi = PyPIAPI()
     for proj, rel, _, action, serial in pypi.changelog_since_serial(since):
         actwords = action.split()
         # cf. calls to add_journal_entry in
@@ -82,7 +86,11 @@ def queue_wheels_since(db, since, max_size=None):
                 actwords[2] == 'file' and actwords[3].endswith('.whl'):
             log.info('Event %d: wheel %s added', serial, actwords[3])
             ### TODO: Apply `latest_only`
-            for asset in pypi.release_urls(proj, rel):
+            data = pypi.project_data(proj)
+            if data is None:
+                log.warning('No releases found for project %r', proj)
+                continue
+            for asset in data["releases"].get(rel, []):
                 if asset["filename"] == actwords[3]:
                     if max_size is not None and asset["size"] > max_size:
                         log.info('Asset %s: size %d too large; not queuing',
