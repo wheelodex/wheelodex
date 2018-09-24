@@ -79,8 +79,13 @@ class WheelDatabase:
         proj.latest_version = latest_version
         return proj
 
-    def get_project(self, name):
-        return Project.from_name(self.session, name)
+    def get_project(self, name, create=False):
+        if create:
+            return Project.from_name(self.session, name)
+        else:
+            return self.session.query(Project)\
+                               .filter(Project.name == normalize(name))\
+                               .one_or_none()
 
     def remove_project(self, project):
         # This deletes the project's wheels but leaves the project entry in
