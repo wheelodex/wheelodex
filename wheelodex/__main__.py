@@ -35,8 +35,6 @@ def main(ctx, config, log_level):
         ctx.obj.max_size = parse_memory(cfg["collection"]["max_size"])
     except KeyError:
         ctx.obj.max_size = None
-    ctx.obj.latest_only \
-        = cfg.getboolean("collection", "latest_only", fallback=True)
     logging.basicConfig(
         format  = '%(asctime)s %(levelname)s %(name)s %(message)s',
         datefmt = '%Y-%m-%dT%H:%M:%S%z',
@@ -44,15 +42,11 @@ def main(ctx, config, log_level):
     )
 
 @main.command()
-### TODO: Add command-line options for setting `latest_only` and `max_size`
+### TODO: Add a command-line option for setting `max_size`
 @click.pass_obj
 def queue_all(obj):
     with obj.db:
-        queue_all_wheels(
-            obj.db,
-            latest_only = obj.latest_only,
-            max_size    = obj.max_size,
-        )
+        queue_all_wheels(obj.db, max_size=obj.max_size)
 
 @main.command()
 ### TODO: Add a command-line option for setting `max_size`

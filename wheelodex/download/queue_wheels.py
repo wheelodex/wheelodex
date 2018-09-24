@@ -5,7 +5,7 @@ from   ..util    import latest_version
 
 log = logging.getLogger(__name__)
 
-def queue_all_wheels(db, latest_only=True, max_size=None):
+def queue_all_wheels(db, max_size=None):
     log.info('BEGIN queue_all_wheels')
     pypi = PyPIAPI()
     serial = pypi.changelog_last_serial()
@@ -19,7 +19,7 @@ def queue_all_wheels(db, latest_only=True, max_size=None):
         versions = list(data["releases"].keys())
         log.info('Available versions: %r', versions)
         latest = latest_version(versions)
-        if latest_only and latest is not None:
+        if latest is not None:
             log.info('Preferring latest version: %r', latest)
         project = db.add_project(pkg, latest)
         qty_queued = 0
@@ -30,7 +30,7 @@ def queue_all_wheels(db, latest_only=True, max_size=None):
                     log.debug('Asset %s: not a wheel; skipping',
                               asset["filename"])
                     continue
-                if latest_only and v != latest:
+                if v != latest:
                     log.debug('Asset %s: not latest version; not queuing',
                               asset["filename"])
                     queued = False
@@ -86,7 +86,7 @@ def queue_wheels_since(db, since, max_size=None):
         if actwords[0] == 'add' and len(actwords) == 4 and \
                 actwords[2] == 'file' and actwords[3].endswith('.whl'):
             log.info('Event %d: wheel %s added', serial, actwords[3])
-            ### TODO: Apply `latest_only`
+            ### TODO: Only queue wheels for the latest version of the project
             data = pypi.project_data(proj)
             if data is None:
                 log.warning('No releases found for project %r', proj)
