@@ -43,7 +43,7 @@ class WheelDatabase:
         else:
             ps.serial = max(ps.serial, value)
 
-    def add_wheel(self, wheel, serial=None):
+    def add_wheel(self, wheel):
         whl = self.session.query(Wheel)\
                           .filter(Wheel.filename == wheel.filename)\
                           .one_or_none()
@@ -51,8 +51,6 @@ class WheelDatabase:
             self.session.add(wheel)
         else:
             whl.queued = wheel.queued
-        if serial is not None:
-            self.serial = serial
 
     def unqueue_wheel(self, whl):
         if isinstance(whl, Wheel):
@@ -69,34 +67,52 @@ class WheelDatabase:
                            .filter(Wheel.queued == True)\
                            .all()  # noqa: E712
 
+    def remove_wheel(self, filename):
+        self.session.query(Wheel).filter(Wheel.filename == filename).delete()
+
     def add_wheel_data(self, wheel, raw_data):
         wheel.data = WheelData.from_raw_data(self.session, raw_data)
 
-    def remove_wheel(self, filename, serial=None):
-        self.session.query(Wheel)\
-                    .filter(Wheel.filename == filename)\
-                    .delete()
-        if serial is not None:
-            self.serial = serial
+    def add_project(self, name, latest_version):
+        proj = Project.from_name(self.session, name)
+        proj.display_name = name
+        proj.latest_version = latest_version
+        return proj
 
-    def remove_version(self, project, version, serial=None):
-        # Note that this filters by PyPI project & version, not by wheel
-        # filename project & version, as this method is meant to be called in
-        # response to "remove" events in the PyPI changelog.
-        self.session.query(Wheel)\
-                    .filter(Wheel.project == project)\
-                    .filter(Wheel.version == version)\
-                    .delete()
-        if serial is not None:
-            self.serial = serial
+    def get_project(self, name):
+        return Project.from_name(self.session, name)
 
-    def remove_project(self, project, serial=None):
+    def remove_project(self, project):
+        # This deletes the project's wheels but leaves the project entry in
+        # place in case it's still referenced as a dependency of other wheels.
+        #
         # Note that this filters by PyPI project, not by wheel filename
         # project, as this method is meant to be called in response to "remove"
         # events in the PyPI changelog.
-        self.session.query(Wheel).filter(Wheel.project == project).delete()
-        if serial is not None:
-            self.serial = serial
+        ### TODO: Look into doing this as a JOIN + DELETE of some sort
+        p = self.session.query(Project)\
+                        .filter(Project.name == normalize(project))\
+                        .one_or_none()
+        if p is not None:
+            self.session.query(Wheel).filter(Wheel.project == p).delete()
+
+    def remove_version(self, project, version):
+        # Note that this filters by PyPI project & version, not by wheel
+        # filename project & version, as this method is meant to be called in
+        # response to "remove" events in the PyPI changelog.
+        ### TODO: Should the version comparisons in this function be done on
+        ### normalized strings?
+        p = self.session.query(Project)\
+                        .filter(Project.name == normalize(project))\
+                        .one_or_none()
+        if p is not None:
+            if p.latest_version == version:
+                p.latest_version = None
+                ### TODO: Set latest_version to next latest
+            self.session.query(Wheel)\
+                        .filter(Wheel.project == p)\
+                        .filter(Wheel.version == version)\
+                        .delete()
 
     def add_wheel_error(self, wheel, errmsg):
         wheel.errors.append(ProcessingError(
@@ -122,6 +138,8 @@ class Project(Base):
     #: The preferred non-normalized form of the project's name
     display_name    = S.Column(S.Unicode(2048), nullable=False, unique=True)
     latest_version  = S.Column(S.Unicode(2048), nullable=True, default=None)
+    ### TODO: Configure this column so that it's set to NULL when the Wheel is
+    ### deleted:
     latest_wheel_id = S.Column(S.Integer, S.ForeignKey('wheels.id'),
                                nullable=True, default=None)
     latest_wheel    = relationship('Wheel')
@@ -151,7 +169,8 @@ class Wheel(Base):
     id = S.Column(S.Integer, primary_key=True, nullable=False)  # noqa: B001
     filename = S.Column(S.Unicode(2048), nullable=False, unique=True)
     url      = S.Column(S.Unicode(2048), nullable=False)
-    project  = S.Column(S.Unicode(2048), nullable=False)
+    project_id = S.Column(S.Integer, S.ForeignKey('projects.id'), nullable=False)
+    project  = relationship('Project', backref='wheels')
     version  = S.Column(S.Unicode(2048), nullable=False)
     size     = S.Column(S.Integer, nullable=False)
     md5      = S.Column(S.Unicode(32), nullable=True)
