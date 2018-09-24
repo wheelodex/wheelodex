@@ -1,11 +1,13 @@
-An index of wheels
+**Goal:** To create a website for viewing, searching, & browsing the wheels on
+PyPI by their metadata (including entry points, dependency links, ``WHEEL``
+data, etc.) in more detail than is shown on PyPI itself.
+
+This is the code for that website.  It's still a work in progress.
 
 Not Supported
 =============
-- PyPI releases without wheels
-- non-PEP440 version numbers (?)
-- Wheel v1.9 (PEP 491, still in draft)
-- wheels with invalid or non-UTF-8 metadata
+- PyPI releases that don't distribute wheels
+- ill-formed wheels
 - large wheels
 
 Related Prior Art
