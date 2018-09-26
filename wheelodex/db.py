@@ -177,11 +177,6 @@ class Project(Base):
     name            = S.Column(S.Unicode(2048), nullable=False, unique=True)
     #: The preferred non-normalized form of the project's name
     display_name    = S.Column(S.Unicode(2048), nullable=False, unique=True)
-    ### TODO: Configure this column so that it's set to NULL when the Wheel is
-    ### deleted:
-    latest_wheel_id = S.Column(S.Integer, S.ForeignKey('wheels.id'),
-                               nullable=True, default=None)
-    latest_wheel    = relationship('Wheel')
 
     @classmethod
     def from_name(cls, session, name: str):

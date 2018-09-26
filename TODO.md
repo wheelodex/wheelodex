@@ -46,7 +46,6 @@
 - Upgrade `wheel-data.schema.json` to a more recent JSON Schema draft
 - `queue_wheels_since()`: When a wheel from a new version of a project is
   queued, unqueue wheels for older versions
-- Write a function/command for setting `Project.latest_wheel`
 - Give `process_queue` (the function and the command) options for limiting the
   number and/or total size of wheels to process
 
