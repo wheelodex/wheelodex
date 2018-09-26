@@ -50,6 +50,8 @@
 - Give `process_queue` (the function and the command) options for limiting the
   number and/or total size of wheels to process
 - Compare `latest_version()` against PyPI's code for determining latest version
+- Merge `ensure_project()` and `ensure_version()` into `add_project()` and
+  `add_version()`?
 
 Architecture
 ------------

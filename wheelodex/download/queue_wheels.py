@@ -25,6 +25,7 @@ def queue_all_wheels(db, max_size=None):
         qty_queued = 0
         qty_unqueued = 0
         for v in versions:
+            vobj = db.ensure_version(project, v)
             for asset in data["releases"][v]:
                 if not asset["filename"].endswith('.whl'):
                     log.debug('Asset %s: not a wheel; skipping',
@@ -47,7 +48,7 @@ def queue_all_wheels(db, max_size=None):
                 db.add_wheel(Wheel(
                     filename = asset["filename"],
                     url      = asset["url"],
-                    version  = db.ensure_version(project, v),
+                    version  = vobj,
                     size     = asset["size"],
                     md5      = asset["digests"]["md5"].lower(),
                     sha256   = asset["digests"]["sha256"].lower(),
