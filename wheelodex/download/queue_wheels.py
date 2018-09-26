@@ -1,6 +1,5 @@
 import logging
 from   .pypi_api import PyPIAPI
-from   ..db      import Wheel
 from   ..util    import latest_version
 
 log = logging.getLogger(__name__)
@@ -45,16 +44,16 @@ def queue_all_wheels(db, max_size=None):
                     log.debug('Asset %s: queuing', asset["filename"])
                     queued = True
                     qty_queued += 1
-                db.add_wheel(Wheel(
+                db.add_wheel(
+                    version  = vobj,
                     filename = asset["filename"],
                     url      = asset["url"],
-                    version  = vobj,
                     size     = asset["size"],
                     md5      = asset["digests"]["md5"].lower(),
                     sha256   = asset["digests"]["sha256"].lower(),
                     uploaded = str(asset["upload_time"]),
                     queued   = queued,
-                ))
+                )
         log.info('%s: %d wheels queued, %d wheels not queued',
                  pkg, qty_queued, qty_unqueued)
         if qty_queued or qty_unqueued:
@@ -100,16 +99,16 @@ def queue_wheels_since(db, since, max_size=None):
                     else:
                         log.info('Asset %s: queuing', asset["filename"])
                         queued = True
-                    db.add_wheel(Wheel(
+                    db.add_wheel(
+                        version  = db.add_version(proj, rel),
                         filename = asset["filename"],
                         url      = asset["url"],
-                        version  = db.add_version(proj, rel),
                         size     = asset["size"],
                         md5      = asset["digests"].get("md5").lower(),
                         sha256   = asset["digests"].get("sha256").lower(),
                         uploaded = str(asset["upload_time"]),
                         queued   = queued,
-                    ))
+                    )
             ### TODO: Log if no wheel is found
 
         elif actwords[:2] == ['remove', 'file'] and len(actwords) == 3 and \

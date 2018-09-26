@@ -46,14 +46,26 @@ class WheelDatabase:
         else:
             ps.serial = max(ps.serial, value)
 
-    def add_wheel(self, wheel: 'Wheel'):
+    def add_wheel(self, version: 'Version', filename, url, size, md5, sha256,
+                  uploaded, queued):
         whl = self.session.query(Wheel)\
-                          .filter(Wheel.filename == wheel.filename)\
+                          .filter(Wheel.filename == filename)\
                           .one_or_none()
         if whl is None:
-            self.session.add(wheel)
+            whl = Wheel(
+                version  = version,
+                filename = filename,
+                url      = url,
+                size     = size,
+                md5      = md5,
+                sha256   = sha256,
+                uploaded = uploaded,
+                queued   = queued,
+            )
+            self.session.add(whl)
         else:
-            whl.queued = wheel.queued
+            whl.queued = queued
+        return whl
 
     def unqueue_wheel(self, whl: Union[str, 'Wheel']):
         if isinstance(whl, Wheel):
