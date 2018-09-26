@@ -49,7 +49,6 @@
 - Write a function/command for setting `Project.latest_wheel`
 - Give `process_queue` (the function and the command) options for limiting the
   number and/or total size of wheels to process
-- Compare `latest_version()` against PyPI's code for determining latest version
 
 Architecture
 ------------

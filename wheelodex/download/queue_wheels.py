@@ -15,14 +15,13 @@ def queue_all_wheels(db, max_size=None):
     for pkg in pypi.list_packages():
         #if pkg in projects_seen: continue
         log.info('Queuing wheels for project %r', pkg)
+        project = db.add_project(pkg)
         data = pypi.project_data(pkg) or {"releases": {}}
         versions = list(data["releases"].keys())
         log.info('Available versions: %r', versions)
         latest = latest_version(versions)
         if latest is not None:
             log.info('Preferring latest version: %r', latest)
-        project = db.add_project(pkg)
-        ### XXX: Set project.latest_version to `latest`
         qty_queued = 0
         qty_unqueued = 0
         for v in versions:
@@ -129,11 +128,7 @@ def queue_wheels_since(db, since, max_size=None):
         elif action == 'new release':
             log.info('Event %d: version %r of project %r released', serial,
                      rel, proj)
-            project = db.add_project(proj)
-            v = db.add_version(project, rel)
-            if project.latest_version is None or \
-                    latest_version([project.latest_version.name, rel]) == rel:
-                project.latest_version = v
+            db.add_version(proj, rel)
 
         elif action == 'remove release':
             log.info('Event %d: version %r of project %r removed', serial,

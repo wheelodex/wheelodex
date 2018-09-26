@@ -7,6 +7,7 @@ from   sqlalchemy.ext.declarative import declarative_base
 from   sqlalchemy.orm             import backref, relationship, sessionmaker
 from   sqlalchemy_utils           import JSONType
 from   .                          import __version__
+from   .util                      import version_sort_key
 
 Base = declarative_base()
 
@@ -109,7 +110,18 @@ class WheelDatabase:
         """
         if isinstance(project, str):
             project = self.add_project(project)
-        return Version.from_version(self.session, project, version)
+        vnorm = normversion(version)
+        v = self.session.query(Version).filter(Version.project == project)\
+                                       .filter(Version.name == vnorm)\
+                                       .one_or_none()
+        if v is None:
+            v = Version(project=project, name=vnorm, display_name=version)
+            self.session.add(v)
+            for i,u in enumerate(
+                sorted(Project.versions, key=lambda x: version_sort_key(x.name))
+            ):
+                u.ordering = i
+        return v
 
     def get_version(self, project: Union[str, 'Project'], version: str):
         if isinstance(project, str):
@@ -129,8 +141,6 @@ class WheelDatabase:
                     .filter(Version.project.name == normalize(project))\
                     .filter(Version.name == normversion(version))\
                     .delete()
-        ### TODO: If the version is the project's latest_version, set
-        ### latest_version to next latest
 
     def add_wheel_error(self, wheel: 'Wheel', errmsg: str):
         wheel.errors.append(ProcessingError(
@@ -155,11 +165,6 @@ class Project(Base):
     name            = S.Column(S.Unicode(2048), nullable=False, unique=True)
     #: The preferred non-normalized form of the project's name
     display_name    = S.Column(S.Unicode(2048), nullable=False, unique=True)
-    ### TODO: Configure this column so that it's set to NULL when the Version
-    ### is deleted:
-    latest_version_id = S.Column(S.Integer, S.ForeignKey('versions.id'),
-                                 nullable=True, default=None)
-    latest_version = relationship('Version', foreign_keys=[latest_version_id])
     ### TODO: Configure this column so that it's set to NULL when the Wheel is
     ### deleted:
     latest_wheel_id = S.Column(S.Integer, S.ForeignKey('wheels.id'),
@@ -175,6 +180,13 @@ class Project(Base):
             session.add(proj)
         return proj
 
+    @property
+    def latest_version(self):
+        return self.session.query(Version)\
+                           .filter(Version.project == self)\
+                           .order_by(Version.ordering.desc())\
+                           .first()
+
 
 class Version(Base):
     __tablename__ = 'versions'
@@ -187,17 +199,11 @@ class Version(Base):
     name = S.Column(S.Unicode(2048), nullable=False)
     #: The preferred non-normalized version string
     display_name = S.Column(S.Unicode(2048), nullable=False)
-
-    @classmethod
-    def from_version(cls, session, project: Project, v: str):
-        vnorm = normversion(v)
-        vobj = session.query(cls).filter(cls.project == project)\
-                                 .filter(cls.name == vnorm)\
-                                 .one_or_none()
-        if vobj is None:
-            vobj = cls(project=project, name=vnorm, display_name=v)
-            session.add(vobj)
-        return vobj
+    #: The index of this version when all versions for the project are sorted
+    #: in PEP 440 order with prereleases at the bottom.  (The latest version
+    #: has the highest `ordering` value.)  This column is set every time a new
+    #: version is added to the project with WheelDatabase.add_version().
+    ordering = S.Column(S.Integer, nullable=False, default=0)
 
 
 class Wheel(Base):

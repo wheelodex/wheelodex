@@ -2,16 +2,16 @@ import re
 from   packaging.version import parse
 
 def latest_version(versions):
-    v2str = {parse(v): v for v in versions}
-    # The unparsed version string needs to be kept around because the
-    # alternative approach (stringifying the Version object once comparisons
-    # are done) can result in a different string (e.g., "2001.01.01" becomes
-    # "2001.1.1"), leading to a 404.
-    candidates = [v for v in v2str.keys() if not v.is_prerelease]
-    if not candidates:
-        candidates = v2str.keys()
-    latest = max(candidates, default=None)
-    return latest and v2str[latest]
+    """
+    Returns the latest version in ``versions`` in PEP 440 order, except that
+    prereleases are only returned when there are no non-prereleases in the
+    input.  Returns `None` for an empty list.
+    """
+    return max(versions, key=version_sort_key, default=None)
+
+def version_sort_key(v):
+    v = parse(v)
+    return (not v.is_prerelease, v)
 
 def parse_memory(s):
     """
