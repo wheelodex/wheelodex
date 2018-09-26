@@ -4,7 +4,8 @@ from   packaging.utils            import canonicalize_name as normalize, \
                                          canonicalize_version as normversion
 import sqlalchemy as S
 from   sqlalchemy.ext.declarative import declarative_base
-from   sqlalchemy.orm             import backref, relationship, sessionmaker
+from   sqlalchemy.orm             import backref, object_session, relationship,\
+                                            sessionmaker
 from   sqlalchemy_utils           import JSONType
 from   .                          import __version__
 from   .util                      import reprify, version_sort_key
@@ -101,6 +102,9 @@ class WheelDatabase:
                            .filter(Project.name == normalize(name))\
                            .one_or_none()
 
+    def get_all_projects(self):
+        return self.session.query(Project).all()
+
     def remove_project(self, project: str):
         # This deletes the project's versions (and thus also wheels) but leaves
         # the project entry in place in case it's still referenced as a
@@ -149,10 +153,13 @@ class WheelDatabase:
         # Note that this filters by PyPI project & version, not by wheel
         # filename project & version, as this method is meant to be called in
         # response to "remove" events in the PyPI changelog.
-        self.session.query(Version)\
-                    .filter(Version.project.name == normalize(project))\
-                    .filter(Version.name == normversion(version))\
-                    .delete()
+        ### TODO: Look into doing this as a JOIN + DELETE of some sort
+        p = self.get_project(project)
+        if p is not None:
+            self.session.query(Version)\
+                        .filter(Version.project == p)\
+                        .filter(Version.name == normversion(version))\
+                        .delete()
 
     def add_wheel_error(self, wheel: 'Wheel', errmsg: str):
         wheel.errors.append(ProcessingError(
@@ -195,10 +202,10 @@ class Project(Base):
 
     @property
     def latest_version(self):
-        return self.session.query(Version)\
-                           .filter(Version.project == self)\
-                           .order_by(Version.ordering.desc())\
-                           .first()
+        return object_session(self).query(Version)\
+                                   .filter(Version.project == self)\
+                                   .order_by(Version.ordering.desc())\
+                                   .first()
 
 
 class Version(Base):
