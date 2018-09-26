@@ -75,27 +75,18 @@ class WheelDatabase:
     def add_wheel_data(self, wheel: 'Wheel', raw_data: dict):
         wheel.data = WheelData.from_raw_data(self.session, raw_data)
 
-    def add_project(self, name: str, latest_version: Optional[str]):
-        proj = Project.from_name(self.session, name)
-        proj.display_name = name
-        if latest_version is not None:
-            proj.latest_version \
-                = Version.from_version(self.session, proj, latest_version)
-        else:
-            proj.latest_version = None
-        return proj
+    def add_project(self, name: str):
+        """
+        Create a `Project` with the given name and return it.  If there already
+        exists a project with the same name (after normalization), do nothing
+        and return that instead.
+        """
+        return Project.from_name(self.session, name)
 
     def get_project(self, name: str):
         return self.session.query(Project)\
                            .filter(Project.name == normalize(name))\
                            .one_or_none()
-
-    def ensure_project(self, name: str):
-        """
-        Return the `Project` with the given name, creating it if it doesn't
-        already exist
-        """
-        return Project.from_name(self.session, name)
 
     def remove_project(self, project: str):
         # This deletes the project's versions (and thus also wheels) but leaves
@@ -111,7 +102,14 @@ class WheelDatabase:
             self.session.query(Version).filter(Version.project == p).delete()
 
     def add_version(self, project: Union[str, 'Project'], version: str):
-        return self.ensure_version(project, version)
+        """
+        Create a `Version` with the given project & version string and return
+        it.  If there already exists a version with the same details, do
+        nothing and return that instead.
+        """
+        if isinstance(project, str):
+            project = self.add_project(project)
+        return Version.from_version(self.session, project, version)
 
     def get_version(self, project: Union[str, 'Project'], version: str):
         if isinstance(project, str):
@@ -122,15 +120,6 @@ class WheelDatabase:
                            .filter(Version.project == project)\
                            .filter(Version.name == normversion(version))\
                            .one_or_none()
-
-    def ensure_version(self, project: Union[str, 'Project'], version: str):
-        """
-        Return the `Version` with the given project and version, creating it if
-        it doesn't already exist
-        """
-        if isinstance(project, str):
-            project = self.ensure_project(project)
-        return Version.from_version(self.session, project, version)
 
     def remove_version(self, project: str, version: str):
         # Note that this filters by PyPI project & version, not by wheel
