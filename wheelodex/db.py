@@ -118,7 +118,7 @@ class WheelDatabase:
             v = Version(project=project, name=vnorm, display_name=version)
             self.session.add(v)
             for i,u in enumerate(
-                sorted(Project.versions, key=lambda x: version_sort_key(x.name))
+                sorted(project.versions, key=lambda x: version_sort_key(x.name))
             ):
                 u.ordering = i
         return v
