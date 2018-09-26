@@ -47,7 +47,7 @@ def queue_all_wheels(db, max_size=None):
                 db.add_wheel(Wheel(
                     filename = asset["filename"],
                     url      = asset["url"],
-                    version  = db.get_version(project, v, create=True),
+                    version  = db.ensure_version(project, v),
                     size     = asset["size"],
                     md5      = asset["digests"]["md5"].lower(),
                     sha256   = asset["digests"]["sha256"].lower(),
@@ -102,7 +102,7 @@ def queue_wheels_since(db, since, max_size=None):
                     db.add_wheel(Wheel(
                         filename = asset["filename"],
                         url      = asset["url"],
-                        version  = db.get_version(proj, rel, create=True),
+                        version  = db.ensure_version(proj, rel),
                         size     = asset["size"],
                         md5      = asset["digests"].get("md5").lower(),
                         sha256   = asset["digests"].get("sha256").lower(),
@@ -127,7 +127,7 @@ def queue_wheels_since(db, since, max_size=None):
         elif action == 'new release':
             log.info('Event %d: version %r of project %r released', serial,
                      rel, proj)
-            project = db.get_project(proj, create=True)
+            project = db.ensure_project(proj)
             v = db.add_version(project, rel)
             if project.latest_version is None or \
                     latest_version([project.latest_version.name, rel]) == rel:
