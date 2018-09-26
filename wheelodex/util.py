@@ -29,3 +29,9 @@ def parse_memory(s):
     if m.group(2) is not None:
         x <<= 10 * ('kMGTPE'.index(m.group(2)) + 1)
     return x
+
+def reprify(obj, fields):
+    return '{0.__module__}.{0.__name__}({1})'.format(
+        type(obj),
+        ', '.join('{}={!r}'.format(f, getattr(obj, f)) for f in fields),
+    )

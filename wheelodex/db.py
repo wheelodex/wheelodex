@@ -7,7 +7,7 @@ from   sqlalchemy.ext.declarative import declarative_base
 from   sqlalchemy.orm             import backref, relationship, sessionmaker
 from   sqlalchemy_utils           import JSONType
 from   .                          import __version__
-from   .util                      import version_sort_key
+from   .util                      import reprify, version_sort_key
 
 Base = declarative_base()
 
@@ -168,6 +168,9 @@ class PyPISerial(Base):
     id     = S.Column(S.Integer, primary_key=True, nullable=False)  # noqa: B001
     serial = S.Column(S.Integer, nullable=False)
 
+    def __repr__(self):
+        return reprify(self, ['serial'])
+
 
 class Project(Base):
     __tablename__ = 'projects'
@@ -177,6 +180,9 @@ class Project(Base):
     name            = S.Column(S.Unicode(2048), nullable=False, unique=True)
     #: The preferred non-normalized form of the project's name
     display_name    = S.Column(S.Unicode(2048), nullable=False, unique=True)
+
+    def __repr__(self):
+        return reprify(self, 'name display_name'.split())
 
     @classmethod
     def from_name(cls, session, name: str):
@@ -212,6 +218,9 @@ class Version(Base):
     #: version is added to the project with WheelDatabase.add_version().
     ordering = S.Column(S.Integer, nullable=False, default=0)
 
+    def __repr__(self):
+        return reprify(self, 'project name display_name ordering'.split())
+
 
 class Wheel(Base):
     """
@@ -235,6 +244,9 @@ class Wheel(Base):
     sha256   = S.Column(S.Unicode(64), nullable=True)
     uploaded = S.Column(S.Unicode(32), nullable=False)
     queued   = S.Column(S.Boolean, nullable=False)
+
+    def __repr__(self):
+        return reprify(self, 'filename queued'.split())
 
 
 class ProcessingError(Base):
@@ -324,6 +336,9 @@ class EntryPointGroup(Base):
     name        = S.Column(S.Unicode(2048), nullable=False, unique=True)
     description = S.Column(S.Unicode(65535), nullable=True, default=None)
 
+    def __repr__(self):
+        return reprify(self, 'name')
+
     @classmethod
     def from_name(cls, session, name: str):
         epg = session.query(cls).filter(cls.name == name).one_or_none()
@@ -344,3 +359,6 @@ class EntryPoint(Base):
                              nullable=False)
     group         = relationship('EntryPointGroup')
     name          = S.Column(S.Unicode(2048), nullable=False)
+
+    def __repr__(self):
+        return reprify(self, 'wheel_data group name')
