@@ -1,5 +1,3 @@
-- Expand README
-- Support PEP 561?  [Is this a typo for PEP 566?]
 - Wheel inspection:
     - Parse `Description-Content-Type` into a structured `dict`?
     - Should flat modules inside packages be discarded from `.derived.modules`?
@@ -22,12 +20,22 @@
         - Do likewise for the `.derived.description_in_*` fields?
     - Eliminate the `"derived"` subobject and only store the data within as
       structured fields in the database?
+    - Add a `.derived.signed` field?
+    - Add a `.derived.type_checked`(?) field for whether `py.typed` is present?
+      (See PEP 561)
+
 - `config.ini`: Either use the `long_descriptions` and `[pypi.urls]` options or
   get rid of them
+    - Give `inspect_wheel()` an option for whether to keep long descriptions?
 - Make `queue_all_wheels()` less all-or-nothing:
     - Add an option for only scanning projects that aren't already in the
       database?
+    - Add an option for not adding or modifying wheels that are already in the
+      database?
+- Ensure `queue_all_wheels()` is idempotent
 - Rename the functions & commands with "queue" in their names?
+    - `queue_all_wheels()` → `scan_pypi()`?
+    - `queue_wheels_since()` → `scan_changelog()`?
 - Add docstrings
     - Add `help` strings to commands & their options
 - Add a column to `WheelData` for storing the revision of
@@ -39,6 +47,9 @@
 - `queue_wheels_since()`: When a wheel from a new version of a project is
   queued, unqueue wheels for older versions
 - Write a function/command for setting `Project.latest_wheel`
+- Give `process_queue` (the function and the command) options for limiting the
+  number and/or total size of wheels to process
+- Compare `latest_version()` against PyPI's code for determining latest version
 
 Architecture
 ------------

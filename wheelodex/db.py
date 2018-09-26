@@ -1,5 +1,7 @@
 from   datetime                   import datetime, timezone
-from   packaging.utils            import canonicalize_name as normalize
+from   typing                     import Optional, Union
+from   packaging.utils            import canonicalize_name as normalize, \
+                                         canonicalize_version as normversion
 import sqlalchemy as S
 from   sqlalchemy.ext.declarative import declarative_base
 from   sqlalchemy.orm             import backref, relationship, sessionmaker
@@ -30,20 +32,20 @@ class WheelDatabase:
         return False
 
     @property
-    def serial(self):
+    def serial(self) -> Optional[int]:
         # Serial ID of the last seen PyPI event
         ps = self.session.query(PyPISerial).one_or_none()
         return ps and ps.serial
 
     @serial.setter
-    def serial(self, value):
+    def serial(self, value: int):
         ps = self.session.query(PyPISerial).one_or_none()
         if ps is None:
             self.session.add(PyPISerial(serial=value))
         else:
             ps.serial = max(ps.serial, value)
 
-    def add_wheel(self, wheel):
+    def add_wheel(self, wheel: 'Wheel'):
         whl = self.session.query(Wheel)\
                           .filter(Wheel.filename == wheel.filename)\
                           .one_or_none()
@@ -52,7 +54,7 @@ class WheelDatabase:
         else:
             whl.queued = wheel.queued
 
-    def unqueue_wheel(self, whl):
+    def unqueue_wheel(self, whl: Union[str, 'Wheel']):
         if isinstance(whl, Wheel):
             whl.queued = False
         else:
@@ -60,26 +62,30 @@ class WheelDatabase:
                         .filter(Wheel.filename == whl)\
                         .update({Wheel.queued: False})
 
-    def iterqueue(self):
+    def iterqueue(self) -> ['Wheel']:
         ### Would leaving off the ".all()" give an iterable that plays well
         ### with unqueue_wheel()?
         return self.session.query(Wheel)\
                            .filter(Wheel.queued == True)\
                            .all()  # noqa: E712
 
-    def remove_wheel(self, filename):
+    def remove_wheel(self, filename: str):
         self.session.query(Wheel).filter(Wheel.filename == filename).delete()
 
-    def add_wheel_data(self, wheel, raw_data):
+    def add_wheel_data(self, wheel: 'Wheel', raw_data: dict):
         wheel.data = WheelData.from_raw_data(self.session, raw_data)
 
-    def add_project(self, name, latest_version):
+    def add_project(self, name: str, latest_version: Optional[str]):
         proj = Project.from_name(self.session, name)
         proj.display_name = name
-        proj.latest_version = latest_version
+        if latest_version is not None:
+            proj.latest_version \
+                = Version.from_version(self.session, proj, latest_version)
+        else:
+            proj.latest_version = None
         return proj
 
-    def get_project(self, name, create=False):
+    def get_project(self, name: str, create=False):
         if create:
             return Project.from_name(self.session, name)
         else:
@@ -87,39 +93,48 @@ class WheelDatabase:
                                .filter(Project.name == normalize(name))\
                                .one_or_none()
 
-    def remove_project(self, project):
-        # This deletes the project's wheels but leaves the project entry in
-        # place in case it's still referenced as a dependency of other wheels.
+    def remove_project(self, project: str):
+        # This deletes the project's versions (and thus also wheels) but leaves
+        # the project entry in place in case it's still referenced as a
+        # dependency of other wheels.
         #
         # Note that this filters by PyPI project, not by wheel filename
         # project, as this method is meant to be called in response to "remove"
         # events in the PyPI changelog.
         ### TODO: Look into doing this as a JOIN + DELETE of some sort
-        p = self.session.query(Project)\
-                        .filter(Project.name == normalize(project))\
-                        .one_or_none()
+        p = self.get_project(project)
         if p is not None:
-            self.session.query(Wheel).filter(Wheel.project == p).delete()
+            self.session.query(Version).filter(Version.project == p).delete()
 
-    def remove_version(self, project, version):
+    def add_version(self, project: Union[str, 'Project'], version: str):
+        return self.get_version(project, version, create=True)
+
+    def get_version(self, project: Union[str, 'Project'], version: str,
+                    create=False):
+        if isinstance(project, str):
+            project = self.get_project(project, create=create)
+        if project is None:
+            return None
+        if create:
+            return Version.from_version(self.session, project, version)
+        else:
+            return self.session.query(Version)\
+                               .filter(Version.project == project)\
+                               .filter(Version.name == normversion(version))\
+                               .one_or_none()
+
+    def remove_version(self, project: str, version: str):
         # Note that this filters by PyPI project & version, not by wheel
         # filename project & version, as this method is meant to be called in
         # response to "remove" events in the PyPI changelog.
-        ### TODO: Should the version comparisons in this function be done on
-        ### normalized strings?
-        p = self.session.query(Project)\
-                        .filter(Project.name == normalize(project))\
-                        .one_or_none()
-        if p is not None:
-            if p.latest_version == version:
-                p.latest_version = None
-                ### TODO: Set latest_version to next latest
-            self.session.query(Wheel)\
-                        .filter(Wheel.project == p)\
-                        .filter(Wheel.version == version)\
-                        .delete()
+        self.session.query(Version)\
+                    .filter(Version.project.name == normalize(project))\
+                    .filter(Version.name == normversion(version))\
+                    .delete()
+        ### TODO: If the version is the project's latest_version, set
+        ### latest_version to next latest
 
-    def add_wheel_error(self, wheel, errmsg):
+    def add_wheel_error(self, wheel: 'Wheel', errmsg: str):
         wheel.errors.append(ProcessingError(
             errmsg            = errmsg,
             timestamp         = datetime.now(timezone.utc),
@@ -142,7 +157,11 @@ class Project(Base):
     name            = S.Column(S.Unicode(2048), nullable=False, unique=True)
     #: The preferred non-normalized form of the project's name
     display_name    = S.Column(S.Unicode(2048), nullable=False, unique=True)
-    latest_version  = S.Column(S.Unicode(2048), nullable=True, default=None)
+    ### TODO: Configure this column so that it's set to NULL when the Version
+    ### is deleted:
+    latest_version_id = S.Column(S.Integer, S.ForeignKey('versions.id'),
+                                 nullable=True, default=None)
+    latest_version = relationship('Version', foreign_keys=[latest_version_id])
     ### TODO: Configure this column so that it's set to NULL when the Wheel is
     ### deleted:
     latest_wheel_id = S.Column(S.Integer, S.ForeignKey('wheels.id'),
@@ -150,13 +169,37 @@ class Project(Base):
     latest_wheel    = relationship('Wheel')
 
     @classmethod
-    def from_name(cls, session, name):
+    def from_name(cls, session, name: str):
         proj = session.query(cls).filter(cls.name == normalize(name))\
                                  .one_or_none()
         if proj is None:
             proj = cls(name=normalize(name), display_name=name)
             session.add(proj)
         return proj
+
+
+class Version(Base):
+    __tablename__ = 'versions'
+    __table_args__ = (S.UniqueConstraint('project_id', 'name'),)
+
+    id = S.Column(S.Integer, primary_key=True, nullable=False)  # noqa: B001
+    project_id = S.Column(S.Integer,S.ForeignKey('projects.id'),nullable=False)
+    project = relationship('Project', backref='versions', foreign_keys=[project_id])
+    #: The normalized version string
+    name = S.Column(S.Unicode(2048), nullable=False)
+    #: The preferred non-normalized version string
+    display_name = S.Column(S.Unicode(2048), nullable=False)
+
+    @classmethod
+    def from_version(cls, session, project: Project, v: str):
+        vnorm = normversion(v)
+        vobj = session.query(cls).filter(cls.project == project)\
+                                 .filter(cls.name == vnorm)\
+                                 .one_or_none()
+        if vobj is None:
+            vobj = cls(project=project, name=vnorm, display_name=v)
+            session.add(vobj)
+        return vobj
 
 
 class Wheel(Base):
@@ -174,9 +217,8 @@ class Wheel(Base):
     id = S.Column(S.Integer, primary_key=True, nullable=False)  # noqa: B001
     filename = S.Column(S.Unicode(2048), nullable=False, unique=True)
     url      = S.Column(S.Unicode(2048), nullable=False)
-    project_id = S.Column(S.Integer, S.ForeignKey('projects.id'), nullable=False)
-    project  = relationship('Project', backref='wheels')
-    version  = S.Column(S.Unicode(2048), nullable=False)
+    version_id = S.Column(S.Integer,S.ForeignKey('versions.id'),nullable=False)
+    version  = relationship('Version', backref='wheels')
     size     = S.Column(S.Integer, nullable=False)
     md5      = S.Column(S.Unicode(32), nullable=True)
     sha256   = S.Column(S.Unicode(64), nullable=True)
@@ -224,7 +266,7 @@ class WheelData(Base):
                                 backref='rdepends')
 
     @classmethod
-    def from_raw_data(cls, session, raw_data):
+    def from_raw_data(cls, session, raw_data: dict):
         return cls(
             raw_data  = raw_data,
             processed = datetime.now(timezone.utc),
@@ -232,7 +274,7 @@ class WheelData(Base):
         )
 
     @staticmethod
-    def parse_raw_data(session, raw_data):
+    def parse_raw_data(session, raw_data: dict):
         return {
             "wheelodex_version": __version__,
             "project": raw_data["project"],
@@ -272,7 +314,7 @@ class EntryPointGroup(Base):
     description = S.Column(S.Unicode(65535), nullable=True, default=None)
 
     @classmethod
-    def from_name(cls, session, name):
+    def from_name(cls, session, name: str):
         epg = session.query(cls).filter(cls.name == name).one_or_none()
         if epg is None:
             epg = cls(name=name)
