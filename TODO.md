@@ -1,41 +1,6 @@
-- Wheel inspection:
-    - Parse `Description-Content-Type` into a structured `dict`?
-    - Should flat modules inside packages be discarded from `.derived.modules`?
-    - Compare `extract_modules()` with <https://github.com/takluyver/wheeldex>
-    - Does `extract_modules()` need to take compiled library files into
-      account?
-    - Include the results of testing manylinux1 wheels with `auditwheel`?
-    - Should (rarely used) fields similar to `Requires-Dist` be parsed into
-      structured `dict`s?
-        - `Obsoletes` - no longer supposed to exist?
-        - `Obsoletes-Dist` - same format as `Requires-Dist`?
-        - `Provides` - no longer supposed to exist?
-        - `Provides-Dist` - same as `Requires-Dist` but with a single version
-          number instead of a version specifier?
-        - `Requires` - no longer supposed to exist?
-        - `Requires-External` - same as `Requires-Dist` but with looser version
-          string requirements?
-    - Move `.derived.readme_renders` to inside the
-      `.dist_info.metadata.description` object?
-        - Do likewise for the `.derived.description_in_*` fields?
-    - Eliminate the `"derived"` subobject and only store the data within as
-      structured fields in the database?
-    - Add a `.derived.signed` field?
-    - Add a `.derived.type_checked`(?) field for whether `py.typed` is present?
-      (See PEP 561)
-
 - `config.ini`: Either use the `long_descriptions` and `[pypi.urls]` options or
   get rid of them
     - Give `inspect_wheel()` an option for whether to keep long descriptions?
-- Make `queue_all_wheels()` less all-or-nothing:
-    - Add an option for only scanning projects that aren't already in the
-      database?
-    - Add an option for not adding or modifying wheels that are already in the
-      database?
-- Ensure `queue_all_wheels()` is idempotent
-- Rename the functions & commands with "queue" in their names?
-    - `queue_all_wheels()` → `scan_pypi()`?
-    - `queue_wheels_since()` → `scan_changelog()`?
 - Add docstrings
     - Add `help` strings to commands & their options
 - Add a column to `WheelData` for storing the revision of
@@ -44,10 +9,38 @@
         - Split `wheelodex.inspect` into a separate project? (and move
           `wheel-data.schema.json` into it)
 - Upgrade `wheel-data.schema.json` to a more recent JSON Schema draft
-- `queue_wheels_since()`: When a wheel from a new version of a project is
-  queued, unqueue wheels for older versions
+- `iterqueue()`:
+    - Only return wheels for the latest version of each project
+    - Don't return wheels with processing errors
 - Give `process_queue` (the function and the command) options for limiting the
   number and/or total size of wheels to process
+- Use a custom User-Agent for requests to PyPI's JSON API
+
+Wheel Inspection
+----------------
+- Parse `Description-Content-Type` into a structured `dict`?
+- Should flat modules inside packages be discarded from `.derived.modules`?
+- Compare `extract_modules()` with <https://github.com/takluyver/wheeldex>
+- Does `extract_modules()` need to take compiled library files into account?
+- Include the results of testing manylinux1 wheels with `auditwheel`?
+- Should (rarely used) fields similar to `Requires-Dist` be parsed into
+  structured `dict`s?
+    - `Obsoletes` - no longer supposed to exist?
+    - `Obsoletes-Dist` - same format as `Requires-Dist`?
+    - `Provides` - no longer supposed to exist?
+    - `Provides-Dist` - same as `Requires-Dist` but with a single version
+      number instead of a version specifier?
+    - `Requires` - no longer supposed to exist?
+    - `Requires-External` - same as `Requires-Dist` but with looser version
+      string requirements?
+- Move `.derived.readme_renders` to inside the
+  `.dist_info.metadata.description` object?
+    - Do likewise for the `.derived.description_in_*` fields?
+- Eliminate the `"derived"` subobject and only store the data within as
+  structured fields in the database?
+- Add a `.derived.signed` field?
+- Add a `.derived.type_checked`(?) field for whether `py.typed` is present?
+  (See PEP 561)
 
 Architecture
 ------------

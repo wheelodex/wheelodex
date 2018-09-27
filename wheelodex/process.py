@@ -6,8 +6,8 @@ from   tempfile          import TemporaryDirectory
 import traceback
 import requests
 from   requests_download import __version__ as rd_version, download
-from   ..                import __url__, __version__
-from   ..inspect         import inspect_wheel
+from   .                 import __url__, __version__
+from   .inspect          import inspect_wheel
 
 log = logging.getLogger(__name__)
 

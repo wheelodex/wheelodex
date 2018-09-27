@@ -1,11 +1,11 @@
 import logging
 from   .pypi_api import PyPIAPI
-from   ..util    import latest_version
+from   .util     import latest_version
 
 log = logging.getLogger(__name__)
 
-def queue_all_wheels(db, max_size=None):
-    log.info('BEGIN queue_all_wheels')
+def scan_pypi(db, max_size=None):
+    log.info('BEGIN scan_pypi')
     pypi = PyPIAPI()
     serial = pypi.changelog_last_serial()
     log.info('changlog_last_serial() = %d', serial)
@@ -46,10 +46,10 @@ def queue_all_wheels(db, max_size=None):
         log.info('%s: %d wheels added', pkg, qty_queued)
         #if qty_queued:
         #    db.session.commit()
-    log.info('END queue_all_wheels')
+    log.info('END scan_pypi')
 
-def queue_wheels_since(db, since, max_size=None):
-    log.info('BEGIN queue_wheels_since(%d)', since)
+def scan_changelog(db, since, max_size=None):
+    log.info('BEGIN scan_changelog(%d)', since)
     pypi = PyPIAPI()
     for proj, rel, _, action, serial in pypi.changelog_since_serial(since):
         actwords = action.split()
@@ -124,4 +124,4 @@ def queue_wheels_since(db, since, max_size=None):
             db.remove_version(proj, rel)
 
         db.serial = serial
-    log.info('END queue_wheels_since')
+    log.info('END scan_changelog')

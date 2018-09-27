@@ -1,13 +1,13 @@
-from   configparser             import ConfigParser
+from   configparser import ConfigParser
 import json
 import logging
-from   types                    import SimpleNamespace
+from   types        import SimpleNamespace
 import click
-from   .                        import __version__
-from   .db                      import WheelDatabase, Wheel
-from   .download.queue_wheels   import queue_all_wheels, queue_wheels_since
-from   .download.unqueue_wheels import process_queue
-from   .util                    import parse_memory
+from   .            import __version__
+from   .db          import WheelDatabase, Wheel
+from   .process     import process_queue
+from   .scan        import scan_pypi, scan_changelog
+from   .util        import parse_memory
 
 @click.group()
 @click.option(
@@ -41,21 +41,21 @@ def main(ctx, config, log_level):
         level   = getattr(logging, log_level),
     )
 
-@main.command()
+@main.command('scan_pypi')
 ### TODO: Add a command-line option for setting `max_size`
 @click.pass_obj
-def queue_all(obj):
+def scan_pypi_cmd(obj):
     with obj.db:
-        queue_all_wheels(obj.db, max_size=obj.max_size)
+        scan_pypi(obj.db, max_size=obj.max_size)
 
-@main.command()
+@main.command('scan_changelog')
 ### TODO: Add a command-line option for setting `max_size`
 @click.pass_obj
-def queue_update(obj):
+def scan_changelog_cmd(obj):
     with obj.db:
         if obj.db.serial is None:
             raise click.UsageError('No saved state to update')
-        queue_wheels_since(obj.db, obj.db.serial, max_size=obj.max_size)
+        scan_changelog(obj.db, obj.db.serial, max_size=obj.max_size)
 
 @main.command('process_queue')
 @click.pass_obj
