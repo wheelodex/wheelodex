@@ -1,5 +1,18 @@
+import platform
 import re
 from   packaging.version import parse
+import requests
+import requests_download
+from   .                 import __url__, __version__
+
+USER_AGENT = 'wheelodex/{} ({}) requests/{} requests_download/{} {}/{}'.format(
+    __version__,
+    __url__,
+    requests.__version__,
+    requests_download.__version__,
+    platform.python_implementation(),
+    platform.python_version(),
+)
 
 def latest_version(versions):
     """

@@ -1,24 +1,13 @@
 import logging
 import os
 import os.path
-import platform
 from   tempfile          import TemporaryDirectory
 import traceback
-import requests
-from   requests_download import __version__ as rd_version, download
-from   .                 import __url__, __version__
+from   requests_download import download
 from   .inspect          import inspect_wheel
+from   .util             import USER_AGENT
 
 log = logging.getLogger(__name__)
-
-USER_AGENT = 'wheelodex/{} ({}) requests/{} requests_download/{} {}/{}'.format(
-    __version__,
-    __url__,
-    requests.__version__,
-    rd_version,
-    platform.python_implementation(),
-    platform.python_version(),
-)
 
 def process_queue(db):
     with TemporaryDirectory() as tmpdir:

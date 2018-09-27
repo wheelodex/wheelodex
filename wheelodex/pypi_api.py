@@ -2,6 +2,7 @@ import logging
 from   xmlrpc.client import ProtocolError, ServerProxy
 import requests
 from   retrying      import retry
+from   .util         import USER_AGENT
 
 log = logging.getLogger(__name__)
 
@@ -29,6 +30,7 @@ class PyPIAPI:
     def __init__(self):
         self.client = ServerProxy(ENDPOINT, use_builtin_types=True)
         self.s = requests.Session()
+        self.s.headers["User-Agent"] = USER_AGENT
 
     @retry(
         retry_on_exception          = on_xml_exception('changelog_last_serial'),

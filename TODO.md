@@ -14,7 +14,6 @@
     - Don't return wheels with processing errors
 - Give `process_queue` (the function and the command) options for limiting the
   number and/or total size of wheels to process
-- Use a custom User-Agent for requests to PyPI's JSON API
 
 Wheel Inspection
 ----------------
