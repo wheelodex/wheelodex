@@ -66,9 +66,8 @@ def process_queue_cmd(obj):
 @main.command()
 @click.option('-A', '--all', 'dump_all', is_flag=True)
 @click.option('-o', '--outfile', type=click.File('w'), default='-')
-@click.option('-Q', '--queue', is_flag=True)
 @click.pass_obj
-def dump(obj, dump_all, queue, outfile):
+def dump(obj, dump_all, outfile):
     with outfile, obj.db:
         for whl in obj.db.session.query(Wheel):
             if dump_all or whl.data is not None:
@@ -89,8 +88,6 @@ def dump(obj, dump_all, queue, outfile):
                         "processed": str(whl.data.processed),
                         "wheelodex_version": whl.data.wheelodex_version,
                     }
-                if queue:
-                    about["queued"] = whl.queued
                 click.echo(json.dumps(about), file=outfile)
 
 if __name__ == '__main__':

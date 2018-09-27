@@ -30,9 +30,8 @@ def test_add_wheel(tmpdb):
         md5      = '1234567890abcdef1234567890abcdef',
         sha256   = '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
         uploaded = '2018-09-26T15:12:54',
-        queued   = False,
     )
-    assert tmpdb.iterqueue() == []
+    assert tmpdb.iterqueue() == [whl1]
     v2 = tmpdb.add_version(p, '2.0')
     whl2 = tmpdb.add_wheel(
         version = v2,
@@ -42,9 +41,8 @@ def test_add_wheel(tmpdb):
         md5      = '1234567890abcdef1234567890abcdef',
         sha256   = '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
         uploaded = '2018-09-26T15:14:33',
-        queued   = True,
     )
-    assert tmpdb.iterqueue() == [whl2]
+    assert tmpdb.iterqueue() in ([whl1, whl2], [whl2, whl1])
     assert v1.wheels == [whl1]
     assert v2.wheels == [whl2]
     assert tmpdb.get_version(p, '1.0').wheels == [whl1]
@@ -62,9 +60,8 @@ def test_add_wheel_extant(tmpdb):
         md5      = '1234567890abcdef1234567890abcdef',
         sha256   = '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
         uploaded = '2018-09-26T15:12:54',
-        queued   = False,
     )
-    assert tmpdb.iterqueue() == []
+    assert tmpdb.iterqueue() == [whl1]
     tmpdb.add_wheel(
         version  = v1,
         filename = 'FooBar-1.0-py3-none-any.whl',
@@ -73,7 +70,6 @@ def test_add_wheel_extant(tmpdb):
         md5      = '1234567890abcdef1234567890abcdef',
         sha256   = '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
         uploaded = '2018-09-26T15:14:33',
-        queued   = True,
     )
     whl, = tmpdb.iterqueue()
     assert v1.wheels == [whl1]
@@ -82,7 +78,6 @@ def test_add_wheel_extant(tmpdb):
     assert whl.md5 == '1234567890abcdef1234567890abcdef'
     assert whl.sha256 == '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'
     assert whl.uploaded == '2018-09-26T15:12:54'
-    assert whl.queued is True
 
 def test_remove_wheel(tmpdb):
     assert tmpdb.iterqueue() == []
@@ -96,7 +91,6 @@ def test_remove_wheel(tmpdb):
         md5      = '1234567890abcdef1234567890abcdef',
         sha256   = '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
         uploaded = '2018-09-26T15:12:54',
-        queued   = True,
     )
     assert tmpdb.iterqueue() == [whl1]
     tmpdb.remove_wheel('FooBar-1.0-py3-none-any.whl')
@@ -144,7 +138,6 @@ def test_remove_project(tmpdb):
         md5      = '1234567890abcdef1234567890abcdef',
         sha256   = '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
         uploaded = '2018-09-26T15:12:54',
-        queued   = False,
     )
     v2 = tmpdb.add_version(p, '2.0')
     tmpdb.add_wheel(
@@ -155,7 +148,6 @@ def test_remove_project(tmpdb):
         md5      = '1234567890abcdef1234567890abcdef',
         sha256   = '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
         uploaded = '2018-09-26T15:14:33',
-        queued   = True,
     )
     q = tmpdb.add_project('quux')
     v3 = tmpdb.add_version(q, '1.5')
@@ -167,7 +159,6 @@ def test_remove_project(tmpdb):
         md5      = '1234567890abcdef1234567890abcdef',
         sha256   = '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
         uploaded = '2018-09-27T11:29:39',
-        queued   = True,
     )
     tmpdb.remove_project('FooBar')
     assert tmpdb.get_all_projects() in ([p,q], [q,p])
@@ -275,7 +266,6 @@ def test_remove_version(tmpdb):
         md5      = '1234567890abcdef1234567890abcdef',
         sha256   = '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
         uploaded = '2018-09-26T15:12:54',
-        queued   = True,
     )
     v2 = tmpdb.add_version(p, '2.0')
     tmpdb.add_wheel(
@@ -286,7 +276,6 @@ def test_remove_version(tmpdb):
         md5      = '1234567890abcdef1234567890abcdef',
         sha256   = '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
         uploaded = '2018-09-26T15:14:33',
-        queued   = True,
     )
     tmpdb.remove_version('FooBar', '2.0')
     assert tmpdb.get_all_projects() == [p]
@@ -298,6 +287,7 @@ def test_remove_version(tmpdb):
 
 ### TO TEST:
 # iterqueue()
+#  - Wheels with data are omitted from queue
 # Adding WheelData with dependencies and entry points
 # `wheel.data = None` deletes the WheelData entry
 # Deleting a Wheel deletes its WheelData

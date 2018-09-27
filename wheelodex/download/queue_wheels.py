@@ -13,37 +13,27 @@ def queue_all_wheels(db, max_size=None):
     #projects_seen = set(db.session.query(Project.display_name))
     for pkg in pypi.list_packages():
         #if pkg in projects_seen: continue
-        log.info('Queuing wheels for project %r', pkg)
+        log.info('Adding wheels for project %r', pkg)
         project = db.add_project(pkg)
-        data = pypi.project_data(pkg) or {"releases": {}}
+        data = pypi.project_data(pkg)
+        if data is None or not data.get("releases", {}):
+            log.info('Project has no releases')
+            continue
         versions = list(data["releases"].keys())
-        log.info('Available versions: %r', versions)
+        log.debug('Available versions: %r', versions)
         latest = latest_version(versions)
-        if latest is not None:
-            log.info('Preferring latest version: %r', latest)
+        log.info('Using latest version: %r', latest)
         qty_queued = 0
-        qty_unqueued = 0
-        for v in versions:
-            vobj = db.add_version(project, v)
-            for asset in data["releases"][v]:
-                if not asset["filename"].endswith('.whl'):
-                    log.debug('Asset %s: not a wheel; skipping',
-                              asset["filename"])
-                    continue
-                if v != latest:
-                    log.debug('Asset %s: not latest version; not queuing',
-                              asset["filename"])
-                    queued = False
-                    qty_unqueued += 1
-                elif max_size is not None and asset["size"] > max_size:
-                    log.debug('Asset %s: size %d too large; not queuing',
-                              asset["filename"], asset["size"])
-                    queued = False
-                    qty_unqueued += 1
-                else:
-                    log.debug('Asset %s: queuing', asset["filename"])
-                    queued = True
-                    qty_queued += 1
+        vobj = db.add_version(project, latest)
+        for asset in data["releases"][latest]:
+            if not asset["filename"].endswith('.whl'):
+                log.debug('Asset %s: not a wheel; skipping', asset["filename"])
+            elif max_size is not None and asset["size"] > max_size:
+                log.debug('Asset %s: size %d too large; skipping',
+                          asset["filename"], asset["size"])
+            else:
+                log.debug('Asset %s: adding', asset["filename"])
+                qty_queued += 1
                 db.add_wheel(
                     version  = vobj,
                     filename = asset["filename"],
@@ -52,12 +42,10 @@ def queue_all_wheels(db, max_size=None):
                     md5      = asset["digests"]["md5"].lower(),
                     sha256   = asset["digests"]["sha256"].lower(),
                     uploaded = str(asset["upload_time"]),
-                    queued   = queued,
                 )
-        log.info('%s: %d wheels queued, %d wheels not queued',
-                 pkg, qty_queued, qty_unqueued)
-        if qty_queued or qty_unqueued:
-            db.session.commit()
+        log.info('%s: %d wheels added', pkg, qty_queued)
+        #if qty_queued:
+        #    db.session.commit()
     log.info('END queue_all_wheels')
 
 def queue_wheels_since(db, since, max_size=None):
@@ -85,31 +73,32 @@ def queue_wheels_since(db, since, max_size=None):
         if actwords[0] == 'add' and len(actwords) == 4 and \
                 actwords[2] == 'file' and actwords[3].endswith('.whl'):
             log.info('Event %d: wheel %s added', serial, actwords[3])
-            ### TODO: Only queue wheels for the latest version of the project
+            # New wheels should more often than not belong to the latest
+            # version of the project, and if they don't, they can be pruned out
+            # later.  There's likely little to nothing to be gained by
+            # comparing `rel` to the latest version in the database at this
+            # point.
             data = pypi.project_data(proj)
-            if data is None:
+            if data is None or not data.get("releases", {}):
                 log.warning('No releases found for project %r', proj)
                 continue
             for asset in data["releases"].get(rel, []):
                 if asset["filename"] == actwords[3]:
                     if max_size is not None and asset["size"] > max_size:
-                        log.info('Asset %s: size %d too large; not queuing',
+                        log.info('Asset %s: size %d too large; skipping',
                                  asset["filename"], asset["size"])
-                        queued = False
                     else:
-                        log.info('Asset %s: queuing', asset["filename"])
-                        queued = True
-                    db.add_wheel(
-                        version  = db.add_version(proj, rel),
-                        filename = asset["filename"],
-                        url      = asset["url"],
-                        size     = asset["size"],
-                        md5      = asset["digests"].get("md5").lower(),
-                        sha256   = asset["digests"].get("sha256").lower(),
-                        uploaded = str(asset["upload_time"]),
-                        queued   = queued,
-                    )
-            ### TODO: Log if no wheel is found
+                        log.info('Asset %s: adding', asset["filename"])
+                        db.add_wheel(
+                            version  = db.add_version(proj, rel),
+                            filename = asset["filename"],
+                            url      = asset["url"],
+                            size     = asset["size"],
+                            md5      = asset["digests"].get("md5").lower(),
+                            sha256   = asset["digests"].get("sha256").lower(),
+                            uploaded = str(asset["upload_time"]),
+                        )
+            ### TODO: Log warning if wheel is not found
 
         elif actwords[:2] == ['remove', 'file'] and len(actwords) == 3 and \
                 actwords[2].endswith('.whl'):

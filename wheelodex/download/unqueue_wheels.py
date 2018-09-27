@@ -38,7 +38,6 @@ def process_queue(db):
             else:
                 db.add_wheel_data(whl, about)
             finally:
-                db.unqueue_wheel(whl)
                 db.session.commit()
 
 def process_wheel(filename, url, size, md5, sha256, tmpdir):

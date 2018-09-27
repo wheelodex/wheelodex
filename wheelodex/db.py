@@ -48,7 +48,7 @@ class WheelDatabase:
             ps.serial = max(ps.serial, value)
 
     def add_wheel(self, version: 'Version', filename, url, size, md5, sha256,
-                  uploaded, queued):
+                  uploaded):
         whl = self.session.query(Wheel)\
                           .filter(Wheel.filename == filename)\
                           .one_or_none()
@@ -61,27 +61,14 @@ class WheelDatabase:
                 md5      = md5,
                 sha256   = sha256,
                 uploaded = uploaded,
-                queued   = queued,
             )
             self.session.add(whl)
-        else:
-            whl.queued = queued
         return whl
-
-    def unqueue_wheel(self, whl: Union[str, 'Wheel']):
-        if isinstance(whl, Wheel):
-            whl.queued = False
-        else:
-            self.session.query(Wheel)\
-                        .filter(Wheel.filename == whl)\
-                        .update({Wheel.queued: False})
 
     def iterqueue(self) -> ['Wheel']:
         ### Would leaving off the ".all()" give an iterable that plays well
-        ### with unqueue_wheel()?
-        return self.session.query(Wheel)\
-                           .filter(Wheel.queued == True)\
-                           .all()  # noqa: E712
+        ### with wheels being given data concurrently?
+        return self.session.query(Wheel).filter(~Wheel.data.has()).all()
 
     def remove_wheel(self, filename: str):
         self.session.query(Wheel).filter(Wheel.filename == filename).delete()
@@ -240,15 +227,6 @@ class Version(Base):
 
 
 class Wheel(Base):
-    """
-    A table of *all* wheels available on PyPI, even ones we're not storing data
-    for.  We store all the wheels so that, if we ever decide to go back and
-    analyze wheels we declined to analyze earlier, we don't have to spend hours
-    scraping the entire XML-RPC API to find them.  Also, the table provides
-    statistics on wheels that can be useful for deciding whether to go back and
-    analyze more wheels in the first place.
-    """
-
     __tablename__ = 'wheels'
 
     id = S.Column(S.Integer, primary_key=True, nullable=False)  # noqa: B001
@@ -268,10 +246,9 @@ class Wheel(Base):
     md5      = S.Column(S.Unicode(32), nullable=True)
     sha256   = S.Column(S.Unicode(64), nullable=True)
     uploaded = S.Column(S.Unicode(32), nullable=False)
-    queued   = S.Column(S.Boolean, nullable=False)
 
     def __repr__(self):
-        return reprify(self, 'filename queued'.split())
+        return reprify(self, 'filename'.split())
 
 
 class ProcessingError(Base):
