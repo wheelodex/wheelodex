@@ -74,6 +74,7 @@ def dump(obj, dump_all, outfile):
                 about = {
                     "pypi": {
                         "filename": whl.filename,
+                        "url": whl.url,
                         "project": whl.project,
                         "version": whl.version,
                         "size": whl.size,
