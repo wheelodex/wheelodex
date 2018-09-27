@@ -103,7 +103,7 @@ def scan_changelog(db, since, max_size=None):
 
         elif action == 'create':
             log.info('Event %d: project %r created', serial, proj)
-            db.add_project(proj, None)
+            db.add_project(proj)
 
         elif action == 'remove project':
             log.info('Event %d: project %r removed', serial, proj)
