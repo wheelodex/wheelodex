@@ -75,8 +75,8 @@ def dump(obj, dump_all, outfile):
                     "pypi": {
                         "filename": whl.filename,
                         "url": whl.url,
-                        "project": whl.project,
-                        "version": whl.version,
+                        "project": whl.version.project.display_name,
+                        "version": whl.version.display_name,
                         "size": whl.size,
                         "md5": whl.md5,
                         "sha256": whl.sha256,
@@ -84,7 +84,7 @@ def dump(obj, dump_all, outfile):
                     },
                 }
                 if whl.data is not None:
-                    about["data"] = whl.data.raw_data,
+                    about["data"] = whl.data.raw_data
                     about["wheelodex"] = {
                         "processed": str(whl.data.processed),
                         "wheelodex_version": whl.data.wheelodex_version,
