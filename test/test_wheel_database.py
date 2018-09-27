@@ -1,15 +1,12 @@
-from   tempfile     import NamedTemporaryFile
 import pytest
 from   wheelodex.db import Version, Wheel, WheelDatabase
 
 @pytest.fixture(scope='session')
 def tmpdb_inited():
-    # pytest's tmpdir can't be used here because of fixture scope mismatch.
-    with NamedTemporaryFile() as tmpfile:
-        yield WheelDatabase({
-            "drivername": "sqlite",
-            "database": tmpfile.name,
-        })
+    yield WheelDatabase({
+        "drivername": "sqlite",
+        "database": ":memory:",
+    })
 
 @pytest.fixture()
 def tmpdb(tmpdb_inited):
