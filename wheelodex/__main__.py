@@ -91,5 +91,23 @@ def dump(obj, dump_all, outfile):
                     }
                 click.echo(json.dumps(about), file=outfile)
 
+@main.command()
+@click.argument('infile', type=click.File())
+@click.pass_obj
+def load(obj, infile):
+    with infile, obj.db:
+        for line in infile:
+            about = json.loads(line)
+            version = obj.db.add_version(
+                about["pypi"].pop("project"),
+                about["pypi"].pop("version"),
+            )
+            whl = obj.db.add_wheel(version, **about["pypi"])
+            if "data" in about and whl.data is None:
+                obj.db.add_wheel_data(whl, about["data"])
+                whl.data.processed = about["wheelodex"]["processed"]
+                whl.data.wheelodex_version \
+                    = about["wheelodex"]["wheelodex_version"]
+
 if __name__ == '__main__':
     main(prog_name=__package__)

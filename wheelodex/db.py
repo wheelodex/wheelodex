@@ -74,6 +74,9 @@ class WheelDatabase:
         self.session.query(Wheel).filter(Wheel.filename == filename).delete()
 
     def add_wheel_data(self, wheel: 'Wheel', raw_data: dict):
+        ### TODO: This errors if `wheel.data` is already non-None (because then
+        ### there are temporarily two WheelData objects with the same
+        ### `wheel_id`).  Fix this.
         wheel.data = WheelData.from_raw_data(self.session, raw_data)
 
     def add_project(self, name: str):

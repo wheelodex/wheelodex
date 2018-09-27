@@ -14,6 +14,9 @@
     - Don't return wheels with processing errors
 - Give `process_queue` (the function and the command) options for limiting the
   number and/or total size of wheels to process
+- Give the `load` command an option for overwriting any `WheelData` that's
+  already in the database?  (This would require first fixing
+  `add_wheel_data()`; see the comment in its source.)
 
 Wheel Inspection
 ----------------
