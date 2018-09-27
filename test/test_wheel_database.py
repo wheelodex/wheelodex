@@ -1,7 +1,6 @@
 from   tempfile     import NamedTemporaryFile
 import pytest
-import sqlalchemy as S
-from   wheelodex.db import WheelDatabase
+from   wheelodex.db import Version, Wheel, WheelDatabase
 
 @pytest.fixture(scope='session')
 def tmpdb_inited():
@@ -15,6 +14,8 @@ def tmpdb_inited():
 @pytest.fixture()
 def tmpdb(tmpdb_inited):
     with tmpdb_inited:
+        # See <https://docs.sqlalchemy.org/en/latest/dialects/sqlite.html#foreign-key-support>:
+        tmpdb_inited.session.execute("PRAGMA foreign_keys=ON")
         try:
             yield tmpdb_inited
         finally:
@@ -138,7 +139,7 @@ def test_remove_project(tmpdb):
     assert tmpdb.get_all_projects() == []
     p = tmpdb.add_project('FooBar')
     v1 = tmpdb.add_version(p, '1.0')
-    whl1 = tmpdb.add_wheel(
+    tmpdb.add_wheel(
         version  = v1,
         filename = 'FooBar-1.0-py3-none-any.whl',
         url      = 'http://example.com/FooBar-1.0-py3-none-any.whl',
@@ -149,8 +150,8 @@ def test_remove_project(tmpdb):
         queued   = False,
     )
     v2 = tmpdb.add_version(p, '2.0')
-    whl2 = tmpdb.add_wheel(
-        version = v2,
+    tmpdb.add_wheel(
+        version  = v2,
         filename = 'FooBar-2.0-py3-none-any.whl',
         url      = 'http://example.com/FooBar-2.0-py3-none-any.whl',
         size     = 69105,
@@ -160,20 +161,24 @@ def test_remove_project(tmpdb):
         queued   = True,
     )
     q = tmpdb.add_project('quux')
+    v3 = tmpdb.add_version(q, '1.5')
+    whl3 = tmpdb.add_wheel(
+        version  = v3,
+        filename = 'quux-1.5-py3-none-any.whl',
+        url      = 'http://example.com/quux-1.5-py3-none-any.whl',
+        size     = 2048,
+        md5      = '1234567890abcdef1234567890abcdef',
+        sha256   = '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+        uploaded = '2018-09-27T11:29:39',
+        queued   = True,
+    )
     tmpdb.remove_project('FooBar')
     assert tmpdb.get_all_projects() in ([p,q], [q,p])
+    assert tmpdb.session.query(Version).all() == [v3]
     assert tmpdb.get_version('foobar', '1.0') is None
     assert tmpdb.get_version('foobar', '2.0') is None
-    assert p.versions == []
-    #assert tmpdb.get_project('foobar').versions == []
+    assert tmpdb.session.query(Wheel).all() == [whl3]
     assert p.latest_version is None
-    assert tmpdb.iterqueue() == []
-    assert not S.inspect(p).was_deleted
-    assert S.inspect(v1).was_deleted
-    assert S.inspect(v2).was_deleted
-    assert S.inspect(whl1).was_deleted
-    assert S.inspect(whl2).was_deleted
-    assert not S.inspect(q).was_deleted
 
 def test_add_version_str(tmpdb):
     assert tmpdb.get_all_projects() == []
@@ -276,7 +281,7 @@ def test_remove_version(tmpdb):
         queued   = True,
     )
     v2 = tmpdb.add_version(p, '2.0')
-    whl2 = tmpdb.add_wheel(
+    tmpdb.add_wheel(
         version = v2,
         filename = 'FooBar-2.0-py3-none-any.whl',
         url      = 'http://example.com/FooBar-2.0-py3-none-any.whl',
@@ -290,12 +295,14 @@ def test_remove_version(tmpdb):
     assert tmpdb.get_all_projects() == [p]
     assert tmpdb.get_version('foobar', '1.0') is not None
     assert tmpdb.get_version('foobar', '2.0') is None
-    assert p.versions == [v1]
-    #assert tmpdb.get_project('foobar').versions == [v1]
+    assert tmpdb.session.query(Version).all() == [v1]
     assert p.latest_version == v1
-    assert tmpdb.iterqueue() == [whl1]
-    assert not S.inspect(p).was_deleted
-    assert not S.inspect(v1).was_deleted
-    assert not S.inspect(whl1).was_deleted
-    assert S.inspect(v2).was_deleted
-    assert S.inspect(whl2).was_deleted
+    assert tmpdb.session.query(Wheel).all() == [whl1]
+
+### TO TEST:
+# iterqueue()
+# Adding WheelData with dependencies and entry points
+# `wheel.data = None` deletes the WheelData entry
+# Deleting a Wheel deletes its WheelData
+# Deleting a WheelData deletes its dependencies and entry points
+# Deleting a WheelData doesn't affect its Wheel

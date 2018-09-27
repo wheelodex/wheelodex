@@ -134,6 +134,8 @@ class WheelDatabase:
             v = Version(project=project, name=vnorm, display_name=version)
             self.session.add(v)
             for i,u in enumerate(
+                ### TODO: Is `project.versions` safe to use when some of its
+                ### elements may have been deleted earlier in the transaction?
                 sorted(project.versions, key=lambda x: version_sort_key(x.name))
             ):
                 u.ordering = i
@@ -184,9 +186,9 @@ class Project(Base):
 
     id = S.Column(S.Integer, primary_key=True, nullable=False)  # noqa: B001
     #: The project's normalized name
-    name            = S.Column(S.Unicode(2048), nullable=False, unique=True)
+    name         = S.Column(S.Unicode(2048), nullable=False, unique=True)
     #: The preferred non-normalized form of the project's name
-    display_name    = S.Column(S.Unicode(2048), nullable=False, unique=True)
+    display_name = S.Column(S.Unicode(2048), nullable=False, unique=True)
 
     def __repr__(self):
         return reprify(self, 'name display_name'.split())
@@ -213,8 +215,16 @@ class Version(Base):
     __table_args__ = (S.UniqueConstraint('project_id', 'name'),)
 
     id = S.Column(S.Integer, primary_key=True, nullable=False)  # noqa: B001
-    project_id = S.Column(S.Integer,S.ForeignKey('projects.id'),nullable=False)
-    project = relationship('Project', backref='versions', foreign_keys=[project_id])
+    project_id = S.Column(
+        S.Integer,
+        S.ForeignKey('projects.id', ondelete='CASCADE'),
+        nullable=False,
+    )
+    project = relationship(
+        'Project',
+        backref=backref('versions', cascade='all, delete-orphan',
+                        passive_deletes=True),
+    )
     #: The normalized version string
     name = S.Column(S.Unicode(2048), nullable=False)
     #: The preferred non-normalized version string
@@ -244,8 +254,16 @@ class Wheel(Base):
     id = S.Column(S.Integer, primary_key=True, nullable=False)  # noqa: B001
     filename = S.Column(S.Unicode(2048), nullable=False, unique=True)
     url      = S.Column(S.Unicode(2048), nullable=False)
-    version_id = S.Column(S.Integer,S.ForeignKey('versions.id'),nullable=False)
-    version  = relationship('Version', backref='wheels')
+    version_id = S.Column(
+        S.Integer,
+        S.ForeignKey('versions.id', ondelete='CASCADE'),
+        nullable=False,
+    )
+    version  = relationship(
+        'Version',
+        backref=backref('wheels', cascade='all, delete-orphan',
+                        passive_deletes=True),
+    )
     size     = S.Column(S.Integer, nullable=False)
     md5      = S.Column(S.Unicode(32), nullable=True)
     sha256   = S.Column(S.Unicode(64), nullable=True)
@@ -260,16 +278,34 @@ class ProcessingError(Base):
     __tablename__ = 'processing_errors'
 
     id = S.Column(S.Integer, primary_key=True, nullable=False)  # noqa: B001
-    wheel_id  = S.Column(S.Integer, S.ForeignKey('wheels.id'), nullable=False)
-    wheel     = relationship('Wheel', backref='errors')
+    wheel_id  = S.Column(
+        S.Integer,
+        S.ForeignKey('wheels.id', ondelete='CASCADE'),
+        nullable=False,
+    )
+    wheel     = relationship(
+        'Wheel',
+        backref=backref('errors', cascade='all, delete-orphan',
+                        passive_deletes=True),
+    )
     errmsg    = S.Column(S.Unicode(65535), nullable=False)
     timestamp = S.Column(S.DateTime(timezone=True), nullable=False)
     wheelodex_version = S.Column(S.Unicode(32), nullable=False)
 
 
 dependency_tbl = S.Table('dependency_tbl', Base.metadata,
-    S.Column('wheel_data_id', S.Integer, S.ForeignKey('wheel_data.id'), nullable=False),
-    S.Column('project_id', S.Integer, S.ForeignKey('projects.id'), nullable=False),
+    S.Column(
+        'wheel_data_id',
+        S.Integer,
+        S.ForeignKey('wheel_data.id', ondelete='CASCADE'),
+        nullable=False,
+    ),
+    S.Column(
+        'project_id',
+        S.Integer,
+        S.ForeignKey('projects.id', ondelete='RESTRICT'),
+        nullable=False,
+    ),
     S.UniqueConstraint('wheel_data_id', 'project_id'),
 )
 
@@ -278,9 +314,17 @@ class WheelData(Base):
     __tablename__ = 'wheel_data'
 
     id = S.Column(S.Integer, primary_key=True, nullable=False)  # noqa: B001
-    wheel_id  = S.Column(S.Integer, S.ForeignKey('wheels.id'), nullable=False,
-                         unique=True)
-    wheel     = relationship('Wheel', backref=backref('data', uselist=False))
+    wheel_id  = S.Column(
+        S.Integer,
+        S.ForeignKey('wheels.id', ondelete='CASCADE'),
+        nullable=False,
+        unique=True,
+    )
+    wheel     = relationship(
+        'Wheel',
+        backref=backref('data', uselist=False, cascade='all, delete-orphan',
+                        passive_deletes=True),
+    )
     raw_data  = S.Column(JSONType, nullable=False)
     #: The project name as extracted from the wheel filename.  This may differ
     #: from the project name as reported on PyPI, even after normalization.
@@ -292,6 +336,8 @@ class WheelData(Base):
     #: The version of `wheelodex` under which the WheelData's columns and
     #: relations were filled in
     wheelodex_version = S.Column(S.Unicode(32), nullable=False)
+    ### TODO: What are the right `cascade` and `passive_deletes` settings for
+    ### this relationship?
     dependencies = relationship('Project', secondary=dependency_tbl,
                                 backref='rdepends')
 
@@ -359,11 +405,21 @@ class EntryPoint(Base):
     __tablename__ = 'entry_points'
 
     id = S.Column(S.Integer, primary_key=True, nullable=False)  # noqa: B001
-    wheel_data_id = S.Column(S.Integer, S.ForeignKey('wheel_data.id'),
-                             nullable=False)
-    wheel_data    = relationship('WheelData', backref='entry_points')
-    group_id      = S.Column(S.Integer, S.ForeignKey('entry_point_groups.id'),
-                             nullable=False)
+    wheel_data_id = S.Column(
+        S.Integer,
+        S.ForeignKey('wheel_data.id', ondelete='CASCADE'),
+        nullable=False,
+    )
+    wheel_data    = relationship(
+        'WheelData',
+        backref=backref('entry_points', cascade='all, delete-orphan',
+                        passive_deletes=True),
+    )
+    group_id      = S.Column(
+        S.Integer,
+        S.ForeignKey('entry_point_groups.id', ondelete='RESTRICT'),
+        nullable=False,
+    )
     group         = relationship('EntryPointGroup')
     name          = S.Column(S.Unicode(2048), nullable=False)
 
