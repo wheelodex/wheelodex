@@ -10,9 +10,7 @@ def scan_pypi(db, max_size=None):
     serial = pypi.changelog_last_serial()
     log.info('changlog_last_serial() = %d', serial)
     db.serial = serial
-    #projects_seen = set(db.session.query(Project.display_name))
     for pkg in pypi.list_packages():
-        #if pkg in projects_seen: continue
         log.info('Adding wheels for project %r', pkg)
         project = db.add_project(pkg)
         data = pypi.project_data(pkg)
@@ -44,8 +42,6 @@ def scan_pypi(db, max_size=None):
                     uploaded = str(asset["upload_time"]),
                 )
         log.info('%s: %d wheels added', pkg, qty_queued)
-        #if qty_queued:
-        #    db.session.commit()
     log.info('END scan_pypi')
 
 def scan_changelog(db, since, max_size=None):
