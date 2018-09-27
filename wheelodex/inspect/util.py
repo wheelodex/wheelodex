@@ -1,3 +1,5 @@
+from packaging.utils import canonicalize_name as normalize
+
 def extract_modules(filelist):
     modules = set()
     for fname in filelist:
@@ -32,3 +34,11 @@ def strfield(s):
 
 def fieldnorm(s):
     return s.lower().replace('-', '_')
+
+def unique_projects(projects):
+    seen = set()
+    for p in projects:
+        pn = normalize(p)
+        if pn not in seen:
+            yield p
+        seen.add(pn)
