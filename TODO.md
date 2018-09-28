@@ -9,14 +9,14 @@
         - Split `wheelodex.inspect` into a separate project? (and move
           `wheel-data.schema.json` into it)
 - Upgrade `wheel-data.schema.json` to a more recent JSON Schema draft
-- `iterqueue()`:
-    - Only return wheels for the latest version of each project
-    - Don't return wheels with processing errors
+- `iterqueue()`: Only return wheels for the latest version of each project
 - Give `process_queue` (the function and the command) options for limiting the
   number and/or total size of wheels to process
 - Give the `load` command an option for overwriting any `WheelData` that's
   already in the database?  (This would require first fixing
   `add_wheel_data()`; see the comment in its source.)
+- Add a command for analyzing the wheels for given projects
+- Add a command for analyzing given wheels
 
 Wheel Inspection
 ----------------

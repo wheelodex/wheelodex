@@ -288,6 +288,7 @@ def test_remove_version(tmpdb):
 ### TO TEST:
 # iterqueue()
 #  - Wheels with data are omitted from queue
+#  - Wheels with errors are omitted from queue
 # Adding WheelData with dependencies and entry points
 # `wheel.data = None` deletes the WheelData entry
 # Deleting a Wheel deletes its WheelData

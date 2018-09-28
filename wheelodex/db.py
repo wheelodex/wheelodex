@@ -68,7 +68,10 @@ class WheelDatabase:
     def iterqueue(self) -> ['Wheel']:
         ### Would leaving off the ".all()" give an iterable that plays well
         ### with wheels being given data concurrently?
-        return self.session.query(Wheel).filter(~Wheel.data.has()).all()
+        return self.session.query(Wheel)\
+                           .filter(~Wheel.data.has())\
+                           .filter(~Wheel.errors.any())\
+                           .all()
 
     def remove_wheel(self, filename: str):
         self.session.query(Wheel).filter(Wheel.filename == filename).delete()
