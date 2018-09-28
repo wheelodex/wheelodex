@@ -1,0 +1,16 @@
+language: python
+cache: pip
+jobs:
+    include:
+        - python: 3.5
+        - python: 3.6
+        - python: 3.7
+          dist: xenial
+          sudo: true
+        - python: pypy3
+install:
+    - pip install codecov tox
+script:
+    - tox -e py
+after_success:
+    - codecov
