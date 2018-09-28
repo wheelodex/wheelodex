@@ -9,8 +9,10 @@ from   .db       import Wheel, WheelDatabase
 from   .process  import process_queue
 from   .scan     import scan_pypi, scan_changelog
 
-# FlaskGroup causes all commands to be run inside an application context; hence
-# `wheelodex.db.db` can do database operations and `WheelDatabase` just works.
+# FlaskGroup causes all commands to be run inside an application context,
+# thereby letting `wheelodex.db.db` do database operations and making
+# `WheelDatabase()` just work.  This does require that `ctx.obj` be left
+# untouched, though.
 @click.group(cls=FlaskGroup, create_app=create_app)
 @click.option(
     '-l', '--log-level',
