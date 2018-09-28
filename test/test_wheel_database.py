@@ -1,12 +1,11 @@
 import pytest
-from   wheelodex.db import Version, Wheel, WheelDatabase
+from   wheelodex.app import create_app
+from   wheelodex.db  import Version, Wheel, WheelDatabase
 
 @pytest.fixture(scope='session')
 def tmpdb_inited():
-    yield WheelDatabase({
-        "drivername": "sqlite",
-        "database": ":memory:",
-    })
+    with create_app().app_context():
+        yield WheelDatabase()
 
 @pytest.fixture()
 def tmpdb(tmpdb_inited):

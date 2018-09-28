@@ -1,27 +1,26 @@
 from   datetime                   import datetime, timezone
 from   typing                     import Optional, Union
+from   flask_sqlalchemy           import SQLAlchemy
 from   packaging.utils            import canonicalize_name as normalize, \
                                          canonicalize_version as normversion
 import sqlalchemy as S
-from   sqlalchemy.ext.declarative import declarative_base
-from   sqlalchemy.orm             import backref, object_session, relationship,\
-                                            sessionmaker
+from   sqlalchemy.orm             import backref, object_session, relationship
 from   sqlalchemy_utils           import JSONType
 from   .                          import __version__
 from   .util                      import reprify, version_sort_key
 
-Base = declarative_base()
+db = SQLAlchemy()
+Base = db.Model
 
 class WheelDatabase:
-    def __init__(self, dburl_params):
-        self.engine = S.create_engine(S.engine.url.URL(**dburl_params))
-        Base.metadata.create_all(self.engine)
+    def __init__(self):
+        db.create_all()
         self.session = None
 
     def __enter__(self):
         assert self.session is None, \
             'WheelDatabase context manager is not reentrant'
-        self.session = sessionmaker(bind=self.engine)()
+        self.session = db.session
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -255,6 +254,27 @@ class Wheel(Base):
 
     def __repr__(self):
         return reprify(self, 'filename'.split())
+
+    def as_json(self):
+        about = {
+            "pypi": {
+                "filename": self.filename,
+                "url": self.url,
+                "project": self.version.project.display_name,
+                "version": self.version.display_name,
+                "size": self.size,
+                "md5": self.md5,
+                "sha256": self.sha256,
+                "uploaded": self.uploaded,
+            },
+        }
+        if self.data is not None:
+            about["data"] = self.data.raw_data
+            about["wheelodex"] = {
+                "processed": str(self.data.processed),
+                "wheelodex_version": self.data.wheelodex_version,
+            }
+        return about
 
 
 class ProcessingError(Base):

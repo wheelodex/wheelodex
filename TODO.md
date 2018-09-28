@@ -1,6 +1,3 @@
-- `config.ini`: Either use the `long_descriptions` and `[pypi.urls]` options or
-  get rid of them
-    - Give `inspect_wheel()` an option for whether to keep long descriptions?
 - Add docstrings
     - Add `help` strings to commands & their options
 - Add a column to `WheelData` for storing the revision of
@@ -13,6 +10,11 @@
 - Give `process_queue` (the function and the command) options for limiting the
   number and/or total size of wheels to process
 - Replace `WheelData.update_structure()` with Alembic
+- Eliminate `WheelDatabase` and make its methods into functions that operate on
+  the app's `db` object?
+    - Replace `WheelDatabase`'s constructor with a context manager that calls
+      `db.create_all()`, yields `db.session`, and commits or rolls back as
+      appropriate?
 
 - Commands:
     - Give `load` an option for overwriting any `WheelData` that's already in
@@ -24,6 +26,8 @@
     - `dump`: Add an option for including processing errors/wheels with
       processing errors
     - Add a command & function for pruning old project versions
+    - Add a database initialization command that calls `create_all()` and sets
+      `db.serial` to 0?
 
 Wheel Inspection
 ----------------
@@ -53,6 +57,7 @@ Wheel Inspection
 - Add a `.derived.type_checked`(?) field for whether `py.typed` is present?
   (See PEP 561)
 - Remove duplicates from `.derived.keywords`?
+- Give `inspect_wheel()` an option for whether to keep long descriptions?
 
 Architecture
 ------------
