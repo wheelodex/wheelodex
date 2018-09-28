@@ -17,11 +17,15 @@
   `add_wheel_data()`; see the comment in its source.)
 - Add a command for analyzing the wheels for given projects
 - Add a command for analyzing given wheels
+- `load` and `dump`: Add a means for including the PyPI changelog serial
+- Replace `WheelData.update_structure()` with Alembic
 
 Wheel Inspection
 ----------------
 - Parse `Description-Content-Type` into a structured `dict`?
 - Should flat modules inside packages be discarded from `.derived.modules`?
+- Divide `.derived.modules` into a list of packages and a list of flat modules
+  (or otherwise somehow indicate which is which)?
 - Compare `extract_modules()` with <https://github.com/takluyver/wheeldex>
 - Does `extract_modules()` need to take compiled library files into account?
 - Include the results of testing manylinux1 wheels with `auditwheel`?

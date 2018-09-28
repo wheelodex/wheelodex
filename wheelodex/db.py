@@ -323,6 +323,8 @@ class WheelData(Base):
     ### this relationship?
     dependencies = relationship('Project', secondary=dependency_tbl,
                                 backref='rdepends')
+    summary   = S.Column(S.Unicode(2048), nullable=True)
+    verified  = S.Column(S.Boolean, nullable=False)
 
     @classmethod
     def from_raw_data(cls, session, raw_data: dict):
@@ -334,23 +336,35 @@ class WheelData(Base):
 
     @staticmethod
     def parse_raw_data(session, raw_data: dict):
+        summary = raw_data["dist_info"].get("metadata", {}).get("summary")
         return {
             "wheelodex_version": __version__,
             "project": raw_data["project"],
             "version": raw_data["version"],
             "entry_points": [
-                EntryPoint(
-                    group=EntryPointGroup.from_name(session, group),
-                    name=e,
-                )
+                EntryPoint(group=grobj, name=e)
                 for group, eps in raw_data["dist_info"].get("entry_points", {})
                                                        .items()
+                for grobj in [EntryPointGroup.from_name(session, group)]
                 for e in eps
             ],
             "dependencies": [
                 Project.from_name(session, p)
                 for p in raw_data["derived"]["dependencies"]
             ],
+            "summary": summary[:2048] if summary is not None else None,
+            "verified": raw_data["verifies"],
+            "keywords": [
+                Keyword(name=k) for k in raw_data["derived"]["keywords"]
+            ],
+            "files": [
+                File(
+                    path=f["path"],
+                    size=f["size"],
+                    sha256_base64=f["digests"].get("sha256"),
+                ) for f in raw_data["dist_info"].get("record", [])
+            ],
+            "modules": [Module(name=m) for m in raw_data["derived"]["modules"]],
         }
 
     def update_structure(self, session):
@@ -408,3 +422,59 @@ class EntryPoint(Base):
 
     def __repr__(self):
         return reprify(self, 'wheel_data group name')
+
+
+class File(Base):
+    __tablename__ = 'files'
+    __table_args__ = (S.UniqueConstraint('wheel_data_id', 'path'),)
+
+    id = S.Column(S.Integer, primary_key=True, nullable=False)  # noqa: B001
+    wheel_data_id = S.Column(
+        S.Integer,
+        S.ForeignKey('wheel_data.id', ondelete='CASCADE'),
+        nullable=False,
+    )
+    wheel_data    = relationship(
+        'WheelData',
+        backref=backref('files', cascade='all, delete-orphan',
+                        passive_deletes=True),
+    )
+    path          = S.Column(S.Unicode(2048), nullable=False)
+    size          = S.Column(S.Integer, nullable=True)
+    sha256_base64 = S.Column(S.Unicode(43), nullable=True)
+
+
+class Module(Base):
+    __tablename__ = 'modules'
+    __table_args__ = (S.UniqueConstraint('wheel_data_id', 'name'),)
+
+    id = S.Column(S.Integer, primary_key=True, nullable=False)  # noqa: B001
+    wheel_data_id = S.Column(
+        S.Integer,
+        S.ForeignKey('wheel_data.id', ondelete='CASCADE'),
+        nullable=False,
+    )
+    wheel_data    = relationship(
+        'WheelData',
+        backref=backref('modules', cascade='all, delete-orphan',
+                        passive_deletes=True),
+    )
+    name          = S.Column(S.Unicode(2048), nullable=False)
+
+
+class Keyword(Base):
+    __tablename__ = 'keywords'
+    #__table_args__ = (S.UniqueConstraint('wheel_data_id', 'name'),)
+
+    id = S.Column(S.Integer, primary_key=True, nullable=False)  # noqa: B001
+    wheel_data_id = S.Column(
+        S.Integer,
+        S.ForeignKey('wheel_data.id', ondelete='CASCADE'),
+        nullable=False,
+    )
+    wheel_data    = relationship(
+        'WheelData',
+        backref=backref('keywords', cascade='all, delete-orphan',
+                        passive_deletes=True),
+    )
+    name          = S.Column(S.Unicode(2048), nullable=False)

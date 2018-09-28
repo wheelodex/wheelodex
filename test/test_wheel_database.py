@@ -285,11 +285,11 @@ def test_remove_version(tmpdb):
     assert p.latest_version == v1
     assert tmpdb.session.query(Wheel).all() == [whl1]
 
-### TO TEST:
+### TODO: TO TEST:
 # iterqueue()
 #  - Wheels with data are omitted from queue
 #  - Wheels with errors are omitted from queue
-# Adding WheelData with dependencies and entry points
+# Adding WheelData with dependencies, entry points, etc.
 # `wheel.data = None` deletes the WheelData entry
 # Deleting a Wheel deletes its WheelData
 # Deleting a WheelData deletes its dependencies and entry points
