@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}Wheels{% endblock %}
+
+{% block content %}
+<table border="1" style="border-collapse: collapse">
+    <tr>
+        <th>Project</th>
+        <th>Version</th>
+        <th>Wheel</th>
+        <th>HTML</th>
+        <th>JSON</th>
+    </tr>
+    {% for whl in wheels %}
+    <tr>
+        <td><tt>{{whl.project.display_name|e}}</tt></td>
+        <td><tt>{{whl.version.display_name|e}}</tt></td>
+        <td><tt>{{whl.filename|e}}</tt></td>
+        <td><a href="{{url_for('.wheel_html', wheel=whl.filename[:-4])}}">[html]</a></td>
+        <td><a href="{{url_for('.wheel_json', wheel=whl.filename[:-4])}}">[json]</a></td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

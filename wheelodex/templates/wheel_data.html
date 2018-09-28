@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}{{whl.filename|e}}{% endblock %}
+
+{% block content %}
+<table>
+    <tr>
+        <td><b>Project:</b></td>
+        <td>{{whl.project.display_name|e}}</td>
+    </tr>
+    <tr>
+        <td><b>Version:</b></td>
+        <td>{{whl.version.display_name|e}}</td>
+    </tr>
+    <tr>
+        <td><b>Filename:</b></td>
+        <td>{{whl.filename|e}}</td>
+    </tr>
+    <tr>
+        <td><b>Download:</b></td>
+        <td><a href="{{whl.url}}">[link]</a></td>
+    </tr>
+    <tr>
+        <td><b>Size:</b></td>
+        <td>{{whl.size}}</td>
+    </tr>
+    <tr>
+        <td><b>MD5:</b></td>
+        {% if whl.md5 is undefined %}
+        <td>[Unknown]</td>
+        {% else %}
+        <td><tt>{{whl.md5}}</tt></td>
+        {% endif %}
+    </tr>
+    <tr>
+        <td><b>SHA256:</b></td>
+        {% if whl.sha256 is undefined %}
+        <td>[Unknown]</td>
+        {% else %}
+        <td><tt>{{whl.sha256}}</tt></td>
+        {% endif %}
+    </tr>
+    <tr>
+        <td><b>Uploaded:</b></td>
+        <td>{{whl.uploaded}}</td>
+    </tr>
+</table>
+
+{% if whl.data is defined %}
+{% set data = whl.data.raw_data %}
+
+{% if 'metadata' in data['dist_info'] %}
+    {% set metadata = data['dist_info']['metadata'] %}
+    <div class="metadata">
+        <table class="keyvalues">
+        {% for field, value in metadata|flatten_metadata %}
+            <tr>
+                <td class="key">{{field|e}}</td>
+                <td class="value">{{value|e}}</td>
+            </tr>
+        {% endfor %}
+        </table>
+        {% if 'description' in metadata %}
+            <div class="body">[Description omitted; length: {{metadata["description"]["length"]}} characters{% if not data["derived"]["readme_renders"] %}; fails to render{% endif %}]</div>
+        {% else %}
+            <div class="body">[No description]</div>
+        {% endif %}
+    </div>
+{% endif %}
+
+{% endif %}
+{% endblock %}

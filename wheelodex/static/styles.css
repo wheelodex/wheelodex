@@ -1,0 +1,59 @@
+body {
+ font-family: helvetica, sans-serif;
+ font-size: 15px;
+ color: #000000;
+ background-color: #ffffff;
+}
+
+div.main {width: 500pt; margin-left: auto; margin-right: auto; }
+
+h1 {font-size: 32px; text-align: center; }
+h2 {font-size: 24px; text-align: center; }
+h3 {font-size: 18px; text-align: center; }
+h4 {font-size: 16px; text-align: center; }
+h5 {font-size: 13px; text-align: center; }
+h6 {font-size: 10px; text-align: center; }
+h2 tt, h4 tt {font-size: 80%; }
+
+p       {text-align: justify; }
+p.text  {text-indent: 0.5in; margin: 0px; }
+p.more  {margin: 0px; } /* paragraph continuation after an "embedded" block */
+p.link  {text-align: center; }
+p.cited {margin-left: 0.5in; text-indent: -0.5in; } /* bibliography entry */
+
+p.footnote {
+ font-size: 10px;
+ text-align: center;
+ margin-left: 0.5in;
+ margin-right: 0.5in;
+}
+
+tt, code, pre, p.ident {  /* p.ident is for RCS $Id$ lines. */
+ font-size: 10px;  /* Should font-size be 80% instead? */
+ font-family: monaco, courier, monospace;
+}
+
+ul {list-style-type: disc; }
+li {text-align: justify; margin-bottom: 5px; }
+
+/* li > p:first-child {margin-top: 0px; } */
+
+table {border-collapse: collapse; }
+th {text-align: justify; }
+td {vertical-align: top; }
+
+blockquote {font-style: italic; text-align: justify; }
+hr {width: 450px; height: 2px; text-align: center; }
+img {margin: 0px; vertical-align: middle; }
+fieldset {padding: 5px; }
+
+a:link    {color: #0000ff; text-decoration: underline; }
+a:hover   {color: #ffff00; text-decoration: underline; }
+a:active  {color: #ffff00; text-decoration: none; }
+a:visited {color: #ff0000; text-decoration: underline; }
+
+@media screen, projection, tv {
+ /* See <http://www.w3.org/TR/REC-CSS2/media.html> for more information. */
+ body {background-color: #dddddd; }  /* #fafafa? */
+ a:active {color: #ffffff; }
+}

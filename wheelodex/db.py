@@ -255,12 +255,16 @@ class Wheel(Base):
     def __repr__(self):
         return reprify(self, 'filename'.split())
 
+    @property
+    def project(self):
+        return self.version.project
+
     def as_json(self):
         about = {
             "pypi": {
                 "filename": self.filename,
                 "url": self.url,
-                "project": self.version.project.display_name,
+                "project": self.project.display_name,
                 "version": self.version.display_name,
                 "size": self.size,
                 "md5": self.md5,
