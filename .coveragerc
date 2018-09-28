@@ -1,6 +1,0 @@
-[run]
-branch = True
-
-[report]
-precision = 2
-show_missing = True

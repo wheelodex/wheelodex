@@ -12,13 +12,18 @@
 - `iterqueue()`: Only return wheels for the latest version of each project
 - Give `process_queue` (the function and the command) options for limiting the
   number and/or total size of wheels to process
-- Give the `load` command an option for overwriting any `WheelData` that's
-  already in the database?  (This would require first fixing
-  `add_wheel_data()`; see the comment in its source.)
-- Add a command for analyzing the wheels for given projects
-- Add a command for analyzing given wheels
-- `load` and `dump`: Add a means for including the PyPI changelog serial
 - Replace `WheelData.update_structure()` with Alembic
+
+- Commands:
+    - Give `load` an option for overwriting any `WheelData` that's already in
+      the database?  (This would require first fixing `add_wheel_data()`; see
+      the comment in its source.)
+    - Add a command for analyzing the wheels for given projects
+    - Add a command for analyzing given wheels
+    - `load` and `dump`: Add a means for including the PyPI changelog serial
+    - `dump`: Add an option for including processing errors/wheels with
+      processing errors
+    - Add a command & function for pruning old project versions
 
 Wheel Inspection
 ----------------
@@ -47,6 +52,7 @@ Wheel Inspection
 - Add a `.derived.signed` field?
 - Add a `.derived.type_checked`(?) field for whether `py.typed` is present?
   (See PEP 561)
+- Remove duplicates from `.derived.keywords`?
 
 Architecture
 ------------
