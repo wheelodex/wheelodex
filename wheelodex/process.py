@@ -21,11 +21,10 @@ def process_queue(db):
                     sha256   = whl.sha256,
                     tmpdir   = tmpdir,
                 )
+                db.add_wheel_data(whl, about)
             except Exception:
                 log.exception('Error processing %s', whl.filename)
                 db.add_wheel_error(whl, traceback.format_exc())
-            else:
-                db.add_wheel_data(whl, about)
             finally:
                 db.session.commit()
 
