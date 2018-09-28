@@ -3,7 +3,7 @@ from .db   import Wheel, db
 
 web = Blueprint('web', __name__)
 
-from .     import macros  # noqa: F401
+from .     import macros  # noqa
 
 @web.route('/wheels.html')
 def wheel_list():
