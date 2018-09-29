@@ -30,7 +30,7 @@ def flatten_metadata(metadata):
                     s += '[{}]'.format(','.join(req["extras"]))
                 if req["url"] is not None:
                     s += ' @ ' + req["url"]
-                if req["specifier"] is not None:
+                if req["specifier"]:
                     s += ' ({})'.format(req["specifier"])
                 if req["marker"] is not None:
                     if req["url"] is not None and req["specifier"] is None:
