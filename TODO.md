@@ -22,7 +22,6 @@
       the comment in its source.)
     - Add a command for analyzing the wheels for given projects
     - Add a command for analyzing given wheels
-    - `load` and `dump`: Add a means for including the PyPI changelog serial
     - `dump`: Add an option for including processing errors/wheels with
       processing errors
     - Add a command & function for pruning old project versions

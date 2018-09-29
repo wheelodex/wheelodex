@@ -58,17 +58,22 @@ def process_queue_cmd():
 
 @main.command()
 @click.option('-A', '--all', 'dump_all', is_flag=True)
-@click.option('-o', '--outfile', type=click.File('w'), default='-')
+@click.option('-o', '--outfile', default='-')
 def dump(dump_all, outfile):
-    with WheelDatabase() as db, outfile:
-        for whl in db.session.query(Wheel):
-            if dump_all or whl.data is not None:
-                click.echo(json.dumps(whl.as_json()), file=outfile)
+    with WheelDatabase() as db:
+        outfile %= {"serial": db.serial}
+        with click.open_file(outfile, 'w') as fp:
+            for whl in db.session.query(Wheel):
+                if dump_all or whl.data is not None:
+                    click.echo(json.dumps(whl.as_json()), file=fp)
 
 @main.command()
+@click.option('-S', '--serial', type=int)
 @click.argument('infile', type=click.File())
-def load(infile):
+def load(infile, serial):
     with WheelDatabase() as db, infile:
+        if serial is not None:
+            db.serial = serial
         for line in infile:
             about = json.loads(line)
             version = db.add_version(
