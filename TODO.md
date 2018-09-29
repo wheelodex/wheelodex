@@ -25,8 +25,6 @@
     - `dump`: Add an option for including processing errors/wheels with
       processing errors
     - Add a command & function for pruning old project versions
-    - Add a database initialization command that calls `create_all()` and sets
-      `db.serial` to 0?
 
 Wheel Inspection
 ----------------

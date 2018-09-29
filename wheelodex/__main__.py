@@ -30,6 +30,12 @@ def main(log_level):
         level   = getattr(logging, log_level),
     )
 
+@main.command()
+def initdb():
+    """ Ensure the database is initialized """
+    with WheelDatabase() as db:
+        db.serial = 0
+
 @main.command('scan_pypi')
 ### TODO: Add a command-line option for setting `max_size`
 def scan_pypi_cmd():
