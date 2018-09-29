@@ -56,6 +56,14 @@ Wheel Inspection
 - Remove duplicates from `.derived.keywords`?
 - Give `inspect_wheel()` an option for whether to keep long descriptions?
 
+Web Interface
+-------------
+- Obfuscate e-mail addresses
+- Make project names in `Requires-Dist` into hyperlinks
+- Make `Home-page`, `Download-URL`, and `Project-URL` URLs into (nofollow)
+  hyperlinks
+- Paginate `wheels.html`
+
 Architecture
 ------------
 - getting configuration from config file

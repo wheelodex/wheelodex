@@ -3,6 +3,10 @@
 {% block title %}{{whl.filename|e}}{% endblock %}
 
 {% block content %}
+<a href="https://pypi.org/project/{{whl.project.display_name|e}}/{{whl.version.display_name|e}}/">[pypi]</a>
+
+<h2>Details</h2>
+
 <table>
     <tr>
         <td><b>Project:</b></td>
@@ -50,12 +54,13 @@
 {% set data = whl.data.raw_data %}
 
 {% if 'metadata' in data['dist_info'] %}
+    <h2>METADATA</h2>
     {% set metadata = data['dist_info']['metadata'] %}
     <div class="metadata">
         <table class="keyvalues">
         {% for field, value in metadata|flatten_metadata %}
             <tr>
-                <td class="key">{{field|e}}</td>
+                <td class="key">{{field|e}}:</td>
                 <td class="value">{{value|e}}</td>
             </tr>
         {% endfor %}

@@ -52,8 +52,15 @@ a:hover   {color: #ffff00; text-decoration: underline; }
 a:active  {color: #ffff00; text-decoration: none; }
 a:visited {color: #ff0000; text-decoration: underline; }
 
-@media screen, projection, tv {
- /* See <http://www.w3.org/TR/REC-CSS2/media.html> for more information. */
- body {background-color: #dddddd; }  /* #fafafa? */
- a:active {color: #ffffff; }
+.metadata {
+    background-color: #dddddd;
+    font-family: monospace;
+}
+
+.metadata a:active {
+    color: #ffffff;
+}
+
+.body {
+    margin-top: 2ex;
 }
