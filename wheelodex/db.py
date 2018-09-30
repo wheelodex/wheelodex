@@ -1,4 +1,5 @@
 from   datetime                   import datetime, timezone
+import logging
 from   typing                     import Optional, Union
 from   flask_sqlalchemy           import SQLAlchemy
 from   packaging.utils            import canonicalize_name as normalize, \
@@ -11,6 +12,8 @@ from   .util                      import reprify, version_sort_key
 
 db = SQLAlchemy()
 Base = db.Model
+
+log = logging.getLogger(__name__)
 
 class WheelDatabase:
     def __init__(self):
@@ -154,6 +157,44 @@ class WheelDatabase:
                         .filter(Version.project == p)\
                         .filter(Version.name == normversion(version))\
                         .delete()
+
+    def purge_old_versions(self):
+        """
+        For each project, keep (a) the latest version, (b) the latest version
+        with wheels registered, and (c) the latest version with wheel data, and
+        delete all other versions.
+        """
+        log.info('BEGIN purge_old_versions')
+        for p in self.session.query(Project).join(Version)\
+                             .group_by(Project)\
+                             .having(S.func.count(Version.id) > 1):
+            latest = p.latest_version
+            log.info('Project %s: keeping latest version: %s',
+                     p.display_name, latest.display_name)
+            latest_wheel = self.session.query(Version).with_parent(p)\
+                                       .filter(Version.wheels.any())\
+                                       .order_by(Version.ordering.desc())\
+                                       .first()
+            if latest_wheel is not None:
+                log.info('Project %s: keeping latest version with wheels: %s',
+                         p.display_name, latest_wheel.display_name)
+                latest_data = self.session.query(Version).with_parent(p)\
+                                          .filter(Version.wheels.any(
+                                              Wheel.data.has()
+                                          ))\
+                                          .order_by(Version.ordering.desc())\
+                                          .first()
+                if latest_data is not None:
+                    log.info('Project %s: keeping latest version with data: %s',
+                            p.display_name, latest_wheel.display_name)
+            else:
+                latest_data = None
+            for v in p.versions:
+                if v not in (latest, latest_wheel, latest_data):
+                    log.info('Project %s: deleting version %s',
+                             p.display_name, v.display_name)
+                    self.session.delete(v)
+        log.info('END purge_old_versions')
 
     def add_wheel_error(self, wheel: 'Wheel', errmsg: str):
         wheel.errors.append(ProcessingError(

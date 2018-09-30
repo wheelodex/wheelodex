@@ -15,6 +15,7 @@
     - Replace `WheelDatabase`'s constructor with a context manager that calls
       `db.create_all()`, yields `db.session`, and commits or rolls back as
       appropriate?
+- Make `add_wheel_data()` into a method of `Wheel`?
 
 - Commands:
     - Give `load` an option for overwriting any `WheelData` that's already in
@@ -24,7 +25,6 @@
     - Add a command for analyzing given wheels
     - `dump`: Add an option for including processing errors/wheels with
       processing errors
-    - Add a command & function for pruning old project versions
 
 Wheel Inspection
 ----------------

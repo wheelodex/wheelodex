@@ -93,5 +93,10 @@ def load(infile, serial):
                 whl.data.wheelodex_version \
                     = about["wheelodex"]["wheelodex_version"]
 
+@main.command()
+def purge_old_versions():
+    with WheelDatabase() as db:
+        db.purge_old_versions()
+
 if __name__ == '__main__':
     main(prog_name=__package__)
