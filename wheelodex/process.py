@@ -22,10 +22,16 @@ def process_queue(db):
                     tmpdir   = tmpdir,
                 )
                 db.add_wheel_data(whl, about)
+                # Some errors in inserting data aren't raised until we actually
+                # try to insert by calling commit(), so include the commit()
+                # under the `try`.
+                db.session.commit()
             except Exception:
+                # rollback() needs to be called before log.exception() or else
+                # SQLAlchemy gets all complainy.
+                db.session.rollback()
                 log.exception('Error processing %s', whl.filename)
                 db.add_wheel_error(whl, traceback.format_exc())
-            finally:
                 db.session.commit()
 
 def process_wheel(filename, url, size, md5, sha256, tmpdir):

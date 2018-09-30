@@ -157,7 +157,7 @@ class WheelDatabase:
 
     def add_wheel_error(self, wheel: 'Wheel', errmsg: str):
         wheel.errors.append(ProcessingError(
-            errmsg            = errmsg,
+            errmsg            = errmsg[-65535:],
             timestamp         = datetime.now(timezone.utc),
             wheelodex_version = __version__,
         ))
