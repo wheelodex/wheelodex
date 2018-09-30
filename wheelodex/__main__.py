@@ -36,7 +36,7 @@ def initdb():
     with WheelDatabase() as db:
         db.serial = 0
 
-@main.command('scan_pypi')
+@main.command('scan-pypi')
 ### TODO: Add a command-line option for setting `max_size`
 def scan_pypi_cmd():
     with WheelDatabase() as db:
@@ -45,7 +45,7 @@ def scan_pypi_cmd():
             max_size=current_app.config.get("WHEELODEX_MAX_WHEEL_SIZE"),
         )
 
-@main.command('scan_changelog')
+@main.command('scan-changelog')
 ### TODO: Add a command-line option for setting `max_size`
 def scan_changelog_cmd():
     with WheelDatabase() as db:
@@ -57,7 +57,7 @@ def scan_changelog_cmd():
             max_size=current_app.config.get("WHEELODEX_MAX_WHEEL_SIZE"),
         )
 
-@main.command('process_queue')
+@main.command('process-queue')
 def process_queue_cmd():
     with WheelDatabase() as db:
         process_queue(db)
