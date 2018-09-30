@@ -59,12 +59,7 @@ Wheel Inspection
 Web Interface
 -------------
 - Obfuscate e-mail addresses
-- Make project names in `Requires-Dist` into hyperlinks
-- Make `Home-page`, `Download-URL`, and `Project-URL` URLs into (nofollow)
-  hyperlinks
-    - Do the same for URLs in `Requires-Dist`?
 - Paginate `wheels.html`
-- Make entry point group names into hyperlinks
 
 Architecture
 ------------

@@ -21,3 +21,13 @@ def wheel_html(wheel):
     whl = db.session.query(Wheel).filter(Wheel.filename == wheel + '.whl')\
                     .first_or_404()
     return render_template('wheel_data.html', whl=whl)
+
+@web.route('/project/<name>.html')
+def project(name):
+    ### TODO
+    return 'TODO'
+
+@web.route('/entry-point/<group>.html')
+def entry_point(group):
+    ### TODO
+    return 'TODO'

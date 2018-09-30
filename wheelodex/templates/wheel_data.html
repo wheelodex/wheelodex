@@ -138,7 +138,7 @@
         {% for group, eps in data['dist_info']['entry_points'].items()|sort %}
             <div class="epgroup">
                 <div class="epgroupname">
-                    [{{group|e}}]
+                    [<a href="{{url_for('.entry_point', group=group)}}">{{group|e}}</a>]
                 </div>
                 {% for name, ep in eps.items()|sort %}
                     <div class="ep">

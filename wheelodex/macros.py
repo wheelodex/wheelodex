@@ -1,3 +1,4 @@
+from flask  import url_for
 from jinja2 import Markup
 from .views import web
 
@@ -26,11 +27,16 @@ def flatten_metadata(metadata):
         fieldname = field.replace('_', '-').title()
         if field == 'requires_dist':
             for req in value:
-                s = req["name"]
+                s = Markup(
+                    '<a href="{}">{}</a>'.format(
+                        url_for('.project', name=req["name"]),
+                        req["name"],
+                    )
+                )
                 if req["extras"]:
                     s += '[{}]'.format(','.join(req["extras"]))
                 if req["url"] is not None:
-                    s += ' @ ' + req["url"]
+                    s += ' @ ' + extlink(req["url"])
                 if req["specifier"]:
                     s += ' ({})'.format(req["specifier"])
                 if req["marker"] is not None:
@@ -41,9 +47,14 @@ def flatten_metadata(metadata):
         elif field == 'project_url':
             for purl in value:
                 if purl["label"] is None:
-                    yield (fieldname, purl["url"])
+                    yield (fieldname, extlink(purl["url"]))
                 else:
-                    yield (fieldname, '{label}, {url}'.format_map(purl))
+                    yield (
+                        fieldname,
+                        purl["label"] + ', ' + extlink(purl["url"]),
+                    )
+        elif field in ('home_page', 'download_url'):
+            yield (fieldname, extlink(value))
         elif isinstance(value, list):
             for v in value:
                 yield (fieldname, v)
