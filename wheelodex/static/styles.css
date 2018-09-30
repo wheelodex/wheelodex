@@ -52,15 +52,33 @@ a:hover   {color: #ffff00; text-decoration: underline; }
 a:active  {color: #ffff00; text-decoration: none; }
 a:visited {color: #ff0000; text-decoration: underline; }
 
-.metadata {
+.dist_info_file {
     background-color: #dddddd;
     font-family: monospace;
 }
 
-.metadata a:active {
+.dist_info_file a:active {
     color: #ffffff;
 }
 
-.body {
+.dist_info_file .body {
     margin-top: 2ex;
+}
+
+td.nil {
+    text-align: center;
+}
+
+.record .path {
+    font-family: monospace;
+    font-size: 80%;
+}
+
+.record .digests {
+    font-family: monospace;
+    font-size: 80%;
+}
+
+.record .size {
+    text-align: right;
 }

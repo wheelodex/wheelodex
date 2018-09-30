@@ -1,3 +1,4 @@
+from jinja2 import Markup
 from .views import web
 
 @web.app_template_filter()
@@ -58,3 +59,35 @@ def flatten_metadata(metadata):
                 yield (fieldname, v)
         else:
             yield (fieldname, value)
+
+@web.app_template_filter()
+def flatten_wheel_info(wheel_info):
+    wheel_info = wheel_info.copy()
+    for field in 'wheel_version generator root_is_purelib tag build'.split():
+        value = wheel_info.pop(field, None)
+        if value is None:
+            continue
+        fieldname = field.replace('_', '-').title()
+        if isinstance(value, list):
+            for v in value:
+                yield (fieldname, v)
+        elif isinstance(value, bool):
+            yield (fieldname, str(value).lower())
+        else:
+            yield (fieldname, value)
+    wheel_info.pop("BODY", None)  # Caller must handle this separately
+    for field, value in sorted(wheel_info.items()):
+        if value is None:
+            continue
+        fieldname = field.replace('_', '-').title()
+        if isinstance(value, list):
+            for v in value:
+                yield (fieldname, v)
+        else:
+            yield (fieldname, value)
+
+@web.app_template_filter()
+def extlink(url):
+    return Markup(
+        '<a href="{0}" rel="nofollow">{0}</a>'.format(Markup.escape(url))
+    )

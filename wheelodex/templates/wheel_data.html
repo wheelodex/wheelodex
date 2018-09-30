@@ -4,6 +4,7 @@
 
 {% block content %}
 <a href="https://pypi.org/project/{{whl.project.display_name|e}}/{{whl.version.display_name|e}}/">[pypi]</a>
+<a href="{{url_for('.wheel_json', wheel=whl.filename[:-4])}}">[json]</a>
 
 <h2>Details</h2>
 
@@ -30,7 +31,7 @@
     </tr>
     <tr>
         <td><b>MD5:</b></td>
-        {% if whl.md5 is undefined %}
+        {% if whl.md5 == None %}
         <td>[Unknown]</td>
         {% else %}
         <td><tt>{{whl.md5}}</tt></td>
@@ -38,7 +39,7 @@
     </tr>
     <tr>
         <td><b>SHA256:</b></td>
-        {% if whl.sha256 is undefined %}
+        {% if whl.sha256 == None %}
         <td>[Unknown]</td>
         {% else %}
         <td><tt>{{whl.sha256}}</tt></td>
@@ -50,27 +51,131 @@
     </tr>
 </table>
 
-{% if whl.data is defined %}
+{% if whl.data != None %}
 {% set data = whl.data.raw_data %}
 
 {% if 'metadata' in data['dist_info'] %}
-    <h2>METADATA</h2>
-    {% set metadata = data['dist_info']['metadata'] %}
-    <div class="metadata">
+    <h2 class="dist_info_filename">METADATA</h2>
+    <div class="dist_info_file metadata">
+        {% set metadata = data['dist_info']['metadata'] %}
         <table class="keyvalues">
-        {% for field, value in metadata|flatten_metadata %}
-            <tr>
-                <td class="key">{{field|e}}:</td>
-                <td class="value">{{value|e}}</td>
-            </tr>
-        {% endfor %}
+            {% for field, value in metadata|flatten_metadata %}
+                <tr>
+                    <td class="key">{{field|e}}:</td>
+                    <td class="value">{{value|e}}</td>
+                </tr>
+            {% endfor %}
         </table>
-        {% if 'description' in metadata %}
+        {% if metadata.get('description') != None %}
             <div class="body">[Description omitted; length: {{metadata["description"]["length"]}} characters{% if not data["derived"]["readme_renders"] %}; fails to render{% endif %}]</div>
         {% else %}
             <div class="body">[No description]</div>
         {% endif %}
     </div>
+{% endif %}
+
+{% if 'wheel' in data['dist_info'] %}
+    <h2 class="dist_info_filename">WHEEL</h2>
+    <div class="dist_info_file">
+        {% set wheelinfo = data['dist_info']['wheel'] %}
+        <table class="keyvalues">
+            {% for field, value in wheelinfo|flatten_wheel_info %}
+                <tr>
+                    <td class="key">{{field|e}}:</td>
+                    <td class="value">{{value|e}}</td>
+                </tr>
+            {% endfor %}
+        </table>
+        {% if 'BODY' in wheelinfo %}
+            <div class="body">{{wheelinfo['BODY']|e}}</div>
+        {% endif %}
+    </div>
+{% endif %}
+
+{% if 'record' in data['dist_info'] %}
+    <h2 class="dist_info_filename">RECORD</h2>
+    <table class="record">
+        <tr>
+            <th>Path</th>
+            <th>Digest</th>
+            <th>Size</th>
+        </tr>
+        {% for entry in data['dist_info']['record'] %}
+            <tr>
+                <td class="path">{{entry['path']|e}}</td>
+                {% if entry['digests'] %}
+                    <td class="digests">
+                        {% set middigest = joiner('<br/>'|safe) %}
+                        {% for alg, value in entry['digests'].items() %}
+                            {{middigest()}}{{alg|e}}={{value|e}}
+                        {% endfor %}
+                    </td>
+                {% else %}
+                    <td class="nil">&#x2014;</td>
+                {% endif %}
+                {% if entry['size'] != None %}
+                    <td class="size">{{entry['size']}}</td>
+                {% else %}
+                    <td class="nil">&#x2014;</td>
+                {% endif %}
+            </tr>
+        {% endfor %}
+    </table>
+{% endif %}
+
+{% if 'top_level' in data['dist_info'] %}
+    <h2 class="dist_info_filename">top_level.txt</h2>
+    <div class="dist_info_file">
+        {% for pkg in data["dist_info"]["top_level"] %}
+            <div>{{pkg|e}}</div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+{% if 'entry_points' in data['dist_info'] %}
+    <h2 class="dist_info_filename">entry_points.txt</h2>
+    <div class="dist_info_file entry_points">
+        {% for group, eps in data['dist_info']['entry_points'].items()|sort %}
+            <div class="epgroup">
+                <div class="epgroupname">
+                    [{{group|e}}]
+                </div>
+                {% for name, ep in eps.items()|sort %}
+                    <div class="ep">
+                        {{name|e}} = {{ep["module"]|e}}{% if ep["attr"] %}:{{ep["attr"]|e}}{% endif %}{% if ep["extras"] %} [{{ep["extras"]|join(",")}}]{% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+{% if 'namespace_packages' in data['dist_info'] %}
+    <h2 class="dist_info_filename">namespace_packages.txt</h2>
+    <div class="dist_info_file">
+        {% for pkg in data["dist_info"]["namespace_packages"] %}
+            <div>{{pkg|e}}</div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+{% if 'dependency_links' in data['dist_info'] %}
+    <h2 class="dist_info_filename">dependency_links.txt</h2>
+    <div class="dist_info_file">
+        {% for url in data["dist_info"]["dependency_links"] %}
+            <div>{{url|extlink}}</div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+{% if 'zip_safe' in data['dist_info'] %}
+    <h2 class="dist_info_filename">
+        {% if data['dist_info']['zip_safe'] %}
+            zip-safe
+        {% else %}
+            not-zip-safe
+        {% endif %}
+    </h2>
 {% endif %}
 
 {% endif %}
