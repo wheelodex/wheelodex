@@ -26,7 +26,7 @@ def wheel_json(wheel):
     return jsonify(whl.as_json())
 
 @web.route('/<wheel>.html')
-def wheel_html(wheel):
+def wheel_data(wheel):
     whl = db.session.query(Wheel).filter(Wheel.filename == wheel + '.whl')\
                     .first_or_404()
     return render_template('wheel_data.html', whl=whl)
