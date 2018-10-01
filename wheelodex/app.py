@@ -4,6 +4,7 @@ from   flask import Flask
 DEFAULT_CONFIG = {
     "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
     "SQLALCHEMY_TRACK_MODIFICATIONS": False,
+    "WHEELODEX_WHEELS_PER_PAGE": 50,
 }
 
 def create_app():

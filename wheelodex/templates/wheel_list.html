@@ -11,7 +11,7 @@
         <th>HTML</th>
         <th>JSON</th>
     </tr>
-    {% for whl in wheels %}
+    {% for whl in wheels.items %}
     <tr>
         <td><tt>{{whl.project.display_name|e}}</tt></td>
         <td><tt>{{whl.version.display_name|e}}</tt></td>
@@ -21,4 +21,19 @@
     </tr>
     {% endfor %}
 </table>
+
+<div class="pagination">
+    {%- for page in wheels.iter_pages() %}
+        {% if page %}
+            {% if page != wheels.page %}
+                <a href="{{url_for('.wheel_list', page=page)}}">{{page}}</a>
+            {% else %}
+                <strong>{{page}}</strong>
+            {% endif %}
+        {% else %}
+            <span class="ellipsis">&#x2026;</span>
+        {% endif %}
+    {%- endfor %}
+</div>
+
 {% endblock %}

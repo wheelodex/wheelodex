@@ -78,7 +78,6 @@ Wheel Inspection
 
 Web Interface
 -------------
-- Paginate `wheels.html`
 - Wheel data:
     - Include whether the wheel was verified
     - `METADATA` display:

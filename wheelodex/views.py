@@ -1,6 +1,6 @@
-from flask           import Blueprint, jsonify, render_template
+from flask           import Blueprint, current_app, jsonify, render_template
 from packaging.utils import canonicalize_name as normalize
-from .db             import Project, Wheel, db
+from .db             import Project, Version, Wheel, db
 
 web = Blueprint('web', __name__)
 
@@ -8,7 +8,14 @@ from .     import macros  # noqa
 
 @web.route('/wheels.html')
 def wheel_list():
-    wheels = db.session.query(Wheel).filter(Wheel.data.has()).all()
+    per_page = current_app.config["WHEELODEX_WHEELS_PER_PAGE"]
+    wheels = db.session.query(Wheel).join(Version).join(Project)\
+                       .filter(Wheel.data.has())\
+                       .order_by(
+                            Project.name.asc(),
+                            Version.ordering.asc(),
+                            Wheel.ordering.desc(),
+                       ).paginate(per_page=per_page)
     return render_template('wheel_list.html', wheels=wheels)
 
 @web.route('/<wheel>.json')

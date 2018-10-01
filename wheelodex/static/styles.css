@@ -82,3 +82,7 @@ td.nil {
 .record .size {
     text-align: right;
 }
+
+.paginate {
+    text-align: center;
+}
