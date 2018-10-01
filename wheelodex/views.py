@@ -2,7 +2,7 @@ from   flask           import Blueprint, current_app, jsonify, render_template
 from   packaging.utils import canonicalize_name as normalize
 import sqlalchemy as S
 from   .db             import EntryPoint, EntryPointGroup, Project, Version, \
-                                Wheel, WheelData, db
+                                Wheel, WheelData, db, dependency_tbl
 
 web = Blueprint('web', __name__)
 
@@ -48,6 +48,23 @@ def project(name):
         return render_template('wheel_data.html', whl=whl)
     else:
         return 'No data available'
+
+@web.route('/project/<name>/rdepends.html')
+def rdepends(name):
+    per_page = current_app.config["WHEELODEX_RDEPENDS_PER_PAGE"]
+    p = db.session.query(Project).filter(Project.name == normalize(name))\
+                  .first_or_404()
+    subq = db.session.query(WheelData).join(dependency_tbl).join(Project)\
+                     .filter(Project.id == p.id).subquery()
+    ### TODO: Use preferred wheel:
+    rdeps = db.session.query(Project).join(Version).join(Wheel).join(subq)\
+                      .order_by(Project.name.asc())\
+                      .paginate(per_page=per_page)
+    return render_template(
+        'rdepends.html',
+        project  = p.display_name,
+        rdepends = rdeps,
+    )
 
 @web.route('/entry-points.html')
 def entry_point_list():

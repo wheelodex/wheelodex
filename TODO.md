@@ -25,6 +25,10 @@
   wheels registered for a project even though there may be lower-versioned
   releases on PyPI with wheels.  Try to keep this from happening.
 
+- Problem: PyPI's JSON API doesn't update automatically (probably due to
+  caching), causing some wheels to fall through the cracks when scanning the
+  changelog.  Deal with this.
+
 - Commands:
     - Give `load` an option for overwriting any `WheelData` that's already in
       the database?  (This would require first fixing `add_wheel_data()`; see
@@ -84,11 +88,13 @@ Web Interface
         - Obfuscate e-mail addresses
         - Make each keyword into a hyperlink?
         - Make each classifier into a hyperlink?
+    - Insert a blank line between entry point groups
 - Project page:
     - Show some sort of informative boilerplate if no project by the given name
-      is found?
+      is found
+        - Include a link to the project's PyPI page
     - If no wheel data is available, show information on latest available
-      wheels?
+      wheels
     - If there are versions but none of them have wheels, show a message to
       that effect
 - Entry point groups:
