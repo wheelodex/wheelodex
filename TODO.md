@@ -91,6 +91,9 @@ Web Interface
       wheels?
     - If there are versions but none of them have wheels, show a message to
       that effect
+- Entry point groups:
+    - Only count entry points from one wheel (the preferred wheel) per project
+    - Add an option for sorting by quantity?
 - Entry points:
     - Only return results from one wheel (the preferred wheel) per project
     - Add options for sorting by either project or entry point name, ascending

@@ -45,8 +45,10 @@ def project(name):
 @web.route('/entry-points.html')
 def entry_point_list():
     per_page = current_app.config["WHEELODEX_ENTRY_POINT_GROUPS_PER_PAGE"]
-    groups = db.session.query(EntryPointGroup)\
-                       .filter(S.exists().where(EntryPoint.group_id == EntryPointGroup.id))\
+    # Omission of groups for which no entry points are defined is intentional.
+    groups = db.session.query(EntryPointGroup.name,S.func.COUNT(EntryPoint.id))\
+                       .join(EntryPoint)\
+                       .group_by(EntryPointGroup)\
                        .order_by(EntryPointGroup.name.asc())\
                        .paginate(per_page=per_page)
     return render_template('entry_point_list.html', groups=groups)
