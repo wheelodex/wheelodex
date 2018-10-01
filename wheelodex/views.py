@@ -1,5 +1,6 @@
-from flask import Blueprint, jsonify, render_template
-from .db   import Wheel, db
+from flask           import Blueprint, jsonify, render_template
+from packaging.utils import canonicalize_name as normalize
+from .db             import Project, Wheel, db
 
 web = Blueprint('web', __name__)
 
@@ -24,8 +25,13 @@ def wheel_html(wheel):
 
 @web.route('/project/<name>.html')
 def project(name):
-    ### TODO
-    return 'TODO'
+    p = db.session.query(Project).filter(Project.name == normalize(name))\
+                  .first_or_404()
+    whl = p.preferred_wheel
+    if whl is not None:
+        return render_template('wheel_data.html', whl=whl)
+    else:
+        return 'No data available'
 
 @web.route('/entry-point/<group>.html')
 def entry_point(group):

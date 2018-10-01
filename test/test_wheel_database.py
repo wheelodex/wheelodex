@@ -120,7 +120,6 @@ def test_remove_wheel(tmpdb):
     assert tmpdb.iterqueue() == [whl1]
     tmpdb.remove_wheel('FooBar-1.0-py3-none-any.whl')
     assert tmpdb.iterqueue() == []
-    assert tmpdb.get_version(p, '1.0').wheels == []
 
 def test_add_project(tmpdb):
     assert tmpdb.get_all_projects() == []
@@ -378,6 +377,42 @@ def test_purge_old_versions_latest_has_data_plus_data_plus_mid(tmpdb):
     tmpdb.purge_old_versions()
     assert sort_versions(tmpdb.session.query(Version).all()) == [v2]
 
+def test_preferred_wheel_two_data(tmpdb):
+    p = tmpdb.add_project('FooBar')
+    v1 = tmpdb.add_version(p, '1.0')
+    whl1 = tmpdb.add_wheel(version=v1, **FOOBAR_1_WHEEL)
+    tmpdb.add_wheel_data(whl1, FOOBAR_1_DATA)
+    v2 = tmpdb.add_version(p, '2.0')
+    whl2 = tmpdb.add_wheel(version=v2, **FOOBAR_2_WHEEL)
+    tmpdb.add_wheel_data(whl2, FOOBAR_2_DATA)
+    assert p.preferred_wheel == whl2
+
+def test_preferred_wheel_two_wheels_nodata(tmpdb):
+    p = tmpdb.add_project('FooBar')
+    v1 = tmpdb.add_version(p, '1.0')
+    tmpdb.add_wheel(version=v1, **FOOBAR_1_WHEEL)
+    v2 = tmpdb.add_version(p, '2.0')
+    tmpdb.add_wheel(version=v2, **FOOBAR_2_WHEEL)
+    assert p.preferred_wheel is None
+
+def test_preferred_wheel_lower_data(tmpdb):
+    p = tmpdb.add_project('FooBar')
+    v1 = tmpdb.add_version(p, '1.0')
+    whl1 = tmpdb.add_wheel(version=v1, **FOOBAR_1_WHEEL)
+    tmpdb.add_wheel_data(whl1, FOOBAR_1_DATA)
+    v2 = tmpdb.add_version(p, '2.0')
+    tmpdb.add_wheel(version=v2, **FOOBAR_2_WHEEL)
+    assert p.preferred_wheel == whl1
+
+def test_preferred_wheel_higher_data(tmpdb):
+    p = tmpdb.add_project('FooBar')
+    v1 = tmpdb.add_version(p, '1.0')
+    tmpdb.add_wheel(version=v1, **FOOBAR_1_WHEEL)
+    v2 = tmpdb.add_version(p, '2.0')
+    whl2 = tmpdb.add_wheel(version=v2, **FOOBAR_2_WHEEL)
+    tmpdb.add_wheel_data(whl2, FOOBAR_2_DATA)
+    assert p.preferred_wheel == whl2
+
 ### TODO: TO TEST:
 # iterqueue()
 #  - Wheels with data are omitted from queue
@@ -388,3 +423,4 @@ def test_purge_old_versions_latest_has_data_plus_data_plus_mid(tmpdb):
 # Deleting a WheelData deletes its dependencies and entry points
 # Deleting a WheelData doesn't affect its Wheel
 # Version.ordering?
+# Project.preferred_wheel when the highest version has multiple wheels with data

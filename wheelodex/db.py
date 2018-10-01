@@ -8,7 +8,8 @@ import sqlalchemy as S
 from   sqlalchemy.orm             import backref, object_session, relationship
 from   sqlalchemy_utils           import JSONType
 from   .                          import __version__
-from   .util                      import reprify, version_sort_key
+from   .util                      import reprify, version_sort_key, \
+                                            wheel_sort_key
 
 db = SQLAlchemy()
 Base = db.Model
@@ -65,6 +66,12 @@ class WheelDatabase:
                 uploaded = uploaded,
             )
             self.session.add(whl)
+            for i,w in enumerate(
+                ### TODO: Is `version.wheels` safe to use when some of its
+                ### elements may have been deleted earlier in the transaction?
+                sorted(version.wheels, key=lambda x: wheel_sort_key(x.filename))
+            ):
+                w.ordering = i
         return whl
 
     def iterqueue(self) -> ['Wheel']:
@@ -242,6 +249,16 @@ class Project(Base):
                                    .order_by(Version.ordering.desc())\
                                    .first()
 
+    @property
+    def preferred_wheel(self):
+        return object_session(self).query(Wheel)\
+                                   .join(Version)\
+                                   .filter(Version.project == self)\
+                                   .filter(Wheel.data.has())\
+                                   .order_by(Version.ordering.desc())\
+                                   .order_by(Wheel.ordering.desc())\
+                                   .first()
+
 
 class Version(Base):
     __tablename__ = 'versions'
@@ -292,6 +309,11 @@ class Wheel(Base):
     md5      = S.Column(S.Unicode(32), nullable=True)
     sha256   = S.Column(S.Unicode(64), nullable=True)
     uploaded = S.Column(S.Unicode(32), nullable=False)
+    #: The index of this wheel when all wheels for the version are sorted by
+    #: applying `wheel_sort_key()` to their filenames.  This column is set
+    #: every time a new wheel is added to the version with
+    #: WheelDatabase.add_wheel().
+    ordering = S.Column(S.Integer, nullable=False, default=0)
 
     def __repr__(self):
         return reprify(self, 'filename'.split())

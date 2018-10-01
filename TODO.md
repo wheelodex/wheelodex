@@ -7,8 +7,6 @@
           `wheel-data.schema.json` into it)
 - Upgrade `wheel-data.schema.json` to a more recent JSON Schema draft
 - `iterqueue()`: Only return wheels for the latest version of each project
-- Give `process_queue` (the function and the command) options for limiting the
-  number and/or total size of wheels to process
 - Replace `WheelData.update_structure()` with Alembic
 - Eliminate `WheelDatabase` and make its methods into functions that operate on
   the app's `db` object?
@@ -16,15 +14,37 @@
       `db.create_all()`, yields `db.session`, and commits or rolls back as
       appropriate?
 - Make `add_wheel_data()` into a method of `Wheel`?
+- Register large wheels but don't return them from `iterqueue()`?
+- Rename `process_queue` (the function and the command) and `iterqueue()`
+- Add a means for setting descriptions for entry points to display in the web
+  interface
+- Rewrite `wheel_sort_key()` to prefer more generic wheels to more specific,
+  prefer higher versions to lower, etc.
+
+- Problem: The deletion of a release from PyPI may leave Wheelodex with no
+  wheels registered for a project even though there may be lower-versioned
+  releases on PyPI with wheels.  Try to keep this from happening.
 
 - Commands:
     - Give `load` an option for overwriting any `WheelData` that's already in
       the database?  (This would require first fixing `add_wheel_data()`; see
       the comment in its source.)
-    - Add a command for analyzing the wheels for given projects
-    - Add a command for analyzing given wheels
+    - Add a command for analyzing the wheels for given projects (including an
+      option for forcing reanalysis)
+    - Add a command for analyzing given wheels (including an option for forcing
+      reanalysis)
     - `dump`: Add an option for including processing errors/wheels with
       processing errors
+    - Add a command (`scan-projects`?) that acts as a limited `scan-pypi`, only
+      registering wheels for projects listed on the command line?
+    - Add a command for setting the serial to the current value on PyPI and
+      doing nothing else?
+    - Give `scan-changelog` an option for ignoring projects that aren't already
+      in the database?
+    - At the end of `scan-pypi`, output a count of how many genuinely new
+      wheels were added?
+    - Give `process_queue` (the function and the command) options for limiting
+      the number and/or total size of wheels to process
 
 Wheel Inspection
 ----------------
@@ -58,8 +78,18 @@ Wheel Inspection
 
 Web Interface
 -------------
-- Obfuscate e-mail addresses
 - Paginate `wheels.html`
+- Wheel data:
+    - Include whether the wheel was verified
+    - `METADATA` display:
+        - Obfuscate e-mail addresses
+        - Make each keyword into a hyperlink?
+        - Make each classifier into a hyperlink?
+- Project page:
+    - Show some sort of informative boilerplate if no project by the given name
+      is found?
+    - If no wheel data is available, show information on latest available
+      wheels?
 
 Architecture
 ------------

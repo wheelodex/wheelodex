@@ -30,3 +30,6 @@ def reprify(obj, fields):
         type(obj),
         ', '.join('{}={!r}'.format(f, getattr(obj, f)) for f in fields),
     )
+
+def wheel_sort_key(filename):
+    return filename

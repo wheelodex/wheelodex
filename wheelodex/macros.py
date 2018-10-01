@@ -1,3 +1,5 @@
+""" Custom Jinja filters """
+
 from flask  import url_for
 from jinja2 import Markup
 from .views import web
