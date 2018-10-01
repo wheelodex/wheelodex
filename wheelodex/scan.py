@@ -96,7 +96,7 @@ def scan_changelog(db, since, max_size=None):
                         )
                     break
             else:
-                log.warning('Asset %s not found in JSON API', asset["filename"])
+                log.warning('Asset %s not found in JSON API', actwords[3])
 
         elif actwords[:2] == ['remove', 'file'] and len(actwords) == 3 and \
                 actwords[2].endswith('.whl'):
