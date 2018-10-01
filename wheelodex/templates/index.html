@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block title %}Wheelodex &#x2014; an Index of Wheels{% endblock %}
+
+{% block content %}
+
+<ul>
+    <li><a href="{{url_for('.wheel_list')}}">Analyzed Wheels</a> ({{whl_qty}})</li>
+    <li><a href="{{url_for('.entry_point_list')}}">Entry Point Groups</a> ({{epg_qty}})</li>
+</ul>
+
+{% endblock %}

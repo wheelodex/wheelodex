@@ -8,6 +8,13 @@ web = Blueprint('web', __name__)
 
 from . import macros  # noqa
 
+@web.route('/')
+@web.route('/index.html')
+def index():
+    whl_qty = db.session.query(WheelData).count()
+    epg_qty = db.session.query(EntryPointGroup).count()
+    return render_template('index.html', whl_qty=whl_qty, epg_qty=epg_qty)
+
 @web.route('/wheels.html')
 def wheel_list():
     per_page = current_app.config["WHEELODEX_WHEELS_PER_PAGE"]
