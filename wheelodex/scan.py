@@ -94,7 +94,9 @@ def scan_changelog(db, since, max_size=None):
                             sha256   = asset["digests"].get("sha256").lower(),
                             uploaded = str(asset["upload_time"]),
                         )
-            ### TODO: Log warning if wheel is not found
+                    break
+            else:
+                log.warning('Asset %s not found in JSON API', asset["filename"])
 
         elif actwords[:2] == ['remove', 'file'] and len(actwords) == 3 and \
                 actwords[2].endswith('.whl'):

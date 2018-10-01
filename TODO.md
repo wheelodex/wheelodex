@@ -13,7 +13,7 @@
     - Replace `WheelDatabase`'s constructor with a context manager that calls
       `db.create_all()`, yields `db.session`, and commits or rolls back as
       appropriate?
-- Make `add_wheel_data()` into a method of `Wheel`?
+    - Make `add_wheel_data()` and `add_wheel_error()` into methods of `Wheel`?
 - Register large wheels but don't return them from `iterqueue()`?
 - Rename `process_queue` (the function and the command) and `iterqueue()`
 - Add a means for setting descriptions for entry points to display in the web
@@ -89,6 +89,8 @@ Web Interface
       is found?
     - If no wheel data is available, show information on latest available
       wheels?
+    - If there are versions but none of them have wheels, show a message to
+      that effect
 
 Architecture
 ------------
