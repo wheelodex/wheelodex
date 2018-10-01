@@ -21,6 +21,10 @@
 - Rewrite `wheel_sort_key()` to prefer more generic wheels to more specific,
   prefer higher versions to lower, etc.
 
+- There are several database queries (marked with "TODO: Use preferred wheel")
+  that need to be amended to only return results for one wheel (the preferred
+  wheel) per project.  Figure out how to amend them and do so.
+
 - Problem: The deletion of a release from PyPI may leave Wheelodex with no
   wheels registered for a project even though there may be lower-versioned
   releases on PyPI with wheels.  Try to keep this from happening.
@@ -98,10 +102,8 @@ Web Interface
     - If there are versions but none of them have wheels, show a message to
       that effect
 - Entry point groups:
-    - Only count entry points from one wheel (the preferred wheel) per project
     - Add an option for sorting by quantity?
 - Entry points:
-    - Only return results from one wheel (the preferred wheel) per project
     - Add options for sorting by either project or entry point name, ascending
       or descending
 

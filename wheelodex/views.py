@@ -70,6 +70,7 @@ def rdepends(name):
 def entry_point_list():
     per_page = current_app.config["WHEELODEX_ENTRY_POINT_GROUPS_PER_PAGE"]
     # Omission of groups for which no entry points are defined is intentional.
+    ### TODO: Use preferred wheel:
     groups = db.session.query(EntryPointGroup.name,S.func.COUNT(EntryPoint.id))\
                        .join(EntryPoint)\
                        .group_by(EntryPointGroup)\
@@ -83,6 +84,7 @@ def entry_point(group):
                          .filter(EntryPointGroup.name == group)\
                          .first_or_404()
     per_page = current_app.config["WHEELODEX_ENTRY_POINTS_PER_PAGE"]
+    ### TODO: Use preferred wheel:
     project_eps = db.session.query(Project.display_name, EntryPoint.name)\
                             .join(Version).join(Wheel).join(WheelData)\
                             .join(EntryPoint)\
