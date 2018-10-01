@@ -316,7 +316,7 @@ class Wheel(Base):
     ordering = S.Column(S.Integer, nullable=False, default=0)
 
     def __repr__(self):
-        return reprify(self, 'filename'.split())
+        return reprify(self, ['filename'])
 
     @property
     def project(self):
@@ -474,7 +474,7 @@ class EntryPointGroup(Base):
     description = S.Column(S.Unicode(65535), nullable=True, default=None)
 
     def __repr__(self):
-        return reprify(self, 'name')
+        return reprify(self, ['name'])
 
     @classmethod
     def from_name(cls, session, name: str):
@@ -508,7 +508,7 @@ class EntryPoint(Base):
     name          = S.Column(S.Unicode(2048), nullable=False)
 
     def __repr__(self):
-        return reprify(self, 'wheel_data group name')
+        return reprify(self, 'wheel_data group name'.split())
 
 
 class File(Base):
