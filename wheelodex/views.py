@@ -1,11 +1,12 @@
-from flask           import Blueprint, current_app, jsonify, render_template
-from packaging.utils import canonicalize_name as normalize
-from .db             import EntryPoint, EntryPointGroup, Project, Version, \
-                            Wheel, WheelData, db
+from   flask           import Blueprint, current_app, jsonify, render_template
+from   packaging.utils import canonicalize_name as normalize
+import sqlalchemy as S
+from   .db             import EntryPoint, EntryPointGroup, Project, Version, \
+                                Wheel, WheelData, db
 
 web = Blueprint('web', __name__)
 
-from .     import macros  # noqa
+from . import macros  # noqa
 
 @web.route('/wheels.html')
 def wheel_list():
@@ -40,6 +41,15 @@ def project(name):
         return render_template('wheel_data.html', whl=whl)
     else:
         return 'No data available'
+
+@web.route('/entry-points.html')
+def entry_point_list():
+    per_page = current_app.config["WHEELODEX_ENTRY_POINT_GROUPS_PER_PAGE"]
+    groups = db.session.query(EntryPointGroup)\
+                       .filter(S.exists().where(EntryPoint.group_id == EntryPointGroup.id))\
+                       .order_by(EntryPointGroup.name.asc())\
+                       .paginate(per_page=per_page)
+    return render_template('entry_point_list.html', groups=groups)
 
 @web.route('/entry-point/<group>.html')
 def entry_point(group):

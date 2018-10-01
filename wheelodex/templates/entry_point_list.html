@@ -1,0 +1,16 @@
+{% from 'macros.j2' import render_pagination %}
+{% extends 'base.html' %}
+
+{% block title %}Entry Point Groups{% endblock %}
+
+{% block content %}
+
+<ul>
+    {% for g in groups.items %}
+        <li><a href="{{url_for('.entry_point', group=g.name)}}">{{g.name|e}}</a></li>
+    {% endfor %}
+</ul>
+
+{{render_pagination(groups, '.entry_point_list')}}
+
+{% endblock %}
