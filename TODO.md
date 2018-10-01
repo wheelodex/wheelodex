@@ -91,6 +91,10 @@ Web Interface
       wheels?
     - If there are versions but none of them have wheels, show a message to
       that effect
+- Entry points:
+    - Only return results from one wheel (the preferred wheel) per project
+    - Add options for sorting by either project or entry point name, ascending
+      or descending
 
 Architecture
 ------------

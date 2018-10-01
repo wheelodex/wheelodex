@@ -5,6 +5,7 @@ DEFAULT_CONFIG = {
     "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
     "SQLALCHEMY_TRACK_MODIFICATIONS": False,
     "WHEELODEX_WHEELS_PER_PAGE": 50,
+    "WHEELODEX_ENTRY_POINTS_PER_PAGE": 100,
 }
 
 def create_app():

@@ -1,0 +1,27 @@
+{% from 'macros.j2' import render_pagination %}
+{% extends 'base.html' %}
+
+{% block title %}{{ep_group.name|e}}{% endblock %}
+{% block content %}
+<h2>{{ep_group.name|e}}</h2>
+
+{% if ep_group.description != None %}
+{{ep_group.description|safe}}
+{% endif %}
+
+<table class="entry_points">
+    <tr>
+        <th>Project</th>
+        <th>Entry Point</th>
+    </tr>
+    {% for project, ep in project_eps.items %}
+        <tr>
+            <td class="project"><a href="{{url_for('.project', name=project)}}">{{project|e}}</a></td>
+            <td class="epname">{{ep|e}}</td>
+        </tr>
+    {% endfor %}
+</table>
+
+{{render_pagination(project_eps, '.entry_point', group=ep_group.name)}}
+
+{% endblock %}

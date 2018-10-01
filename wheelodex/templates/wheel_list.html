@@ -1,3 +1,4 @@
+{% from 'macros.j2' import render_pagination %}
 {% extends 'base.html' %}
 
 {% block title %}Wheels{% endblock %}
@@ -22,18 +23,6 @@
     {% endfor %}
 </table>
 
-<div class="pagination">
-    {%- for page in wheels.iter_pages() %}
-        {% if page %}
-            {% if page != wheels.page %}
-                <a href="{{url_for('.wheel_list', page=page)}}">{{page}}</a>
-            {% else %}
-                <strong>{{page}}</strong>
-            {% endif %}
-        {% else %}
-            <span class="ellipsis">&#x2026;</span>
-        {% endif %}
-    {%- endfor %}
-</div>
+{{render_pagination(wheels, '.wheel_list')}}
 
 {% endblock %}

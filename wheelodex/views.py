@@ -1,6 +1,7 @@
 from flask           import Blueprint, current_app, jsonify, render_template
 from packaging.utils import canonicalize_name as normalize
-from .db             import Project, Version, Wheel, db
+from .db             import EntryPoint, EntryPointGroup, Project, Version, \
+                            Wheel, WheelData, db
 
 web = Blueprint('web', __name__)
 
@@ -42,5 +43,19 @@ def project(name):
 
 @web.route('/entry-point/<group>.html')
 def entry_point(group):
-    ### TODO
-    return 'TODO'
+    ep_group = db.session.query(EntryPointGroup)\
+                         .filter(EntryPointGroup.name == group)\
+                         .first_or_404()
+    per_page = current_app.config["WHEELODEX_ENTRY_POINTS_PER_PAGE"]
+    project_eps = db.session.query(Project.display_name, EntryPoint.name)\
+                            .join(Version).join(Wheel).join(WheelData)\
+                            .join(EntryPoint)\
+                            .filter(EntryPoint.group == ep_group)\
+                            .order_by(
+                                Project.name.asc(), EntryPoint.name.asc()
+                            ).paginate(per_page=per_page)
+    return render_template(
+        'entry_point.html',
+        ep_group    = ep_group,
+        project_eps = project_eps,
+    )
