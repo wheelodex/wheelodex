@@ -58,6 +58,7 @@ def rdepends(name):
                      .filter(Project.id == p.id).subquery()
     ### TODO: Use preferred wheel:
     rdeps = db.session.query(Project).join(Version).join(Wheel).join(subq)\
+                      .group_by(Project)\
                       .order_by(Project.name.asc())\
                       .paginate(per_page=per_page)
     return render_template(
