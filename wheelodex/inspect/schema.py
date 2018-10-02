@@ -1,4 +1,4 @@
-{
+SCHEMA = {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "type": "object",
     "required": [
@@ -14,7 +14,7 @@
         "dist_info",
         "derived"
     ],
-    "additionalProperties": false,
+    "additionalProperties": False,
     "properties": {
         "filename": {
             "type": "string",
@@ -56,7 +56,7 @@
             "type": "object",
             "description": "If the wheel could not be verified, this field contains information on the Python exception raised by `distlib.wheel.Wheel.verify()`.",
             "required": ["type", "str"],
-            "additionalProperties": false,
+            "additionalProperties": False,
             "properties": {
                 "type": {
                     "type": "string",
@@ -72,13 +72,13 @@
         "file": {
             "type": "object",
             "required": ["size", "digests"],
-            "additionalProperties": false,
+            "additionalProperties": False,
             "properties": {
                 "size": {"type": "integer"},
                 "digests": {
                     "type": "object",
                     "required": ["md5", "sha256"],
-                    "additionalProperties": false,
+                    "additionalProperties": False,
                     "properties": {
                         "md5": {"type": "string", "pattern": "^[0-9A-Fa-f]{32}$"},
                         "sha256": {"type": "string", "pattern": "^[0-9A-Fa-f]{64}$"}
@@ -90,7 +90,7 @@
         "dist_info": {
             "type": "object",
             "description": "JSONifications of files from the wheel's .dist-info directory",
-            "additionalProperties": false,
+            "additionalProperties": False,
             "properties": {
 
                 "metadata": {
@@ -107,7 +107,7 @@
                         "description": {
                             "type": "object",
                             "requires": ["length"],
-                            "additionalProperties": false,
+                            "additionalProperties": False,
                             "properties": {
                                 "length": {"type": "integer"}
                             }
@@ -123,7 +123,7 @@
                                     "specifier",
                                     "marker"
                                 ],
-                                "additionalProperties": false,
+                                "additionalProperties": False,
                                 "properties": {
                                     "name": {"type": "string"},
                                     "url": {"type": ["null", "string"]},
@@ -141,7 +141,7 @@
                             "items": {
                                 "type": "object",
                                 "requires": ["label", "url"],
-                                "additionalProperties": false,
+                                "additionalProperties": False,
                                 "properties": {
                                     "label": {"type": ["null", "string"]},
                                     "url": {"type": "string"}
@@ -166,7 +166,7 @@
                     "items": {
                         "type": "object",
                         "required": ["path", "digests", "size"],
-                        "additionalProperties": false,
+                        "additionalProperties": False,
                         "properties": {
                             "path": {"type": "string"},
                             "digests": {
@@ -215,7 +215,7 @@
                         "additionalProperties": {
                             "type": "object",
                             "required": ["module", "attr", "extras"],
-                            "additionalProperties": false,
+                            "additionalProperties": False,
                             "properties": {
                                 "module": {"type": "string"},
                                 "attr": {"type": ["null", "string"]},
@@ -254,7 +254,7 @@
                 "dependencies",
                 "modules"
             ],
-            "additionalProperties": false,
+            "additionalProperties": False,
             "properties": {
                 "readme_renders": {
                     "type": ["null", "boolean"],
@@ -274,19 +274,19 @@
                     "description": "The wheel's keywords string, split on what appears to be the appropriate separator"
                 },
                 "keyword_separator": {
-                    "enum": [" ", ",", null],
+                    "enum": [" ", ",", None],
                     "description": "The apparent appropriate separator for the wheel's keywords string.  A value of `null` indicates that the keywords string is undefined."
                 },
                 "dependencies": {
                     "type": "array",
                     "items": {"type": "string"},
-                    "uniqueItems": true,
+                    "uniqueItems": True,
                     "description": "The names of all of the projects listed in the wheel's Requires-Dist"
                 },
                 "modules": {
                     "type": "array",
                     "items": {"type": "string"},
-                    "uniqueItems": true,
+                    "uniqueItems": True,
                     "description": "A list of Python modules installed by the wheel"
                 }
             }

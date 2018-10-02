@@ -3,12 +3,7 @@ from   operator          import attrgetter
 from   pathlib           import Path
 from   jsonschema        import validate
 import pytest
-import wheelodex
-from   wheelodex.inspect import inspect_wheel
-
-SCHEMA = json.loads(
-    Path(wheelodex.__file__).with_name('wheel-data.schema.json').read_text()
-)
+from   wheelodex.inspect import SCHEMA, inspect_wheel
 
 @pytest.mark.parametrize('whlfile', [
     p for p in (Path(__file__).with_name('data') / 'wheels').iterdir()
