@@ -1,11 +1,10 @@
 - Add docstrings
     - Add `help` strings to commands & their options
-- Add a column to `WheelData` for storing the revision of
-  `wheel-data.schema.json` that `raw_data` conforms to?
+- Add a column to `WheelData` for storing the revision of `SCHEMA` that
+  `raw_data` conforms to?
     - Alternatively, store the revision of the wheel inspection code used?
-        - Split `wheelodex.inspect` into a separate project? (and move
-          `wheel-data.schema.json` into it)
-- Upgrade `wheel-data.schema.json` to a more recent JSON Schema draft
+        - Split `wheelodex.inspect` into a separate project?
+- Upgrade `SCHEMA` to a more recent JSON Schema draft
 - `iterqueue()`: Only return wheels for the latest version of each project
 - Replace `WheelData.update_structure()` with Alembic
 - Eliminate `WheelDatabase` and make its methods into functions that operate on
@@ -18,6 +17,8 @@
 - Rename `process_queue` (the function and the command) and `iterqueue()`
 - Add a means for setting descriptions for entry points to display in the web
   interface
+    - Where possible, write a description of each entry point, including what
+      project consumes it
 - Rewrite `wheel_sort_key()` to prefer more generic wheels to more specific,
   prefer higher versions to lower, etc.
 
@@ -62,6 +63,8 @@ Wheel Inspection
   (or otherwise somehow indicate which is which)?
 - Compare `extract_modules()` with <https://github.com/takluyver/wheeldex>
 - Does `extract_modules()` need to take compiled library files into account?
+- Determine namespace packages other than those listed in
+  `namespace_packages.txt`?  (cf. wheeldex?)
 - Include the results of testing manylinux1 wheels with `auditwheel`?
 - Should (rarely used) fields similar to `Requires-Dist` be parsed into
   structured `dict`s?
@@ -83,16 +86,33 @@ Wheel Inspection
   (See PEP 561)
 - Remove duplicates from `.derived.keywords`?
 - Give `inspect_wheel()` an option for whether to keep long descriptions?
+- Show more detailed (and machine readable) information on verification errors
 
 Web Interface
 -------------
+- Make things look good
+    - Add breadcrumbs to pages
+    - Improve page `<title>`s
+- Get rid of the wheel list; it's just for testing
+- Main page: Show statistics on wheels registered, wheels analyzed, and
+  projects known (or something like that)
 - Wheel data:
+    - If there were errors processing the wheel, show some indication of this
     - Include whether the wheel was verified
+    - Include TOC-like links at the top linking to each section on the page
     - `METADATA` display:
         - Obfuscate e-mail addresses
         - Make each keyword into a hyperlink?
         - Make each classifier into a hyperlink?
     - Insert a blank line between entry point groups
+    - Sort `RECORD` entries?
+    - Display `RECORD` digests in hex?
+    - Add a separate box showing dependencies, organized by extras?
+    - Add a dedicated box for commands defined by the wheel?
+    - Add a dedicated box for Python packages defined by the wheel?
+    - Include (at least some) reverse dependencies on the page itself
+    - Eliminate the dedicated wheel data pages and merge them into project
+      pages
 - Project page:
     - Show some sort of informative boilerplate if no project by the given name
       is found
@@ -101,59 +121,45 @@ Web Interface
       wheels
     - If there are versions but none of them have wheels, show a message to
       that effect
+    - Show a list of links to known wheels for the project, organized by
+      version, highlighted based on whether they have data
 - Entry point groups:
     - Add an option for sorting by quantity?
+    - Give entry points groups short descriptions to show next to them in the
+      entry point group list?
 - Entry points:
     - Add options for sorting by either project or entry point name, ascending
       or descending
+    - Include project summaries in entry point lists?
+- Include project summaries in reverse dependency lists
+- Make all URLs with project names in them redirect to canonical URLs that use
+  the normalized spellings
+- Provide a download of a database export made periodically with `dump`
+- Add a paginated list of projects that have data?
 
-Architecture
-------------
-- getting configuration from config file
-- fetching & parsing wheels and adding data to database
-    - fetching wheels
-        - fetching all wheels uploaded to PyPI since some point in the past
-        - initial fetch / fetching all wheels from PyPI
-        - entry points for performing all of the above and storing the parsed
-          wheel data in the database (with an option for whether or not to
-          refetch & update wheels already in the database) and/or outputting
-          said data as JSON
-    - parsing wheels
-        - Record extras upon which individual entry points depend
-        - determine namespace packages other than those listed in
-          `namespace_packages.txt`?
-            - cf. <https://github.com/takluyver/wheeldex>?
-    - storing in database
-        - replacing pre-existing database entries
-        - updating reverse dependencies?
-        - updating latest version of a project?
-- JSON REST API
-    - getting data from database
-    - searching
-- web interface to API's data using AJAX(?)
-    - provide a download of a database export rebuilt daily
-    - Items displayed on the page for a given wheel:
-        - metadata
-            - links to dependencies
-            - list of extras with their dependencies listed under them
-        - links to reverse dependencies (specifically, those projects whose
-          highest-numbered non-prerelease versions depend upon some version of
-          the project to which the wheel belongs, regardless of platform etc.
-          compatibility)
-        - list of modules in the wheel (top-level and packages only?)
-        - list of files in the wheel
-        - list of commands and other entry points defined by the wheel
-    - pages listing all defined entry points and all projects that define each
-      entry point
-        - Where possible, include a description of each entry point, including
-          what project consumes it
-    - page for searching for wheels that contain a given module
-    - page for searching for wheels that contain a given file
-    - pages of various statistics:
-        - wheel generators
-        - keywords
-        - Project URL labels
-        - description content types?
-        - license files?
-        - metadata versions?
-        - "Platform" values
+- Add "API" endpoints for just retrieving JSON:
+    - `/json/projects/<project>` — returns a list of all known wheels (with
+      links) for a project and whether they have data
+        - organize by version like in PyPI's JSON API?
+    - `/json/projects/<project>/data` — returns the data for the preferred
+      wheel for a project
+    - `/json/projects/<project>/rdepends` — reverse dependencies
+    - `/json/wheels/<filename>.whl.json` — individual wheel data
+
+- Add search options:
+    - search by project name
+    - searching for wheels that contain a given module
+    - searching for wheels that contain a given file, with glob support
+    - search for wheels that define a given command or other entry point?
+    - search/browse by keywords, classifiers, etc.?
+    - search for wheels that define given metadata fields?
+    - search by contents of arbitrary metadata fields?
+
+- Add pages of various statistics:
+   - wheel generators
+   - keywords
+   - Project URL labels
+   - description content types?
+   - license files?
+   - metadata versions?
+   - "Platform" values
