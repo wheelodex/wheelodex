@@ -21,6 +21,7 @@
     - Where possible, write a description of each entry point, including what
       project consumes it
 - Try to make `wheel_sort_key()` both more efficient and more comprehensive
+- Don't register wheels with filenames that distlib rejects?
 
 - There are several database queries (marked with "TODO: Use preferred wheel")
   that need to be amended to only return results for one wheel (the preferred
@@ -136,6 +137,7 @@ Web Interface
   the normalized spellings
 - Provide a download of a database export made periodically with `dump`
 - Add a paginated list of projects that have data?
+- Do something with the keywords table
 
 - Add "API" endpoints for just retrieving JSON:
     - `/json/projects/<project>` — returns a list of all known wheels (with
