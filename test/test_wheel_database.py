@@ -20,6 +20,9 @@ def tmpdb(tmpdb_inited):
 def sort_versions(vs):
     return sorted(vs, key=lambda v: (v.project.name, v.name))
 
+def sort_wheels(ws):
+    return sorted(ws, key=lambda w: w.filename)
+
 FOOBAR_1_WHEEL = {
     "filename": 'FooBar-1.0-py3-none-any.whl',
     "url":      'http://example.com/FooBar-1.0-py3-none-any.whl',
@@ -72,14 +75,14 @@ QUUX_1_5_WHEEL = {
 }
 
 def test_add_wheel(tmpdb):
-    assert tmpdb.iterqueue() == []
+    assert tmpdb.session.query(Wheel).all() == []
     p = tmpdb.add_project('FooBar')
     v1 = tmpdb.add_version(p, '1.0')
     whl1 = tmpdb.add_wheel(version=v1, **FOOBAR_1_WHEEL)
-    assert tmpdb.iterqueue() == [whl1]
+    assert tmpdb.session.query(Wheel).all() == [whl1]
     v2 = tmpdb.add_version(p, '2.0')
     whl2 = tmpdb.add_wheel(version=v2, **FOOBAR_2_WHEEL)
-    assert tmpdb.iterqueue() in ([whl1, whl2], [whl2, whl1])
+    assert sort_wheels(tmpdb.session.query(Wheel).all()) == [whl1, whl2]
     assert v1.wheels == [whl1]
     assert v2.wheels == [whl2]
     assert tmpdb.get_version(p, '1.0').wheels == [whl1]
@@ -90,11 +93,11 @@ def test_add_wheel_extant(tmpdb):
     Add two wheels with the same project, version, & filename and assert that
     only the first one exists
     """
-    assert tmpdb.iterqueue() == []
+    assert tmpdb.session.query(Wheel).all() == []
     p = tmpdb.add_project('FooBar')
     v1 = tmpdb.add_version(p, '1.0')
     whl1 = tmpdb.add_wheel(version=v1, **FOOBAR_1_WHEEL)
-    assert tmpdb.iterqueue() == [whl1]
+    assert tmpdb.session.query(Wheel).all() == [whl1]
     tmpdb.add_wheel(
         version  = v1,
         filename = 'FooBar-1.0-py3-none-any.whl',
@@ -104,7 +107,7 @@ def test_add_wheel_extant(tmpdb):
         sha256   = '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
         uploaded = '2018-09-26T15:14:33',
     )
-    whl, = tmpdb.iterqueue()
+    whl, = tmpdb.session.query(Wheel).all()
     assert v1.wheels == [whl1]
     assert whl.url == FOOBAR_1_WHEEL["url"]
     assert whl.size == FOOBAR_1_WHEEL["size"]
@@ -113,13 +116,13 @@ def test_add_wheel_extant(tmpdb):
     assert whl.uploaded == FOOBAR_1_WHEEL["uploaded"]
 
 def test_remove_wheel(tmpdb):
-    assert tmpdb.iterqueue() == []
+    assert tmpdb.session.query(Wheel).all() == []
     p = tmpdb.add_project('FooBar')
     v1 = tmpdb.add_version(p, '1.0')
     whl1 = tmpdb.add_wheel(version=v1, **FOOBAR_1_WHEEL)
-    assert tmpdb.iterqueue() == [whl1]
+    assert tmpdb.session.query(Wheel).all() == [whl1]
     tmpdb.remove_wheel('FooBar-1.0-py3-none-any.whl')
-    assert tmpdb.iterqueue() == []
+    assert tmpdb.session.query(Wheel).all() == []
 
 def test_add_project(tmpdb):
     assert tmpdb.get_all_projects() == []
@@ -413,10 +416,35 @@ def test_preferred_wheel_higher_data(tmpdb):
     tmpdb.add_wheel_data(whl2, FOOBAR_2_DATA)
     assert p.preferred_wheel == whl2
 
+def test_iterqueue_skip_data(tmpdb):
+    assert tmpdb.iterqueue() == []
+    p = tmpdb.add_project('FooBar')
+    v1 = tmpdb.add_version(p, '1.0')
+    whl1 = tmpdb.add_wheel(version=v1, **FOOBAR_1_WHEEL)
+    assert tmpdb.iterqueue() == [whl1]
+    tmpdb.add_wheel_data(whl1, FOOBAR_1_DATA)
+    assert tmpdb.iterqueue() == []
+
+def test_iterqueue_skip_error(tmpdb):
+    assert tmpdb.iterqueue() == []
+    p = tmpdb.add_project('FooBar')
+    v1 = tmpdb.add_version(p, '1.0')
+    whl1 = tmpdb.add_wheel(version=v1, **FOOBAR_1_WHEEL)
+    assert tmpdb.iterqueue() == [whl1]
+    tmpdb.add_wheel_error(whl1, 'Testing')
+    assert tmpdb.iterqueue() == []
+
+def test_iterqueue_skip_non_latest(tmpdb):
+    assert tmpdb.iterqueue() == []
+    p = tmpdb.add_project('FooBar')
+    v1 = tmpdb.add_version(p, '1.0')
+    whl1 = tmpdb.add_wheel(version=v1, **FOOBAR_1_WHEEL)
+    assert tmpdb.iterqueue() == [whl1]
+    v2 = tmpdb.add_version(p, '2.0')
+    whl2 = tmpdb.add_wheel(version=v2, **FOOBAR_2_WHEEL)
+    assert tmpdb.iterqueue() == [whl2]
+
 ### TODO: TO TEST:
-# iterqueue()
-#  - Wheels with data are omitted from queue
-#  - Wheels with errors are omitted from queue
 # Adding WheelData with dependencies, entry points, etc.
 # `wheel.data = None` deletes the WheelData entry
 # Deleting a Wheel deletes its WheelData
@@ -424,3 +452,4 @@ def test_preferred_wheel_higher_data(tmpdb):
 # Deleting a WheelData doesn't affect its Wheel
 # Version.ordering?
 # Project.preferred_wheel when the highest version has multiple wheels with data
+# iterqueue() with a version with multiple wheels

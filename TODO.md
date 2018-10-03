@@ -5,7 +5,8 @@
     - Alternatively, store the revision of the wheel inspection code used?
         - Split `wheelodex.inspect` into a separate project?
 - Upgrade `SCHEMA` to a more recent JSON Schema draft
-- `iterqueue()`: Only return wheels for the latest version of each project
+- If the latest version of a project doesn't have any wheels, should
+  `iterqueue()` return the wheels for the next latest version that does?
 - Replace `WheelData.update_structure()` with Alembic
 - Eliminate `WheelDatabase` and make its methods into functions that operate on
   the app's `db` object?

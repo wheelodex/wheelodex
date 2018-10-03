@@ -75,9 +75,21 @@ class WheelDatabase:
         return whl
 
     def iterqueue(self) -> ['Wheel']:
-        ### Would leaving off the ".all()" give an iterable that plays well
-        ### with wheels being given data concurrently?
+        """
+        Returns a list of all wheels with neither data nor errors for the
+        latest version of each project
+        """
+        ### TODO: Would leaving off the ".all()" give an iterable that plays
+        ### well with wheels being given data concurrently?
+        subq = self.session.query(
+            Project.id,
+            S.func.max(Version.ordering).label('max_order'),
+        ).join(Version).group_by(Project.id).subquery()
         return self.session.query(Wheel)\
+                           .join(Version)\
+                           .join(Project)\
+                           .join(subq, (Project.id == subq.c.id)
+                                    & (Version.ordering == subq.c.max_order))\
                            .filter(~Wheel.data.has())\
                            .filter(~Wheel.errors.any())\
                            .all()
