@@ -1,5 +1,5 @@
 import pytest
-from   wheelodex.util import latest_version
+from   wheelodex.util import VersionNoDot, latest_version, wheel_sort_key
 
 @pytest.mark.parametrize('versions,latest', [
     ([], None),
@@ -10,3 +10,96 @@ from   wheelodex.util import latest_version
 ])
 def test_latest_version(versions, latest):
     assert latest_version(versions) == latest
+
+# In ascending order
+WHEEL_PREFERENCES = [
+    'foo-1.0-nonsense-nonsense-nonsense.whl',
+    'foo-1.0-othernonsense-othernonsense-othernonsense.whl',
+
+    'foo-1.0-cp25-none-any.whl',
+    'foo-1.0-cp26-none-any.whl',
+    'foo-1.0-cp27-none-any.whl',
+    'foo-1.0-cp30-none-any.whl',
+    'foo-1.0-cp31-none-any.whl',
+    'foo-1.0-cp32-none-any.whl',
+    'foo-1.0-cp33-none-any.whl',
+    'foo-1.0-cp34-none-any.whl',
+
+    'foo-1.0-cp35-cp35m-macosx_10_6_intel.whl',
+    'foo-1.0-cp35-cp35m-macosx_10_7_intel.whl',
+    'foo-1.0-cp35-cp35m-macosx_10_6_intel.macosx_10_7_intel.whl',
+    'foo-1.0-cp35-cp35m-macosx_10_8_intel.whl',
+    'foo-1.0-cp35-cp35m-macosx_10_7_intel.macosx_10_8_intel.whl',
+    'foo-1.0-cp35-cp35m-macosx_10_6_intel.macosx_10_7_intel.macosx_10_8_intel.whl',
+    'foo-1.0-cp35-cp35m-macosx_10_6_intel.macosx_10_7_intel.macosx_10_8_intel.macosx_10_9_intel.macosx_10_6_x86_64.macosx_10_7_x86_64.macosx_10_8_x86_64.macosx_10_9_x86_64.whl',
+
+    'foo-1.0-cp35-none-win32.whl',
+    'foo-1.0-cp35-none-win64.whl',
+    'foo-1.0-cp35-none-win_amd64.whl',
+
+    'foo-1.0-cp35-cp35m-manylinux1_i686.whl',
+    'foo-1.0-cp35-cp35m-manylinux1_x86_64.whl',
+    'foo-1.0-1-cp35-cp35m-manylinux1_x86_64.whl',
+    'foo-1.0-1a-cp35-cp35m-manylinux1_x86_64.whl',
+    'foo-1.0-2-cp35-cp35m-manylinux1_x86_64.whl',
+    'foo-1.0-2a-cp35-cp35m-manylinux1_x86_64.whl',
+    'foo-1.0-2b-cp35-cp35m-manylinux1_x86_64.whl',
+    'foo-1.0-cp35-cp35m-manylinux1_i686.manylinux1_x86_64.whl',
+    'foo-1.0-cp35-cp35m-manylinux2010_x86_64.whl',
+
+    'foo-1.0-cp35-none-any.whl',
+    'foo-1.0-cp36-none-any.whl',
+    'foo-1.0-cp37-none-any.whl',
+    'foo-1.0-cp38-none-any.whl',
+    'foo-1.0-cp39-none-any.whl',
+
+    'foo-1.0-py2-none-any.whl',
+    'foo-1.0-py30-none-any.whl',
+    'foo-1.0-py31-none-any.whl',
+    'foo-1.0-py32-none-any.whl',
+    'foo-1.0-py33-none-any.whl',
+    'foo-1.0-py34-none-any.whl',
+    'foo-1.0-py35-none-any.whl',
+    'foo-1.0-py36-none-any.whl',
+    'foo-1.0-py37-none-any.whl',
+    'foo-1.0-py38-none-any.whl',
+    'foo-1.0-py39-none-any.whl',
+    'foo-1.0-py3-none-any.whl',
+    'foo-1.0-py2.py3-none-any.whl',
+    'foo-1.0-1-py2.py3-none-any.whl',
+    'foo-1.0-1a-py2.py3-none-any.whl',
+    'foo-1.0-2-py2.py3-none-any.whl',
+    'foo-1.0-2a-py2.py3-none-any.whl',
+    'foo-1.0-2b-py2.py3-none-any.whl',
+]
+
+@pytest.mark.parametrize(
+    'lower,higher',
+    zip(WHEEL_PREFERENCES, WHEEL_PREFERENCES[1:]),
+)
+def test_wheel_sort_key(lower, higher):
+    assert wheel_sort_key(lower) < wheel_sort_key(higher)
+
+
+VERSIONS_NO_DOTS = [
+    '12',
+    '1',
+    '200',
+    '2015',
+    '201',
+    '202',
+    '20',
+    '21',
+    '22',
+    '2',
+    '30',
+    '39',
+    '3',
+]
+
+@pytest.mark.parametrize(
+    'lower,higher',
+    zip(VERSIONS_NO_DOTS, VERSIONS_NO_DOTS[1:]),
+)
+def test_version_no_dot(lower, higher):
+    assert VersionNoDot(lower) < VersionNoDot(higher)

@@ -20,8 +20,7 @@
   interface
     - Where possible, write a description of each entry point, including what
       project consumes it
-- Rewrite `wheel_sort_key()` to prefer more generic wheels to more specific,
-  prefer higher versions to lower, etc.
+- Try to make `wheel_sort_key()` both more efficient and more comprehensive
 
 - There are several database queries (marked with "TODO: Use preferred wheel")
   that need to be amended to only return results for one wheel (the preferred
