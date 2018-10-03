@@ -8,7 +8,6 @@
 - If the latest version of a project doesn't have any wheels, should
   `iterqueue()` return the wheels for the next latest version that does?
 - Replace `WheelData.update_structure()` with Alembic
-- Register large wheels but don't return them from `iterqueue()`?
 - Rename `process_queue` (the function and the command) and `iterqueue()`
 - Add a means for setting descriptions for entry points to display in the web
   interface

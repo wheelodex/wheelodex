@@ -38,27 +38,25 @@ def initdb():
         set_serial(0)
 
 @main.command('scan-pypi')
-### TODO: Add a command-line option for setting `max_size`
 def scan_pypi_cmd():
     with dbcontext():
-        scan_pypi(max_size=current_app.config.get("WHEELODEX_MAX_WHEEL_SIZE"))
+        scan_pypi()
 
 @main.command('scan-changelog')
-### TODO: Add a command-line option for setting `max_size`
 def scan_changelog_cmd():
     with dbcontext():
         serial = get_serial()
         if serial is None:
             raise click.UsageError('No saved state to update')
-        scan_changelog(
-            serial,
-            max_size=current_app.config.get("WHEELODEX_MAX_WHEEL_SIZE"),
-        )
+        scan_changelog(serial)
 
 @main.command('process-queue')
+### TODO: Add a command-line option for setting `max_wheel_size`
 def process_queue_cmd():
     with dbcontext():
-        process_queue()
+        process_queue(
+            max_wheel_size=current_app.config.get("WHEELODEX_MAX_WHEEL_SIZE")
+        )
 
 @main.command()
 @click.option('-A', '--all', 'dump_all', is_flag=True)

@@ -6,7 +6,7 @@ from   .util     import latest_version
 
 log = logging.getLogger(__name__)
 
-def scan_pypi(max_size=None):
+def scan_pypi():
     log.info('BEGIN scan_pypi')
     pypi = PyPIAPI()
     serial = pypi.changelog_last_serial()
@@ -28,9 +28,6 @@ def scan_pypi(max_size=None):
         for asset in data["releases"][latest]:
             if not asset["filename"].endswith('.whl'):
                 log.debug('Asset %s: not a wheel; skipping', asset["filename"])
-            elif max_size is not None and asset["size"] > max_size:
-                log.debug('Asset %s: size %d too large; skipping',
-                          asset["filename"], asset["size"])
             else:
                 log.debug('Asset %s: adding', asset["filename"])
                 qty_queued += 1
@@ -46,7 +43,7 @@ def scan_pypi(max_size=None):
         log.info('%s: %d wheels added', pkg, qty_queued)
     log.info('END scan_pypi')
 
-def scan_changelog(since, max_size=None):
+def scan_changelog(since):
     log.info('BEGIN scan_changelog(%d)', since)
     pypi = PyPIAPI()
     for proj, rel, _, action, serial in pypi.changelog_since_serial(since):
@@ -82,20 +79,16 @@ def scan_changelog(since, max_size=None):
                 continue
             for asset in data["releases"].get(rel, []):
                 if asset["filename"] == actwords[3]:
-                    if max_size is not None and asset["size"] > max_size:
-                        log.info('Asset %s: size %d too large; skipping',
-                                 asset["filename"], asset["size"])
-                    else:
-                        log.info('Asset %s: adding', asset["filename"])
-                        add_wheel(
-                            version  = add_version(proj, rel),
-                            filename = asset["filename"],
-                            url      = asset["url"],
-                            size     = asset["size"],
-                            md5      = asset["digests"].get("md5").lower(),
-                            sha256   = asset["digests"].get("sha256").lower(),
-                            uploaded = str(asset["upload_time"]),
-                        )
+                    log.info('Asset %s: adding', asset["filename"])
+                    add_wheel(
+                        version  = add_version(proj, rel),
+                        filename = asset["filename"],
+                        url      = asset["url"],
+                        size     = asset["size"],
+                        md5      = asset["digests"].get("md5").lower(),
+                        sha256   = asset["digests"].get("sha256").lower(),
+                        uploaded = str(asset["upload_time"]),
+                    )
                     break
             else:
                 log.warning('Asset %s not found in JSON API', actwords[3])

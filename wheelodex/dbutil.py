@@ -52,24 +52,29 @@ def add_wheel(version: 'Version', filename, url, size, md5, sha256, uploaded):
             w.ordering = i
     return whl
 
-def iterqueue() -> [Wheel]:
+def iterqueue(max_wheel_size=None) -> [Wheel]:
     """
     Returns a list of all wheels with neither data nor errors for the latest
     version of each project
+
+    :param int max_wheel_size: If set, only wheels this size or smaller are
+        returned
     """
-    ### TODO: Would leaving off the ".all()" give an iterable that plays
-    ### well with wheels being given data concurrently?
     subq = db.session.query(
         Project.id,
         db.func.max(Version.ordering).label('max_order'),
     ).join(Version).group_by(Project.id).subquery()
-    return Wheel.query.join(Version)\
-                      .join(Project)\
-                      .join(subq, (Project.id == subq.c.id)
-                               & (Version.ordering == subq.c.max_order))\
-                      .filter(~Wheel.data.has())\
-                      .filter(~Wheel.errors.any())\
-                      .all()
+    q = Wheel.query.join(Version)\
+                   .join(Project)\
+                   .join(subq, (Project.id == subq.c.id)
+                            & (Version.ordering == subq.c.max_order))\
+                   .filter(~Wheel.data.has())\
+                   .filter(~Wheel.errors.any())
+    if max_wheel_size is not None:
+        q = q.filter(Wheel.size <= max_wheel_size)
+    ### TODO: Would leaving off the ".all()" give an iterable that plays well
+    ### with wheels being given data concurrently?
+    return q.all()
 
 def remove_wheel(filename: str):
     Wheel.query.filter(Wheel.filename == filename).delete()

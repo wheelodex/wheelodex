@@ -11,9 +11,9 @@ from   .util             import USER_AGENT
 
 log = logging.getLogger(__name__)
 
-def process_queue():
+def process_queue(max_wheel_size=None):
     with TemporaryDirectory() as tmpdir:
-        for whl in iterqueue():
+        for whl in iterqueue(max_wheel_size=max_wheel_size):
             try:
                 about = process_wheel(
                     filename = whl.filename,
