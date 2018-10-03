@@ -146,7 +146,7 @@ def wheel_sort_key(filename):
     if abi == 'none':
         abi_rank = (1,)
     else:
-        n = re.fullmatch('(\wp)(\d+)(\w*)', abi)
+        n = re.fullmatch(r'(\wp)(\d+)(\w*)', abi)
         if n:
             py_imp, py_ver, flags = n.groups()
             abi_rank = (0,PYTHON_PREFERENCES[py_imp],VersionNoDot(py_ver),flags)
