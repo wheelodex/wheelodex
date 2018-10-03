@@ -1,18 +1,20 @@
 import logging
 from   .pypi_api import PyPIAPI
+from   .dbutil   import add_project, add_version, add_wheel, remove_project, \
+                            remove_version, remove_wheel, set_serial
 from   .util     import latest_version
 
 log = logging.getLogger(__name__)
 
-def scan_pypi(db, max_size=None):
+def scan_pypi(max_size=None):
     log.info('BEGIN scan_pypi')
     pypi = PyPIAPI()
     serial = pypi.changelog_last_serial()
     log.info('changlog_last_serial() = %d', serial)
-    db.serial = serial
+    set_serial(serial)
     for pkg in pypi.list_packages():
         log.info('Adding wheels for project %r', pkg)
-        project = db.add_project(pkg)
+        project = add_project(pkg)
         data = pypi.project_data(pkg)
         if data is None or not data.get("releases", {}):
             log.info('Project has no releases')
@@ -22,7 +24,7 @@ def scan_pypi(db, max_size=None):
         latest = latest_version(versions)
         log.info('Using latest version: %r', latest)
         qty_queued = 0
-        vobj = db.add_version(project, latest)
+        vobj = add_version(project, latest)
         for asset in data["releases"][latest]:
             if not asset["filename"].endswith('.whl'):
                 log.debug('Asset %s: not a wheel; skipping', asset["filename"])
@@ -32,7 +34,7 @@ def scan_pypi(db, max_size=None):
             else:
                 log.debug('Asset %s: adding', asset["filename"])
                 qty_queued += 1
-                db.add_wheel(
+                add_wheel(
                     version  = vobj,
                     filename = asset["filename"],
                     url      = asset["url"],
@@ -44,7 +46,7 @@ def scan_pypi(db, max_size=None):
         log.info('%s: %d wheels added', pkg, qty_queued)
     log.info('END scan_pypi')
 
-def scan_changelog(db, since, max_size=None):
+def scan_changelog(since, max_size=None):
     log.info('BEGIN scan_changelog(%d)', since)
     pypi = PyPIAPI()
     for proj, rel, _, action, serial in pypi.changelog_since_serial(since):
@@ -85,8 +87,8 @@ def scan_changelog(db, since, max_size=None):
                                  asset["filename"], asset["size"])
                     else:
                         log.info('Asset %s: adding', asset["filename"])
-                        db.add_wheel(
-                            version  = db.add_version(proj, rel),
+                        add_wheel(
+                            version  = add_version(proj, rel),
                             filename = asset["filename"],
                             url      = asset["url"],
                             size     = asset["size"],
@@ -101,25 +103,25 @@ def scan_changelog(db, since, max_size=None):
         elif actwords[:2] == ['remove', 'file'] and len(actwords) == 3 and \
                 actwords[2].endswith('.whl'):
             log.info('Event %d: wheel %s removed', serial, actwords[2])
-            db.remove_wheel(actwords[2])
+            remove_wheel(actwords[2])
 
         elif action == 'create':
             log.info('Event %d: project %r created', serial, proj)
-            db.add_project(proj)
+            add_project(proj)
 
         elif action == 'remove project':
             log.info('Event %d: project %r removed', serial, proj)
-            db.remove_project(proj)
+            remove_project(proj)
 
         elif action == 'new release':
             log.info('Event %d: version %r of project %r released', serial,
                      rel, proj)
-            db.add_version(proj, rel)
+            add_version(proj, rel)
 
         elif action == 'remove release':
             log.info('Event %d: version %r of project %r removed', serial,
                      rel, proj)
-            db.remove_version(proj, rel)
+            remove_version(proj, rel)
 
-        db.serial = serial
+        set_serial(serial)
     log.info('END scan_changelog')

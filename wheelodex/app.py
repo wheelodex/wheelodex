@@ -15,7 +15,7 @@ def create_app():
     app.config.update(DEFAULT_CONFIG)
     if "WHEELODEX_CONFIG" in os.environ:
         app.config.from_envvar("WHEELODEX_CONFIG")
-    from .db import db
+    from .models import db
     db.init_app(app)
     from .views import web
     app.register_blueprint(web)

@@ -1,7 +1,7 @@
 from   flask           import Blueprint, current_app, jsonify, render_template
 from   packaging.utils import canonicalize_name as normalize
 import sqlalchemy as S
-from   .db             import EntryPoint, EntryPointGroup, Project, Version, \
+from   .models         import EntryPoint, EntryPointGroup, Project, Version, \
                                 Wheel, WheelData, db, dependency_tbl
 
 web = Blueprint('web', __name__)

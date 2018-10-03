@@ -5,13 +5,15 @@ from   tempfile          import TemporaryDirectory
 import traceback
 from   requests_download import download
 from   .inspect          import inspect_wheel
+from   .models           import db
+from   .dbutil           import iterqueue
 from   .util             import USER_AGENT
 
 log = logging.getLogger(__name__)
 
-def process_queue(db):
+def process_queue():
     with TemporaryDirectory() as tmpdir:
-        for whl in db.iterqueue():
+        for whl in iterqueue():
             try:
                 about = process_wheel(
                     filename = whl.filename,
@@ -21,7 +23,7 @@ def process_queue(db):
                     sha256   = whl.sha256,
                     tmpdir   = tmpdir,
                 )
-                db.add_wheel_data(whl, about)
+                whl.set_data(about)
                 # Some errors in inserting data aren't raised until we actually
                 # try to insert by calling commit(), so include the commit()
                 # under the `try`.
@@ -31,7 +33,7 @@ def process_queue(db):
                 # SQLAlchemy gets all complainy.
                 db.session.rollback()
                 log.exception('Error processing %s', whl.filename)
-                db.add_wheel_error(whl, traceback.format_exc())
+                whl.add_error(traceback.format_exc())
                 db.session.commit()
 
 def process_wheel(filename, url, size, md5, sha256, tmpdir):

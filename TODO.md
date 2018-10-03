@@ -8,12 +8,6 @@
 - If the latest version of a project doesn't have any wheels, should
   `iterqueue()` return the wheels for the next latest version that does?
 - Replace `WheelData.update_structure()` with Alembic
-- Eliminate `WheelDatabase` and make its methods into functions that operate on
-  the app's `db` object?
-    - Replace `WheelDatabase`'s constructor with a context manager that calls
-      `db.create_all()`, yields `db.session`, and commits or rolls back as
-      appropriate?
-    - Make `add_wheel_data()` and `add_wheel_error()` into methods of `Wheel`?
 - Register large wheels but don't return them from `iterqueue()`?
 - Rename `process_queue` (the function and the command) and `iterqueue()`
 - Add a means for setting descriptions for entry points to display in the web
