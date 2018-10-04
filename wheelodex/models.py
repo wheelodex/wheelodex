@@ -151,6 +151,8 @@ class Wheel(Base):
                 "processed": str(self.data.processed),
                 "wheelodex_version": self.data.wheelodex_version,
             }
+        if self.errors:
+            about["errored"] = True
         return about
 
 
