@@ -11,9 +11,16 @@ from . import macros  # noqa
 @web.route('/')
 @web.route('/index.html')
 def index():
+    proj_qty = db.session.query(db.func.count(Project.id.distinct()))\
+                         .join(Version).join(Wheel).join(WheelData).scalar()
     whl_qty = db.session.query(WheelData).count()
     epg_qty = db.session.query(EntryPointGroup).count()
-    return render_template('index.html', whl_qty=whl_qty, epg_qty=epg_qty)
+    return render_template(
+        'index.html',
+        proj_qty = proj_qty,
+        whl_qty  = whl_qty,
+        epg_qty  = epg_qty,
+    )
 
 @web.route('/wheels.html')
 def wheel_list():
@@ -37,6 +44,32 @@ def wheel_data(wheel):
     whl = db.session.query(Wheel).filter(Wheel.filename == wheel + '.whl')\
                     .first_or_404()
     return render_template('wheel_data.html', whl=whl)
+
+@web.route('/projects/')
+def project_list():
+    per_page = current_app.config["WHEELODEX_PROJECTS_PER_PAGE"]
+    ### TODO: PROBLEM: This query is WAY TOO SLOW:
+    subq1 = db.session.query(
+        Version.id,
+        Version.project_id,
+        Version.ordering,
+        db.func.max(Wheel.ordering).label('max_wheel'),
+    ).join(Wheel).join(WheelData).group_by(Version.id).subquery()
+    subq2 = db.session.query(
+        subq1.c.project_id,
+        db.func.max(subq1.c.ordering).label('max_version'),
+    ).group_by(subq1.c.project_id).subquery()
+    projects = db.session.query(Project.name, Project.display_name, WheelData.summary)\
+                         .join(Version)\
+                         .join(subq2, (Project.id == subq2.c.project_id)
+                                & (Version.ordering == subq2.c.max_version))\
+                         .join(Wheel)\
+                         .join(subq1, (Version.id == subq1.c.id)
+                                & (Wheel.ordering == subq1.c.max_wheel))\
+                         .join(WheelData)\
+                         .order_by(Project.name.asc())\
+                         .paginate(per_page=per_page)
+    return render_template('project_list.html', projects=projects)
 
 @web.route('/projects/<name>/')
 def project(name):

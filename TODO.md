@@ -127,7 +127,6 @@ Web Interface
 - Make all URLs with project names in them redirect to canonical URLs that use
   the normalized spellings
 - Provide a download of a database export made periodically with `dump`
-- Add a paginated list of projects that have data?
 - Do something with the keywords table
 
 - Add "API" endpoints for just retrieving JSON:

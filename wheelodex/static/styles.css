@@ -86,3 +86,8 @@ td.nil {
 .pagination {
     text-align: center;
 }
+
+.no-summary {
+    font-style: italic;
+    color: #cccccc;
+}
