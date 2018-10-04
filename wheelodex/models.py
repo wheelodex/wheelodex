@@ -375,3 +375,41 @@ class Keyword(Base):
                         passive_deletes=True),
     )
     name          = S.Column(S.Unicode(2048), nullable=False)
+
+
+class OrphanWheel(Base):
+    """
+    If the XML-RPC changelog reports the uploading of a wheel that can't be
+    found in the JSON API, we blame caching and add the wheel to the "orphan
+    wheel" table for periodic re-checking until either it's found or it's been
+    so long that we give up.
+
+    (It's also possible that the wheel is missing because the file, release, or
+    project has been deleted from PyPI and we haven't gotten to that changelog
+    entry yet.  If & when we do get to such an entry, `remove_wheel()` will
+    delete the orphan wheel, and `remove_version()` and `remove_project()` will
+    delete the orphan wheel via cascading.)
+
+    This system assumes that the "display name" for a PyPI project's version is
+    the same in both the XML-RPC API and the JSON API and that it remains
+    constant for the lifetime of the version.
+    """
+
+    __tablename__ = 'orphan_wheels'
+
+    id = S.Column(S.Integer, primary_key=True, nullable=False)  # noqa: B001
+    version_id = S.Column(
+        S.Integer,
+        S.ForeignKey('versions.id', ondelete='CASCADE'),
+        nullable=False,
+    )
+    version  = relationship('Version')  # No backref
+    filename = S.Column(S.Unicode(2048), nullable=False, unique=True)
+    uploaded = S.Column(S.DateTime(timezone=True), nullable=False)
+
+    def __repr__(self):
+        return reprify(self, ['filename'])
+
+    @property
+    def project(self):
+        return self.version.project

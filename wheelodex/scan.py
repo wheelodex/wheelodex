@@ -1,7 +1,8 @@
 import logging
 from   .pypi_api import PyPIAPI
-from   .dbutil   import add_project, add_version, add_wheel, remove_project, \
-                            remove_version, remove_wheel, set_serial
+from   .dbutil   import add_orphan_wheel, add_project, add_version, add_wheel, \
+                            remove_project, remove_version, remove_wheel, \
+                            set_serial
 from   .util     import latest_version
 
 log = logging.getLogger(__name__)
@@ -46,7 +47,7 @@ def scan_pypi():
 def scan_changelog(since):
     log.info('BEGIN scan_changelog(%d)', since)
     pypi = PyPIAPI()
-    for proj, rel, _, action, serial in pypi.changelog_since_serial(since):
+    for proj, rel, ts, action, serial in pypi.changelog_since_serial(since):
         actwords = action.split()
 
         # As of pypa/warehouse revision 97f28df (2018-09-20), the possible
@@ -67,31 +68,30 @@ def scan_changelog(since):
 
         if actwords[0] == 'add' and len(actwords) == 4 and \
                 actwords[2] == 'file' and actwords[3].endswith('.whl'):
-            log.info('Event %d: wheel %s added', serial, actwords[3])
+            filename = actwords[3]
+            log.info('Event %d: wheel %s added', serial, filename)
             # New wheels should more often than not belong to the latest
             # version of the project, and if they don't, they can be pruned out
             # later.  There's likely little to nothing to be gained by
             # comparing `rel` to the latest version in the database at this
             # point.
-            data = pypi.project_data(proj)
-            if data is None or not data.get("releases", {}):
-                log.warning('No releases found for project %r', proj)
-                continue
-            for asset in data["releases"].get(rel, []):
-                if asset["filename"] == actwords[3]:
-                    log.info('Asset %s: adding', asset["filename"])
-                    add_wheel(
-                        version  = add_version(proj, rel),
-                        filename = asset["filename"],
-                        url      = asset["url"],
-                        size     = asset["size"],
-                        md5      = asset["digests"].get("md5").lower(),
-                        sha256   = asset["digests"].get("sha256").lower(),
-                        uploaded = str(asset["upload_time"]),
-                    )
-                    break
+            v = add_version(proj, rel)
+            data = pypi.asset_data(proj, rel, filename)
+            if data is not None:
+                log.info('Asset %s: adding', filename)
+                add_wheel(
+                    version  = v,
+                    filename = data["filename"],
+                    url      = data["url"],
+                    size     = data["size"],
+                    md5      = data["digests"].get("md5").lower(),
+                    sha256   = data["digests"].get("sha256").lower(),
+                    uploaded = str(data["upload_time"]),
+                )
             else:
-                log.warning('Asset %s not found in JSON API', actwords[3])
+                log.info('Asset %s not found in JSON API; will check later',
+                         filename)
+                add_orphan_wheel(v, filename, ts)
 
         elif actwords[:2] == ['remove', 'file'] and len(actwords) == 3 and \
                 actwords[2].endswith('.whl'):

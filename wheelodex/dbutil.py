@@ -1,9 +1,11 @@
 from   contextlib      import contextmanager
+from   datetime        import datetime, timezone
 import logging
 from   typing          import Optional, Union
 from   packaging.utils import canonicalize_name as normalize, \
                                 canonicalize_version as normversion
-from   .models         import Project, PyPISerial, Version, Wheel, db
+from   .models         import OrphanWheel, Project, PyPISerial, Version, \
+                                Wheel, db
 from   .util           import version_sort_key, wheel_sort_key
 
 log = logging.getLogger(__name__)
@@ -78,6 +80,7 @@ def iterqueue(max_wheel_size=None) -> [Wheel]:
 
 def remove_wheel(filename: str):
     Wheel.query.filter(Wheel.filename == filename).delete()
+    OrphanWheel.query.filter(OrphanWheel.filename == filename).delete()
 
 def add_project(name: str):
     """
@@ -183,3 +186,17 @@ def purge_old_versions():
                          p.display_name, v.display_name)
                 db.session.delete(v)
     log.info('END purge_old_versions')
+
+def add_orphan_wheel(version, filename, uploaded_epoch):
+    uploaded = datetime.fromtimestamp(uploaded_epoch, timezone.utc)
+    whl = OrphanWheel.query.filter(Wheel.filename == filename).one_or_none()
+    if whl is None:
+        whl = OrphanWheel(
+            version  = version,
+            filename = filename,
+            uploaded = uploaded,
+        )
+        db.session.add(whl)
+    else:
+        # If they keep uploading the wheel, keep checking the JSON API for it.
+        whl.uploaded = uploaded

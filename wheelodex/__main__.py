@@ -1,3 +1,4 @@
+from   datetime  import datetime, timedelta, timezone
 import json
 import logging
 import click
@@ -5,10 +6,13 @@ from   flask     import current_app
 from   flask.cli import FlaskGroup
 from   .         import __version__
 from   .app      import create_app
-from   .models   import Wheel, db
+from   .models   import OrphanWheel, Wheel, db
 from   .dbutil   import dbcontext, add_version, add_wheel, get_serial, set_serial
 from   .process  import process_queue
+from   .pypi_api import PyPIAPI
 from   .scan     import scan_pypi, scan_changelog
+
+log = logging.getLogger(__name__)
 
 # FlaskGroup causes all commands to be run inside an application context,
 # thereby letting `wheelodex.db.db` do database operations.  This does require
@@ -93,6 +97,39 @@ def load(infile, serial):
 def purge_old_versions():
     with dbcontext():
         purge_old_versions()
+
+@main.command()
+def process_orphan_wheels():
+    log.info('BEGIN process_orphan_wheels')
+    pypi = PyPIAPI()
+    max_age = current_app.config["WHEELODEX_MAX_ORPHAN_AGE_SECONDS"]
+    with dbcontext():
+        for orphan in OrphanWheel.query:
+            data = pypi.asset_data(
+                orphan.project.name,
+                orphan.version.display_name,
+                orphan.filename,
+            )
+            if data is not None:
+                log.info('Wheel %s: data found', orphan.filename)
+                add_wheel(
+                    version  = orphan.version,
+                    filename = data["filename"],
+                    url      = data["url"],
+                    size     = data["size"],
+                    md5      = data["digests"].get("md5").lower(),
+                    sha256   = data["digests"].get("sha256").lower(),
+                    uploaded = str(data["upload_time"]),
+                )
+                db.session.delete(orphan)
+            else:
+                log.info('Wheel %s: data not found', orphan.filename)
+        expired = OrphanWheel.query.filter(
+            OrphanWheel.uploaded
+                < datetime.now(timezone.utc) - timedelta(seconds=max_age)
+        ).delete()
+        log.info('%d orphan wheels expired', expired)
+    log.info('END process_orphan_wheels')
 
 if __name__ == '__main__':
     main(prog_name=__package__)

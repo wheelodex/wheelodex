@@ -61,6 +61,15 @@ class PyPIAPI:
         r.raise_for_status()
         return r.json()
 
+    def asset_data(self, project, version, filename):
+        data = self.project_data(project)
+        if data is None:
+            return None
+        for asset in data.get("releases", {}).get(version, []):
+            if asset["filename"] == filename:
+                return asset
+        return None
+
     @retry(
         retry_on_exception          = on_xml_exception('changelog_since_serial'),
         wait_exponential_multiplier = 1000,

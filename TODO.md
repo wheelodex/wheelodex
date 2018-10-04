@@ -24,10 +24,6 @@
   wheels registered for a project even though there may be lower-versioned
   releases on PyPI with wheels.  Try to keep this from happening.
 
-- Problem: PyPI's JSON API doesn't update automatically (probably due to
-  caching), causing some wheels to fall through the cracks when scanning the
-  changelog.  Deal with this.
-
 - Commands:
     - Give `load` an option for overwriting any `WheelData` that's already in
       the database?  (This would require first fixing `add_wheel_data()`; see
