@@ -18,7 +18,7 @@
         <td><tt>{{whl.version.display_name|e}}</tt></td>
         <td><tt>{{whl.filename|e}}</tt></td>
         <td><a href="{{url_for('.wheel_data', wheel=whl.filename[:-4])}}">[html]</a></td>
-        <td><a href="{{url_for('.wheel_json', wheel=whl.filename[:-4])}}">[json]</a></td>
+        <td><a href="{{url_for('.wheel_json', wheel=whl.filename)}}">[json]</a></td>
     </tr>
     {% endfor %}
 </table>

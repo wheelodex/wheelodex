@@ -15,6 +15,8 @@
       project consumes it
 - Try to make `wheel_sort_key()` both more efficient and more comprehensive
 - Don't register wheels with filenames that distlib rejects?
+- Should the code just assume that all "uploaded" timestamps in the JSON API
+  are in UTC and convert them to aware `datetime`s?
 
 - There are several database queries (marked with "TODO: Use preferred wheel")
   that need to be amended to only return results for one wheel (the preferred

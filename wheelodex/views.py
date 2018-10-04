@@ -27,10 +27,9 @@ def wheel_list():
                        ).paginate(per_page=per_page)
     return render_template('wheel_list.html', wheels=wheels)
 
-@web.route('/<wheel>.json')
+@web.route('/json/wheels/<wheel>.json')
 def wheel_json(wheel):
-    whl = db.session.query(Wheel).filter(Wheel.filename == wheel + '.whl')\
-                    .first_or_404()
+    whl = db.session.query(Wheel).filter(Wheel.filename == wheel).first_or_404()
     return jsonify(whl.as_json())
 
 @web.route('/<wheel>.html')
@@ -39,7 +38,7 @@ def wheel_data(wheel):
                     .first_or_404()
     return render_template('wheel_data.html', whl=whl)
 
-@web.route('/project/<name>.html')
+@web.route('/projects/<name>/')
 def project(name):
     p = db.session.query(Project).filter(Project.name == normalize(name))\
                   .first_or_404()
@@ -49,7 +48,7 @@ def project(name):
     else:
         return 'No data available'
 
-@web.route('/project/<name>/rdepends.html')
+@web.route('/projects/<name>/rdepends/')
 def rdepends(name):
     per_page = current_app.config["WHEELODEX_RDEPENDS_PER_PAGE"]
     p = db.session.query(Project).filter(Project.name == normalize(name))\
@@ -67,7 +66,7 @@ def rdepends(name):
         rdepends = rdeps,
     )
 
-@web.route('/entry-points.html')
+@web.route('/entry-points/')
 def entry_point_list():
     per_page = current_app.config["WHEELODEX_ENTRY_POINT_GROUPS_PER_PAGE"]
     # Omission of groups for which no entry points are defined is intentional.
@@ -79,7 +78,7 @@ def entry_point_list():
                        .paginate(per_page=per_page)
     return render_template('entry_point_list.html', groups=groups)
 
-@web.route('/entry-point/<group>.html')
+@web.route('/entry-points/<group>/')
 def entry_point(group):
     ep_group = db.session.query(EntryPointGroup)\
                          .filter(EntryPointGroup.name == group)\
