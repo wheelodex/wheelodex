@@ -7,7 +7,8 @@ from   flask.cli import FlaskGroup
 from   .         import __version__
 from   .app      import create_app
 from   .models   import OrphanWheel, Wheel, db
-from   .dbutil   import dbcontext, add_version, add_wheel, get_serial, set_serial
+from   .dbutil   import dbcontext, add_version, add_wheel, get_serial, \
+                            purge_old_versions, set_serial
 from   .process  import process_queue
 from   .pypi_api import PyPIAPI
 from   .scan     import scan_pypi, scan_changelog
@@ -93,8 +94,8 @@ def load(infile, serial):
                 whl.data.wheelodex_version \
                     = about["wheelodex"]["wheelodex_version"]
 
-@main.command()
-def purge_old_versions():
+@main.command('purge-old-versions')
+def purge_old_versions_cmd():
     with dbcontext():
         purge_old_versions()
 
