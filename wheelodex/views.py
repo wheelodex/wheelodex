@@ -48,7 +48,6 @@ def wheel_data(wheel):
 @web.route('/projects/')
 def project_list():
     per_page = current_app.config["WHEELODEX_PROJECTS_PER_PAGE"]
-    ### TODO: PROBLEM: This query is WAY TOO SLOW:
     subq1 = db.session.query(
         Version.id,
         Version.project_id,
@@ -59,16 +58,21 @@ def project_list():
         subq1.c.project_id,
         db.func.max(subq1.c.ordering).label('max_version'),
     ).group_by(subq1.c.project_id).subquery()
-    projects = db.session.query(Project.name, Project.display_name, WheelData.summary)\
-                         .join(Version)\
-                         .join(subq2, (Project.id == subq2.c.project_id)
-                                & (Version.ordering == subq2.c.max_version))\
-                         .join(Wheel)\
-                         .join(subq1, (Version.id == subq1.c.id)
-                                & (Wheel.ordering == subq1.c.max_wheel))\
-                         .join(WheelData)\
-                         .order_by(Project.name.asc())\
-                         .paginate(per_page=per_page)
+    q = db.session.query(Project.name, Project.display_name, WheelData.summary)\
+                  .join(Version)\
+                  .join(subq2, (Project.id == subq2.c.project_id)
+                         & (Version.ordering == subq2.c.max_version))\
+                  .join(Wheel)\
+                  .join(subq1, (Version.id == subq1.c.id)
+                         & (Wheel.ordering == subq1.c.max_wheel))\
+                  .join(WheelData)\
+                  .order_by(Project.name.asc())\
+                  .cte()
+    # The query needs to be converted to a CTE with the ORDER BY on the inside
+    # and paginate's LIMIT on the outside; otherwise, PostgreSQL's notorious
+    # optimization problems with ORDER BY + LIMIT will kick in, and the query
+    # will take two and a half minutes to run.
+    projects = db.session.query(q).paginate(per_page=per_page)
     return render_template('project_list.html', projects=projects)
 
 @web.route('/projects/<name>/')

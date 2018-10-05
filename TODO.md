@@ -7,6 +7,8 @@
 - Upgrade `SCHEMA` to a more recent JSON Schema draft
 - If the latest version of a project doesn't have any wheels, should
   `iterqueue()` return the wheels for the next latest version that does?
+- If the latest version of a project doesn't have any wheels, should
+  `scan_pypi()` register the latest version that does?
 - Replace `WheelData.update_structure()` with Alembic
 - Rename `process_queue` (the function and the command) and `iterqueue()`
 - Add a means for setting descriptions for entry points to display in the web
@@ -17,6 +19,8 @@
 - Don't register wheels with filenames that distlib rejects?
 - Should the code just assume that all "uploaded" timestamps in the JSON API
   are in UTC and convert them to aware `datetime`s?
+- Come up with a better way of logging processing errors (e.g., so that people
+  actually see them)
 
 - There are several database queries (marked with "TODO: Use preferred wheel")
   that need to be amended to only return results for one wheel (the preferred
@@ -115,6 +119,7 @@ Web Interface
       that effect
     - Show a list of links to known wheels for the project, organized by
       version, highlighted based on whether they have data
+    - Show the number of reverse dependencies next to the link
 - Entry point groups:
     - Add an option for sorting by quantity?
     - Give entry points groups short descriptions to show next to them in the
