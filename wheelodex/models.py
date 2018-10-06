@@ -49,13 +49,27 @@ class Project(Base):
 
     @property
     def preferred_wheel(self):
-        return object_session(self).query(Wheel)\
-                                   .join(Version)\
-                                   .filter(Version.project == self)\
-                                   .filter(Wheel.data.has())\
-                                   .order_by(Version.ordering.desc())\
-                                   .order_by(Wheel.ordering.desc())\
-                                   .first()
+        return Wheel.query.join(Version)\
+                          .filter(Version.project == self)\
+                          .filter(Wheel.data.has())\
+                          .order_by(Version.ordering.desc())\
+                          .order_by(Wheel.ordering.desc())\
+                          .first()
+
+    @property
+    def best_wheel(self):
+        """
+        Returns the project's preferred wheel if it exists (i.e., if any of the
+        project's wheels have data); otherwise returns the highest-ordered
+        wheel for the highest ordered version.
+        """
+        return Wheel.query.join(Version)\
+                         .filter(Version.project == self)\
+                         .outerjoin(WheelData)\
+                         .order_by(WheelData.id.isnot(None).desc())\
+                         .order_by(Version.ordering.desc())\
+                         .order_by(Wheel.ordering.desc())\
+                         .first()
 
 
 class Version(Base):

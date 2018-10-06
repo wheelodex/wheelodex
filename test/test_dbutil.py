@@ -405,14 +405,16 @@ def test_preferred_wheel_two_data():
     whl2 = add_wheel(version=v2, **FOOBAR_2_WHEEL)
     whl2.set_data(FOOBAR_2_DATA)
     assert p.preferred_wheel == whl2
+    assert p.best_wheel == whl2
 
 def test_preferred_wheel_two_wheels_nodata():
     p = add_project('FooBar')
     v1 = add_version(p, '1.0')
     add_wheel(version=v1, **FOOBAR_1_WHEEL)
     v2 = add_version(p, '2.0')
-    add_wheel(version=v2, **FOOBAR_2_WHEEL)
+    whl2 = add_wheel(version=v2, **FOOBAR_2_WHEEL)
     assert p.preferred_wheel is None
+    assert p.best_wheel == whl2
 
 def test_preferred_wheel_lower_data():
     p = add_project('FooBar')
@@ -422,6 +424,7 @@ def test_preferred_wheel_lower_data():
     v2 = add_version(p, '2.0')
     add_wheel(version=v2, **FOOBAR_2_WHEEL)
     assert p.preferred_wheel == whl1
+    assert p.best_wheel == whl1
 
 def test_preferred_wheel_higher_data():
     p = add_project('FooBar')
@@ -431,6 +434,7 @@ def test_preferred_wheel_higher_data():
     whl2 = add_wheel(version=v2, **FOOBAR_2_WHEEL)
     whl2.set_data(FOOBAR_2_DATA)
     assert p.preferred_wheel == whl2
+    assert p.best_wheel == whl2
 
 def test_iterqueue_skip_data():
     assert iterqueue() == []
@@ -514,4 +518,4 @@ def test_iterqueue_multiwheel_version_some_data_other_error():
 # Deleting a WheelData deletes its dependencies and entry points
 # Deleting a WheelData doesn't affect its Wheel
 # Version.ordering?
-# Project.preferred_wheel when the highest version has multiple wheels with data
+# Project.preferred_wheel and Project.best_wheel when the highest version has multiple wheels with data

@@ -79,7 +79,7 @@ def project_list():
 def project(name):
     p = db.session.query(Project).filter(Project.name == normalize(name))\
                   .first_or_404()
-    whl = p.preferred_wheel
+    whl = p.best_wheel
     if whl is not None:
         return render_template('wheel_data.html', whl=whl)
     else:

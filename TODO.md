@@ -113,8 +113,6 @@ Web Interface
     - Show some sort of informative boilerplate if no project by the given name
       is found
         - Include a link to the project's PyPI page
-    - If no wheel data is available, show information on latest available
-      wheels
     - If there are versions but none of them have wheels, show a message to
       that effect
     - Show a list of links to known wheels for the project, organized by
