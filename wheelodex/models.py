@@ -2,7 +2,7 @@ from   datetime         import datetime, timezone
 from   flask_sqlalchemy import SQLAlchemy
 from   packaging.utils  import canonicalize_name as normalize
 import sqlalchemy as S
-from   sqlalchemy.orm   import backref, object_session, relationship
+from   sqlalchemy.orm   import backref, relationship
 from   sqlalchemy_utils import JSONType
 from   .                import __version__
 from   .util            import reprify
@@ -42,10 +42,9 @@ class Project(Base):
 
     @property
     def latest_version(self):
-        return object_session(self).query(Version)\
-                                   .filter(Version.project == self)\
-                                   .order_by(Version.ordering.desc())\
-                                   .first()
+        return Version.query.filter(Version.project == self)\
+                            .order_by(Version.ordering.desc())\
+                            .first()
 
     @property
     def preferred_wheel(self):
