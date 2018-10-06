@@ -7,6 +7,21 @@
 <a href="{{url_for('.wheel_json', wheel=whl.filename)}}">[json]</a>
 <a href="{{url_for('.rdepends', name=whl.project.name)}}">[Reverse Dependencies]</a>
 
+{% if all_wheels is defined %}
+    <table class="versions-wheels-grid">
+        {% for v, wheels in all_wheels %}
+            <tr>
+                <td class="version">{{v|e}}</td>
+                {% for w,d in wheels %}
+                    <td class="{% if d %}wheel-data{% else %}wheel-nodata{% endif %}">
+                        <tt><a href="{{url_for('.wheel_data', wheel=w.filename[:-4])}}">{{w.filename|e}}</a></tt>
+                    </td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    </table>
+{% endif %}
+
 <h2>Details</h2>
 
 <table>

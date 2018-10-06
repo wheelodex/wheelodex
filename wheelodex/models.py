@@ -1,4 +1,5 @@
 from   datetime         import datetime, timezone
+from   itertools        import groupby
 from   flask_sqlalchemy import SQLAlchemy
 from   packaging.utils  import canonicalize_name as normalize
 import sqlalchemy as S
@@ -63,12 +64,24 @@ class Project(Base):
         wheel for the highest ordered version.
         """
         return Wheel.query.join(Version)\
-                         .filter(Version.project == self)\
-                         .outerjoin(WheelData)\
-                         .order_by(WheelData.id.isnot(None).desc())\
-                         .order_by(Version.ordering.desc())\
-                         .order_by(Wheel.ordering.desc())\
-                         .first()
+                          .filter(Version.project == self)\
+                          .outerjoin(WheelData)\
+                          .order_by(WheelData.id.isnot(None).desc())\
+                          .order_by(Version.ordering.desc())\
+                          .order_by(Wheel.ordering.desc())\
+                          .first()
+
+    def versions_wheels_grid(self):
+        q = db.session.query(Version.display_name, Wheel, WheelData.id.isnot(None))\
+                      .join(Wheel)\
+                      .outerjoin(WheelData)\
+                      .filter(Version.project == self)\
+                      .order_by(Version.ordering.desc())\
+                      .order_by(Wheel.ordering.desc())
+        results = []
+        for v, ws in groupby(q, lambda r: r[0]):
+            results.append((v, [(w,b) for _,w,b in ws]))
+        return results
 
 
 class Version(Base):

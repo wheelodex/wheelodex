@@ -91,3 +91,8 @@ td.nil {
     font-style: italic;
     color: #cccccc;
 }
+
+.wheel-nodata {
+    font-style: italic;
+    color: #cccccc;
+}

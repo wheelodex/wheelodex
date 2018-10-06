@@ -511,6 +511,19 @@ def test_iterqueue_multiwheel_version_some_data_other_error():
     whl1b.add_error('Testing')
     assert iterqueue() == []
 
+def test_versions_wheels_grid():
+    p = add_project('FooBar')
+    v1 = add_version(p, '1.0')
+    whl1 = add_wheel(version=v1, **FOOBAR_1_WHEEL)
+    whl1.set_data(FOOBAR_1_DATA)
+    whl1b = add_wheel(version=v1, **FOOBAR_1_WHEEL2)
+    v2 = add_version(p, '2.0')
+    whl2 = add_wheel(version=v2, **FOOBAR_2_WHEEL)
+    assert p.versions_wheels_grid() == [
+        ('2.0', [(whl2, False)]),
+        ('1.0', [(whl1, True), (whl1b, False)]),
+    ]
+
 ### TODO: TO TEST:
 # Adding WheelData with dependencies, entry points, etc.
 # `wheel.data = None` deletes the WheelData entry

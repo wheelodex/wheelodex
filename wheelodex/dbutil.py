@@ -187,7 +187,7 @@ def purge_old_versions():
                 db.session.delete(v)
     log.info('END purge_old_versions')
 
-def add_orphan_wheel(version, filename, uploaded_epoch):
+def add_orphan_wheel(version: Version, filename, uploaded_epoch):
     uploaded = datetime.fromtimestamp(uploaded_epoch, timezone.utc)
     whl = OrphanWheel.query.filter(Wheel.filename == filename).one_or_none()
     if whl is None:

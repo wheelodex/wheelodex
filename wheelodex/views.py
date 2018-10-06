@@ -81,7 +81,11 @@ def project(name):
                   .first_or_404()
     whl = p.best_wheel
     if whl is not None:
-        return render_template('wheel_data.html', whl=whl)
+        return render_template(
+            'wheel_data.html',
+            whl        = whl,
+            all_wheels = p.versions_wheels_grid(),
+        )
     else:
         return 'No data available'
 

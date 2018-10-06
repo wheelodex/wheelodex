@@ -94,6 +94,7 @@ Web Interface
   projects known (or something like that)
 - Wheel data:
     - If there were errors processing the wheel, show some indication of this
+    - If the wheel is too big to analyze, show some indication of this
     - Include whether the wheel was verified
     - Include TOC-like links at the top linking to each section on the page
     - `METADATA` display:
@@ -115,8 +116,8 @@ Web Interface
         - Include a link to the project's PyPI page
     - If there are versions but none of them have wheels, show a message to
       that effect
-    - Show a list of links to known wheels for the project, organized by
-      version, highlighted based on whether they have data
+    - Highlight the entries in the versions-wheels grid based on whether each
+      wheel has data and/or is the wheel being currently viewed
     - Show the number of reverse dependencies next to the link
 - Entry point groups:
     - Add an option for sorting by quantity?
