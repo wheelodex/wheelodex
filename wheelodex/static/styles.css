@@ -96,3 +96,11 @@ td.nil {
     font-style: italic;
     color: #cccccc;
 }
+
+.epgroup {
+    margin-top: 2ex;
+}
+
+.epgroup:first {
+    margin-top: 0ex;
+}

@@ -101,15 +101,18 @@ Web Interface
         - Obfuscate e-mail addresses
         - Make each keyword into a hyperlink?
         - Make each classifier into a hyperlink?
-    - Insert a blank line between entry point groups
     - Sort `RECORD` entries?
     - Display `RECORD` digests in hex?
     - Add a separate box showing dependencies, organized by extras?
     - Add a dedicated box for commands defined by the wheel?
     - Add a dedicated box for Python packages defined by the wheel?
     - Include (at least some) reverse dependencies on the page itself
-    - Eliminate the dedicated wheel data pages and merge them into project
-      pages
+- Do exactly one of the following:
+    - Eliminate individual wheel pages; when the user clicks on a wheel in the
+      grid at the top of a project page, use JavaScript to rewrite the page to
+      show the data for the new wheel
+    - Make individual wheel pages look exactly like project pages, differing
+      only in which wheel is selected
 - Project page:
     - Show some sort of informative boilerplate if no project by the given name
       is found
@@ -132,6 +135,7 @@ Web Interface
   the normalized spellings
 - Provide a download of a database export made periodically with `dump`
 - Do something with the keywords table
+- Add an "about" page describing wheels and what the site does
 
 - Add "API" endpoints for just retrieving JSON:
     - `/json/projects/<project>` — returns a list of all known wheels (with
@@ -159,3 +163,4 @@ Web Interface
    - license files?
    - metadata versions?
    - "Platform" values
+   - projects by number of reverse dependencies?
