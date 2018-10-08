@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block title %}{{project.display_name|e}}{% endblock %}
+
+{% block content %}
+<a href="https://pypi.org/project/{{project.display_name|e}}/">[pypi]</a>
+<a href="{{url_for('.project_json', project=project.name)}}">[project json]</a>
+<a href="{{url_for('.project_data_json', project=project.name)}}">[project data json]</a>
+<a href="{{url_for('.rdepends', name=project.name)}}">[Reverse Dependencies]</a>
+
+<p>No wheels registered for this project.</p>
+{% endblock %}

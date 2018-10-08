@@ -85,7 +85,7 @@ def project(name):
             all_wheels = p.versions_wheels_grid(),
         )
     else:
-        return 'No data available'
+        return render_template('project_nowheel.html', project=p)
 
 @web.route('/projects/<name>/rdepends/')
 def rdepends(name):

@@ -84,6 +84,7 @@ Wheel Inspection
 - Remove duplicates from `.derived.keywords`?
 - Give `inspect_wheel()` an option for whether to keep long descriptions?
 - Show more detailed (and machine readable) information on verification errors
+- Include `pbr.json` contents?
 
 Web Interface
 -------------
@@ -118,8 +119,6 @@ Web Interface
     - Show some sort of informative boilerplate if no project by the given name
       is found
         - Include a link to the project's PyPI page
-    - If there are versions but none of them have wheels, show a message to
-      that effect
     - Highlight the entries in the versions-wheels grid based on whether each
       wheel has data and/or is the wheel being currently viewed
     - Show the number of reverse dependencies next to the link
