@@ -16,7 +16,6 @@
     - Where possible, write a description of each entry point, including what
       project consumes it
 - Try to make `wheel_sort_key()` both more efficient and more comprehensive
-- Don't register wheels with filenames that distlib rejects?
 - Should the code just assume that all "uploaded" timestamps in the JSON API
   are in UTC and convert them to aware `datetime`s?
 - Come up with a better way of logging processing errors (e.g., so that people
@@ -83,7 +82,7 @@ Wheel Inspection
   (See PEP 561)
 - Remove duplicates from `.derived.keywords`?
 - Give `inspect_wheel()` an option for whether to keep long descriptions?
-- Show more detailed (and machine readable) information on verification errors
+- Show more detailed information on verification errors
 - Include `pbr.json` contents?
 
 Web Interface
@@ -95,7 +94,6 @@ Web Interface
 - Main page: Show statistics on wheels registered, wheels analyzed, and
   projects known (or something like that)
 - Wheel data:
-    - If there were errors processing the wheel, show some indication of this
     - If the wheel is too big to analyze, show some indication of this
     - Include whether the wheel was verified
     - Include TOC-like links at the top linking to each section on the page
@@ -116,9 +114,6 @@ Web Interface
     - Make individual wheel pages look exactly like project pages, differing
       only in which wheel is selected
 - Project page:
-    - Show some sort of informative boilerplate if no project by the given name
-      is found
-        - Include a link to the project's PyPI page
     - Highlight the entries in the versions-wheels grid based on whether each
       wheel has data and/or is the wheel being currently viewed
     - Show the number of reverse dependencies next to the link

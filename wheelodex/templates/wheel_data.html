@@ -196,5 +196,7 @@
     </h2>
 {% endif %}
 
+{% elif whl.errors %}
+<p>An error occurred while processing this wheel; it might be malformed.</p>
 {% endif %}
 {% endblock %}

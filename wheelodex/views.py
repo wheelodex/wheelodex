@@ -2,7 +2,6 @@ from   collections     import OrderedDict
 from   flask           import Blueprint, current_app, jsonify, \
                                 render_template, url_for
 from   packaging.utils import canonicalize_name as normalize
-import sqlalchemy as S
 from   .models         import EntryPoint, EntryPointGroup, Project, Version, \
                                 Wheel, WheelData, db, dependency_tbl
 from   .util           import json_response
@@ -110,7 +109,10 @@ def entry_point_list():
     per_page = current_app.config["WHEELODEX_ENTRY_POINT_GROUPS_PER_PAGE"]
     # Omission of groups for which no entry points are defined is intentional.
     ### TODO: Use preferred wheel:
-    groups = db.session.query(EntryPointGroup.name,S.func.COUNT(EntryPoint.id))\
+    groups = db.session.query(
+                            EntryPointGroup.name,
+                            db.func.COUNT(EntryPoint.id),
+                        )\
                        .join(EntryPoint)\
                        .group_by(EntryPointGroup)\
                        .order_by(EntryPointGroup.name.asc())\
