@@ -46,6 +46,7 @@ def wheel_data(wheel):
 @web.route('/projects/')
 def project_list():
     per_page = current_app.config["WHEELODEX_PROJECTS_PER_PAGE"]
+    ### TODO: Speed up this query!
     subq1 = db.session.query(
         Version.id,
         Version.project_id,
@@ -176,6 +177,33 @@ def project_data_json(project):
             {"message": "No wheels found for project"},
             status_code=404,
         )
+
+@web.route('/json/projects/<project>/rdepends')
+def project_rdepends_json(project):
+    per_page = current_app.config["WHEELODEX_RDEPENDS_PER_PAGE"]
+    project = normalize(project)
+    p = db.session.query(Project).filter(Project.name == project).first_or_404()
+    rdeps = rdepends_query(p).order_by(Project.name.asc())\
+                             .paginate(per_page=per_page)
+    return jsonify({
+        "items": [{
+            "name": proj.display_name,
+            "href": url_for('.project_json', project=proj.name),
+        } for proj in rdeps.items],
+        "total": rdeps.total,
+        "links": {
+            "next": url_for(
+                '.project_rdepends_json',
+                project = project,
+                page    = rdeps.next_num,
+            ) if rdeps.has_next else None,
+            "prev": url_for(
+                '.project_rdepends_json',
+                project = project,
+                page    = rdeps.prev_num,
+            ) if rdeps.has_prev else None,
+        },
+    })
 
 @web.route('/json/wheels/<wheel>.json')
 def wheel_json(wheel):

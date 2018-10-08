@@ -130,10 +130,7 @@ Web Interface
 - Do something with the keywords table
 - Add an "about" page describing wheels, what the site does, and the JSON "API"
 - Add a page listing recently analyzed wheels?
-
-- Add "API" endpoints for just retrieving JSON:
-    - `/json/projects/<project>/rdepends` — reverse dependencies
-        - Should this be paginated?
+- `project_json`: Add links to `/data` and `/rdepends`?
 
 - Add search options:
     - search by project name
