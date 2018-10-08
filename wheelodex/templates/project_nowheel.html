@@ -6,7 +6,7 @@
 <a href="https://pypi.org/project/{{project.display_name|e}}/">[pypi]</a>
 <a href="{{url_for('.project_json', project=project.name)}}">[project json]</a>
 <a href="{{url_for('.project_data_json', project=project.name)}}">[project data json]</a>
-<a href="{{url_for('.rdepends', name=project.name)}}">[Reverse Dependencies]</a>
+<a href="{{url_for('.rdepends', name=project.name)}}">[Reverse Dependencies]</a> ({{rdepends_qty}})
 
 <p>No wheels registered for this project.</p>
 {% endblock %}

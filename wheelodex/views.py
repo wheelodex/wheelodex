@@ -2,8 +2,9 @@ from   collections     import OrderedDict
 from   flask           import Blueprint, current_app, jsonify, \
                                 render_template, url_for
 from   packaging.utils import canonicalize_name as normalize
+from   .dbutil         import rdepends_query
 from   .models         import EntryPoint, EntryPointGroup, Project, Version, \
-                                Wheel, WheelData, db, dependency_tbl
+                                Wheel, WheelData, db
 from   .util           import json_response
 
 web = Blueprint('web', __name__)
@@ -76,28 +77,29 @@ def project_list():
 def project(name):
     p = db.session.query(Project).filter(Project.name == normalize(name))\
                   .first_or_404()
+    rdeps_qty = rdepends_query(p).count()
     whl = p.best_wheel
     if whl is not None:
         return render_template(
             'wheel_data.html',
-            whl        = whl,
-            all_wheels = p.versions_wheels_grid(),
+            whl          = whl,
+            rdepends_qty = rdeps_qty,
+            all_wheels   = p.versions_wheels_grid(),
         )
     else:
-        return render_template('project_nowheel.html', project=p)
+        return render_template(
+            'project_nowheel.html',
+            project      = p,
+            rdepends_qty = rdeps_qty,
+        )
 
 @web.route('/projects/<name>/rdepends/')
 def rdepends(name):
     per_page = current_app.config["WHEELODEX_RDEPENDS_PER_PAGE"]
     p = db.session.query(Project).filter(Project.name == normalize(name))\
                   .first_or_404()
-    subq = db.session.query(WheelData).join(dependency_tbl).join(Project)\
-                     .filter(Project.id == p.id).subquery()
-    ### TODO: Use preferred wheel:
-    rdeps = db.session.query(Project).join(Version).join(Wheel).join(subq)\
-                      .group_by(Project)\
-                      .order_by(Project.name.asc())\
-                      .paginate(per_page=per_page)
+    rdeps = rdepends_query(p).order_by(Project.name.asc())\
+                             .paginate(per_page=per_page)
     return render_template(
         'rdepends.html',
         project  = p.display_name,

@@ -4,8 +4,9 @@ import logging
 from   typing          import Optional, Union
 from   packaging.utils import canonicalize_name as normalize, \
                                 canonicalize_version as normversion
+from   sqlalchemy.orm  import aliased
 from   .models         import OrphanWheel, Project, PyPISerial, Version, \
-                                Wheel, db
+                                Wheel, WheelData, db, dependency_tbl
 from   .util           import version_sort_key, wheel_sort_key
 
 log = logging.getLogger(__name__)
@@ -200,3 +201,15 @@ def add_orphan_wheel(version: Version, filename, uploaded_epoch):
     else:
         # If they keep uploading the wheel, keep checking the JSON API for it.
         whl.uploaded = uploaded
+
+def rdepends_query(project: Project):
+    """
+    Returns a query object that returns all Projects that depend on the given
+    Project.  No ordering is applied to the query.
+    """
+    src = aliased(Project)
+    ### TODO: Use preferred wheel:
+    return Project.query.join(Version).join(Wheel).join(WheelData)\
+                        .join(dependency_tbl).join(src)\
+                        .filter(src.id == project.id)\
+                        .group_by(Project.id)

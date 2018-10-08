@@ -19,6 +19,7 @@
 - Come up with a better way of logging processing errors (e.g., so that people
   actually see them)
 - Add tests for the views somehow
+- Use eager loading to speed up various database queries
 
 - There are several database queries (marked with "TODO: Use preferred wheel")
   that need to be amended to only return results for one wheel (the preferred
@@ -114,7 +115,6 @@ Web Interface
 - Project page:
     - Highlight the entries in the versions-wheels grid based on whether each
       wheel has data and/or is the wheel being currently viewed
-    - Show the number of reverse dependencies next to the link
 - Entry point groups:
     - Add an option for sorting by quantity?
     - Give entry points groups short descriptions to show next to them in the
