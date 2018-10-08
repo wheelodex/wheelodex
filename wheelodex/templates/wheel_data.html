@@ -4,7 +4,9 @@
 
 {% block content %}
 <a href="https://pypi.org/project/{{whl.project.display_name|e}}/{{whl.version.display_name|e}}/">[pypi]</a>
-<a href="{{url_for('.wheel_json', wheel=whl.filename)}}">[json]</a>
+<a href="{{url_for('.project_json', project=whl.project.name)}}">[project json]</a>
+<a href="{{url_for('.project_data_json', project=whl.project.name)}}">[project data json]</a>
+<a href="{{url_for('.wheel_json', wheel=whl.filename)}}">[wheel json]</a>
 <a href="{{url_for('.rdepends', name=whl.project.name)}}">[Reverse Dependencies]</a>
 
 {% if all_wheels is defined %}

@@ -1,8 +1,11 @@
-from   flask           import Blueprint, current_app, jsonify, render_template
+from   collections     import OrderedDict
+from   flask           import Blueprint, current_app, jsonify, \
+                                render_template, url_for
 from   packaging.utils import canonicalize_name as normalize
 import sqlalchemy as S
 from   .models         import EntryPoint, EntryPointGroup, Project, Version, \
                                 Wheel, WheelData, db, dependency_tbl
+from   .util           import json_response
 
 web = Blueprint('web', __name__)
 
@@ -33,11 +36,6 @@ def wheel_list():
                             Wheel.ordering.desc(),
                        ).paginate(per_page=per_page)
     return render_template('wheel_list.html', wheels=wheels)
-
-@web.route('/json/wheels/<wheel>.json')
-def wheel_json(wheel):
-    whl = db.session.query(Wheel).filter(Wheel.filename == wheel).first_or_404()
-    return jsonify(whl.as_json())
 
 @web.route('/<wheel>.html')
 def wheel_data(wheel):
@@ -138,3 +136,44 @@ def entry_point(group):
         ep_group    = ep_group,
         project_eps = project_eps,
     )
+
+@web.route('/json/projects/<project>')
+def project_json(project):
+    """
+    Returns the names of all known wheels (with links) for the given project
+    and whether they have data, organized by version
+    """
+    p = db.session.query(Project).filter(Project.name == normalize(project))\
+                  .first_or_404()
+    response = OrderedDict()
+    for v, wheels in p.versions_wheels_grid():
+        lst = []
+        for w,d in wheels:
+            lst.append({
+                "filename": w.filename,
+                "has_data": d,
+                "href": url_for('.wheel_json', wheel=w.filename),
+            })
+        response[v] = lst
+    return jsonify(response)
+
+@web.route('/json/projects/<project>/data')
+def project_data_json(project):
+    """ Returns the JSON representation of the given project's best wheel """
+    p = db.session.query(Project).filter(Project.name == normalize(project))\
+                  .first_or_404()
+    ### TODO: Should this use preferred_wheel instead?  The URL does say
+    ### "data"...
+    whl = p.best_wheel
+    if whl is not None:
+        return jsonify(whl.as_json())
+    else:
+        return json_response(
+            {"message": "No wheels found for project"},
+            status_code=404,
+        )
+
+@web.route('/json/wheels/<wheel>.json')
+def wheel_json(wheel):
+    whl = db.session.query(Wheel).filter(Wheel.filename == wheel).first_or_404()
+    return jsonify(whl.as_json())

@@ -21,6 +21,7 @@
   are in UTC and convert them to aware `datetime`s?
 - Come up with a better way of logging processing errors (e.g., so that people
   actually see them)
+- Add tests for the views somehow
 
 - There are several database queries (marked with "TODO: Use preferred wheel")
   that need to be amended to only return results for one wheel (the preferred
@@ -135,16 +136,12 @@ Web Interface
   the normalized spellings
 - Provide a download of a database export made periodically with `dump`
 - Do something with the keywords table
-- Add an "about" page describing wheels and what the site does
+- Add an "about" page describing wheels, what the site does, and the JSON "API"
+- Add a page listing recently analyzed wheels?
 
 - Add "API" endpoints for just retrieving JSON:
-    - `/json/projects/<project>` — returns a list of all known wheels (with
-      links) for a project and whether they have data
-        - organize by version like in PyPI's JSON API?
-    - `/json/projects/<project>/data` — returns the data for the preferred
-      wheel for a project
     - `/json/projects/<project>/rdepends` — reverse dependencies
-    - `/json/wheels/<filename>.whl.json` — individual wheel data
+        - Should this be paginated?
 
 - Add search options:
     - search by project name

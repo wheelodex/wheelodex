@@ -2,6 +2,8 @@ from   collections       import defaultdict
 from   functools         import total_ordering
 import platform
 import re
+from   flask             import Response
+from   flask.json        import dumps
 from   packaging.version import parse
 import requests
 import requests_download
@@ -183,3 +185,10 @@ def wheel_sort_key(filename):
     )
 
     return (1, pyver_rank, platform_rank, abi_rank, tiebreaker, build_rank)
+
+def json_response(obj, status_code=200):
+    return Response(
+        response = dumps(obj),
+        status   = status_code,
+        mimetype = 'application/json',
+    )
