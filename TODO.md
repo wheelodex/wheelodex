@@ -1,10 +1,8 @@
 - Add docstrings
     - Add `help` strings to commands & their options
-- Add a column to `WheelData` for storing the revision of `SCHEMA` that
-  `raw_data` conforms to?
-    - Alternatively, store the revision of the wheel inspection code used?
-        - Split `wheelodex.inspect` into a separate project?
-- Upgrade `SCHEMA` to a more recent JSON Schema draft
+- Split `wheelodex.inspect` into a separate project and use the
+  `wheelodex_version` columns (renamed to `wheelodex_inspect_version`) to store
+  the version of this project that `wheelodex` uses
 - If the latest version of a project doesn't have any wheels, should
   `iterqueue()` return the wheels for the next latest version that does?
 - If the latest version of a project doesn't have any wheels, should
@@ -53,6 +51,7 @@
 
 Wheel Inspection
 ----------------
+- Upgrade `SCHEMA` to a more recent JSON Schema draft
 - Parse `Description-Content-Type` into a structured `dict`?
 - Should flat modules inside packages be discarded from `.derived.modules`?
 - Divide `.derived.modules` into a list of packages and a list of flat modules
@@ -94,7 +93,6 @@ Web Interface
 - Main page: Show statistics on wheels registered, wheels analyzed, and
   projects known (or something like that)
 - Wheel data:
-    - If the wheel is too big to analyze, show some indication of this
     - Include whether the wheel was verified
     - Include TOC-like links at the top linking to each section on the page
     - `METADATA` display:

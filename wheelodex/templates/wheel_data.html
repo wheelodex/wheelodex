@@ -198,5 +198,7 @@
 
 {% elif whl.errors %}
 <p>An error occurred while processing this wheel; it might be malformed.</p>
+{% elif whl.size > config["WHEELODEX_MAX_WHEEL_SIZE"] %}
+<p>This wheel exceeds Wheelodex's maximum wheel size policy; it will not be analyzed.</p>
 {% endif %}
 {% endblock %}
