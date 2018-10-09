@@ -1,7 +1,7 @@
 """Add EntryPointGroup.summary
 
 Revision ID: 2508919c9f86
-Revises: 
+Revises:
 Create Date: 2018-10-08 22:38:52.231851+00:00
 
 """

@@ -114,6 +114,7 @@ def entry_point_list():
     ### TODO: Use preferred wheel:
     groups = db.session.query(
                             EntryPointGroup.name,
+                            EntryPointGroup.summary,
                             db.func.COUNT(EntryPoint.id),
                         )\
                        .join(EntryPoint)\

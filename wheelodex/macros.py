@@ -1,8 +1,10 @@
 """ Custom Jinja filters """
 
-from flask  import url_for
-from jinja2 import Markup
-from .views import web
+import re
+from   cmarkgfm import markdown_to_html
+from   flask    import url_for
+from   jinja2   import Markup
+from   .views   import web
 
 @web.app_template_filter()
 def flatten_metadata(metadata):
@@ -104,3 +106,11 @@ def extlink(url):
     return Markup(
         '<a href="{0}" rel="nofollow">{0}</a>'.format(Markup.escape(url))
     )
+
+@web.app_template_filter()
+def markdown(src):
+    return Markup(markdown_to_html(src))
+
+@web.app_template_filter()
+def markdown_inline(src):
+    return Markup(re.sub(r'^<p>|</p>$', '', markdown_to_html(src)))

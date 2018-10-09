@@ -6,8 +6,8 @@
 {% block content %}
 
 <ul>
-    {% for name, qty in groups.items %}
-        <li><a href="{{url_for('.entry_point', group=name)}}">{{name|e}}</a> ({{qty}})</li>
+    {% for name, summary, qty in groups.items %}
+        <li><a href="{{url_for('.entry_point', group=name)}}">{{name|e}}</a> ({{qty}}){% if summary != None %} &#x2014; {{summary|markdown_inline}}{% endif %}</li>
     {% endfor %}
 </ul>
 

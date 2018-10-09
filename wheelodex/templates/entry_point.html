@@ -6,7 +6,7 @@
 <h2>{{ep_group.name|e}}</h2>
 
 {% if ep_group.description != None %}
-{{ep_group.description|safe}}
+{{ep_group.description|markdown}}
 {% endif %}
 
 <table class="entry_points">
