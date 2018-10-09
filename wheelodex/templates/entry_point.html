@@ -5,7 +5,7 @@
 {% block content %}
 <h2>{{ep_group.name|e}}</h2>
 
-{% if ep_group.description != None %}
+{% if ep_group.description %}
 {{ep_group.description|markdown}}
 {% endif %}
 

@@ -9,15 +9,13 @@
   `scan_pypi()` register the latest version that does?
 - Replace `WheelData.update_structure()` with Alembic
 - Rename `process_queue` (the function and the command) and `iterqueue()`
-- Add a means for setting descriptions for entry points to display in the web
-  interface
-    - Where possible, write a description of each entry point, including what
-      project consumes it
+- Write descriptions for more entry points
 - Try to make `wheel_sort_key()` both more efficient and more comprehensive
 - Should the code just assume that all "uploaded" timestamps in the JSON API
   are in UTC and convert them to aware `datetime`s?
 - Come up with a better way of logging processing errors (e.g., so that people
   actually see them)
+- Add tests for the commands
 - Add tests for the views somehow
 - Use eager loading to speed up various database queries
 
@@ -49,6 +47,10 @@
       wheels were added?
     - Give `process_queue` (the function and the command) options for limiting
       the number and/or total size of wheels to process
+    - Add a `dump-entry-points` command for outputting the summaries &
+      descriptions from the database
+    - Give `load-entry-points` an option for deleting the summaries &
+      descriptions of entry point groups not listed in the input file?
 
 Wheel Inspection
 ----------------
@@ -117,8 +119,6 @@ Web Interface
       wheel has data and/or is the wheel being currently viewed
 - Entry point groups:
     - Add an option for sorting by quantity?
-    - Give entry points groups short descriptions to show next to them in the
-      entry point group list?
 - Entry points:
     - Add options for sorting by either project or entry point name, ascending
       or descending

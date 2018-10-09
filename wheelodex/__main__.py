@@ -1,3 +1,4 @@
+from   configparser  import ConfigParser
 from   datetime      import datetime, timedelta, timezone
 import json
 import logging
@@ -5,10 +6,11 @@ import click
 from   flask         import current_app
 from   flask.cli     import FlaskGroup
 from   flask_migrate import stamp
+from   pkg_resources import resource_filename
 from   sqlalchemy    import inspect
 from   .             import __version__
 from   .app          import create_app
-from   .models       import OrphanWheel, Wheel, db
+from   .models       import EntryPointGroup, OrphanWheel, Wheel, db
 from   .dbutil       import dbcontext, add_version, add_wheel, get_serial, \
                                 purge_old_versions, set_serial
 from   .process      import process_queue
@@ -147,6 +149,24 @@ def process_orphan_wheels():
         ).delete()
         log.info('%d orphan wheels expired', expired)
     log.info('END process_orphan_wheels')
+
+@main.command()
+@click.argument(
+    'infile',
+    type    = click.File(),
+    default = resource_filename('wheelodex', 'data/entry_points.ini'),
+)
+def load_entry_points(infile):
+    """ Load entry point group descriptions from a file """
+    epgs = ConfigParser(interpolation=None)
+    epgs.read_file(infile)
+    with dbcontext():
+        for name in epgs.sections():
+            group = EntryPointGroup.from_name(name)
+            if epgs.has_option(name, 'summary'):
+                group.summary = epgs.get(name, 'summary')
+            if epgs.has_option(name, 'description'):
+                group.description = epgs.get(name, 'description')
 
 if __name__ == '__main__':
     main(prog_name=__package__)
