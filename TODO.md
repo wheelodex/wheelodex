@@ -106,6 +106,7 @@ Web Interface
     - Add a dedicated box for commands defined by the wheel?
     - Add a dedicated box for Python packages defined by the wheel?
     - Include (at least some) reverse dependencies on the page itself
+    - Show human-readable descriptions of the tags in a wheel's filename?
 - Do exactly one of the following:
     - Eliminate individual wheel pages; when the user clicks on a wheel in the
       grid at the top of a project page, use JavaScript to rewrite the page to

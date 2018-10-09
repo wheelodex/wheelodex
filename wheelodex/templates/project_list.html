@@ -7,7 +7,7 @@
 
 <ul>
     {% for name, display_name, summary in projects.items %}
-        <li><a href="{{url_for('.project', name=name)}}">{{display_name|e}}</a> &#x2014; {% if summary != None %}{{summary|e}}{% else %}<span class="no-summary">no summary</span>{% endif %}</li>
+        <li><a href="{{url_for('.project', project=name)}}">{{display_name|e}}</a> &#x2014; {% if summary != None %}{{summary|e}}{% else %}<span class="no-summary">no summary</span>{% endif %}</li>
     {% endfor %}
 </ul>
 

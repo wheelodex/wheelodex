@@ -7,10 +7,10 @@
 
 <ul>
     {% for rd in rdepends.items %}
-        <li><a href="{{url_for('.project', name=rd.display_name)}}">{{rd.display_name|e}}</a></li>
+        <li><a href="{{url_for('.project', project=rd.name)}}">{{rd.display_name|e}}</a></li>
     {% endfor %}
 </ul>
 
-{{render_pagination(rdepends, '.rdepends', name=project)}}
+{{render_pagination(rdepends, '.rdepends', project=project)}}
 
 {% endblock %}

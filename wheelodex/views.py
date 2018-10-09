@@ -74,9 +74,9 @@ def project_list():
     projects = db.session.query(q).paginate(per_page=per_page)
     return render_template('project_list.html', projects=projects)
 
-@web.route('/projects/<name>/')
-def project(name):
-    p = db.session.query(Project).filter(Project.name == normalize(name))\
+@web.route('/projects/<project>/')
+def project(project):
+    p = db.session.query(Project).filter(Project.name == normalize(project))\
                   .first_or_404()
     rdeps_qty = rdepends_query(p).count()
     whl = p.best_wheel
@@ -94,10 +94,10 @@ def project(name):
             rdepends_qty = rdeps_qty,
         )
 
-@web.route('/projects/<name>/rdepends/')
-def rdepends(name):
+@web.route('/projects/<project>/rdepends/')
+def rdepends(project):
     per_page = current_app.config["WHEELODEX_RDEPENDS_PER_PAGE"]
-    p = db.session.query(Project).filter(Project.name == normalize(name))\
+    p = db.session.query(Project).filter(Project.name == normalize(project))\
                   .first_or_404()
     rdeps = rdepends_query(p).order_by(Project.name.asc())\
                              .paginate(per_page=per_page)
@@ -111,7 +111,8 @@ def rdepends(name):
 def entry_point_groups():
     per_page = current_app.config["WHEELODEX_ENTRY_POINT_GROUPS_PER_PAGE"]
     # Omission of groups for which no entry points are defined is intentional.
-    ### TODO: Use preferred wheel:
+    ### TODO: Use preferred wheel (or at least weed out duplicate
+    ### Project-EntryPoint.name pairs):
     groups = db.session.query(
                             EntryPointGroup.name,
                             EntryPointGroup.summary,
@@ -129,7 +130,7 @@ def entry_point(group):
                          .filter(EntryPointGroup.name == group)\
                          .first_or_404()
     per_page = current_app.config["WHEELODEX_ENTRY_POINTS_PER_PAGE"]
-    ### TODO: Use preferred wheel:
+    ### TODO: Use preferred wheel (or at least weed out duplicate lines):
     project_eps = db.session.query(Project.display_name, EntryPoint.name)\
                             .join(Version).join(Wheel).join(WheelData)\
                             .join(EntryPoint)\

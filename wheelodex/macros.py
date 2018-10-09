@@ -1,10 +1,11 @@
 """ Custom Jinja filters """
 
 import re
-from   cmarkgfm import markdown_to_html
-from   flask    import url_for
-from   jinja2   import Markup
-from   .views   import web
+from   cmarkgfm        import markdown_to_html
+from   flask           import url_for
+from   jinja2          import Markup
+from   packaging.utils import canonicalize_name as normalize
+from   .views          import web
 
 @web.app_template_filter()
 def flatten_metadata(metadata):
@@ -33,7 +34,7 @@ def flatten_metadata(metadata):
             for req in value:
                 s = Markup(
                     '<a href="{}">{}</a>'.format(
-                        url_for('.project', name=req["name"]),
+                        url_for('.project', project=normalize(req["name"])),
                         req["name"],
                     )
                 )
