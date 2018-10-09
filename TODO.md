@@ -4,8 +4,6 @@
   `wheelodex_version` columns (renamed to `wheelodex_inspect_version`) to store
   the version of this project that `wheelodex` uses
 - If the latest version of a project doesn't have any wheels, should
-  `iterqueue()` return the wheels for the next latest version that does?
-- If the latest version of a project doesn't have any wheels, should
   `scan_pypi()` register the latest version that does?
 - Replace `WheelData.update_structure()` with Alembic
 - Rename `process_queue` (the function and the command) and `iterqueue()`
@@ -117,6 +115,8 @@ Web Interface
 - Project page:
     - Highlight the entries in the versions-wheels grid based on whether each
       wheel has data and/or is the wheel being currently viewed
+    - Show a message if we know there's a newer version but it doesn't have any
+      wheels?
 - Entry point groups:
     - Add an option for sorting by quantity?
 - Entry points:

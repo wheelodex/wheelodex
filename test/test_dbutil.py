@@ -464,6 +464,15 @@ def test_iterqueue_skip_non_latest():
     whl2 = add_wheel(version=v2, **FOOBAR_2_WHEEL)
     assert iterqueue() == [whl2]
 
+def test_iterqueue_ignore_empty_latest():
+    assert iterqueue() == []
+    p = add_project('FooBar')
+    v1 = add_version(p, '1.0')
+    whl1 = add_wheel(version=v1, **FOOBAR_1_WHEEL)
+    assert iterqueue() == [whl1]
+    add_version(p, '2.0')
+    assert iterqueue() == [whl1]
+
 def test_iterqueue_skip_large():
     assert iterqueue() == []
     p = add_project('FooBar')

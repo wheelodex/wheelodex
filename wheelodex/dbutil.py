@@ -58,7 +58,7 @@ def add_wheel(version: 'Version', filename, url, size, md5, sha256, uploaded):
 def iterqueue(max_wheel_size=None) -> [Wheel]:
     """
     Returns a list of all wheels with neither data nor errors for the latest
-    version of each project
+    nonempty (i.e., having wheels) version of each project
 
     :param int max_wheel_size: If set, only wheels this size or smaller are
         returned
@@ -66,7 +66,7 @@ def iterqueue(max_wheel_size=None) -> [Wheel]:
     subq = db.session.query(
         Project.id,
         db.func.max(Version.ordering).label('max_order'),
-    ).join(Version).group_by(Project.id).subquery()
+    ).join(Version).join(Wheel).group_by(Project.id).subquery()
     q = Wheel.query.join(Version)\
                    .join(Project)\
                    .join(subq, (Project.id == subq.c.id)
