@@ -1,5 +1,6 @@
 from   collections     import OrderedDict
-from   flask           import Blueprint, current_app, jsonify, \
+from   functools       import wraps
+from   flask           import Blueprint, current_app, jsonify, redirect, \
                                 render_template, url_for
 from   packaging.utils import canonicalize_name as normalize
 from   .dbutil         import rdepends_query
@@ -10,6 +11,16 @@ from   .util           import json_response
 web = Blueprint('web', __name__)
 
 from . import macros  # noqa
+
+def canonicalize_project_url(f):
+    @wraps(f)
+    def wrapped(project):
+        normproj = normalize(project)
+        if normproj != project:
+            return redirect(url_for('.'+f.__name__, project=normproj), code=301)
+        else:
+            return f(normproj)
+    return wrapped
 
 @web.route('/')
 @web.route('/index.html')
@@ -75,9 +86,9 @@ def project_list():
     return render_template('project_list.html', projects=projects)
 
 @web.route('/projects/<project>/')
+@canonicalize_project_url
 def project(project):
-    p = db.session.query(Project).filter(Project.name == normalize(project))\
-                  .first_or_404()
+    p = db.session.query(Project).filter(Project.name == project).first_or_404()
     rdeps_qty = rdepends_query(p).count()
     whl = p.best_wheel
     if whl is not None:
@@ -95,10 +106,10 @@ def project(project):
         )
 
 @web.route('/projects/<project>/rdepends/')
+@canonicalize_project_url
 def rdepends(project):
     per_page = current_app.config["WHEELODEX_RDEPENDS_PER_PAGE"]
-    p = db.session.query(Project).filter(Project.name == normalize(project))\
-                  .first_or_404()
+    p = db.session.query(Project).filter(Project.name == project).first_or_404()
     rdeps = rdepends_query(p).order_by(Project.name.asc())\
                              .paginate(per_page=per_page)
     return render_template(
@@ -145,13 +156,13 @@ def entry_point(group):
     )
 
 @web.route('/json/projects/<project>')
+@canonicalize_project_url
 def project_json(project):
     """
     Returns the names of all known wheels (with links) for the given project
     and whether they have data, organized by version
     """
-    p = db.session.query(Project).filter(Project.name == normalize(project))\
-                  .first_or_404()
+    p = db.session.query(Project).filter(Project.name == project).first_or_404()
     response = OrderedDict()
     for v, wheels in p.versions_wheels_grid():
         lst = []
@@ -165,10 +176,10 @@ def project_json(project):
     return jsonify(response)
 
 @web.route('/json/projects/<project>/data')
+@canonicalize_project_url
 def project_data_json(project):
     """ Returns the JSON representation of the given project's best wheel """
-    p = db.session.query(Project).filter(Project.name == normalize(project))\
-                  .first_or_404()
+    p = db.session.query(Project).filter(Project.name == project).first_or_404()
     ### TODO: Should this use preferred_wheel instead?  The URL does say
     ### "data"...
     whl = p.best_wheel
@@ -181,9 +192,9 @@ def project_data_json(project):
         )
 
 @web.route('/json/projects/<project>/rdepends')
+@canonicalize_project_url
 def project_rdepends_json(project):
     per_page = current_app.config["WHEELODEX_RDEPENDS_PER_PAGE"]
-    project = normalize(project)
     p = db.session.query(Project).filter(Project.name == project).first_or_404()
     rdeps = rdepends_query(p).order_by(Project.name.asc())\
                              .paginate(per_page=per_page)

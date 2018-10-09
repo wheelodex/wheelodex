@@ -125,8 +125,6 @@ Web Interface
       or descending
     - Include project summaries in entry point lists?
 - Include project summaries in reverse dependency lists
-- Make all URLs with project names in them redirect to canonical URLs that use
-  the normalized spellings
 - Provide a download of a database export made periodically with `dump`
 - Do something with the keywords table
 - Add an "about" page describing wheels, what the site does, and the JSON "API"
