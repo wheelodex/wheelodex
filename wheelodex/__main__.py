@@ -1,17 +1,19 @@
-from   datetime  import datetime, timedelta, timezone
+from   datetime      import datetime, timedelta, timezone
 import json
 import logging
 import click
-from   flask     import current_app
-from   flask.cli import FlaskGroup
-from   .         import __version__
-from   .app      import create_app
-from   .models   import OrphanWheel, Wheel, db
-from   .dbutil   import dbcontext, add_version, add_wheel, get_serial, \
-                            purge_old_versions, set_serial
-from   .process  import process_queue
-from   .pypi_api import PyPIAPI
-from   .scan     import scan_pypi, scan_changelog
+from   flask         import current_app
+from   flask.cli     import FlaskGroup
+from   flask_migrate import stamp
+from   sqlalchemy    import inspect
+from   .             import __version__
+from   .app          import create_app
+from   .models       import OrphanWheel, Wheel, db
+from   .dbutil       import dbcontext, add_version, add_wheel, get_serial, \
+                                purge_old_versions, set_serial
+from   .process      import process_queue
+from   .pypi_api     import PyPIAPI
+from   .scan         import scan_pypi, scan_changelog
 
 log = logging.getLogger(__name__)
 
@@ -36,11 +38,25 @@ def main(log_level):
     )
 
 @main.command()
-def initdb():
-    """ Ensure the database is initialized """
-    with dbcontext():
-        db.create_all()
-        set_serial(0)
+@click.option('-f', '--force', is_flag=True)
+def initdb(force):
+    """
+    Initialize the database.
+
+    This command creates the database tables, initializes the PyPI serial to 0,
+    and sets the Alembic revision to the latest version.  In an attempt at
+    ensuring idempotence, this command will do nothing if there are already one
+    or more tables in the database; use the ``--force`` option to override this
+    check.
+    """
+    if force or not inspect(db.engine).get_table_names():
+        click.echo('Initializing database ...')
+        with dbcontext():
+            db.create_all()
+            set_serial(0)
+        stamp()
+    else:
+        click.echo('Database appears to already be initialized; doing nothing')
 
 @main.command('scan-pypi')
 def scan_pypi_cmd():

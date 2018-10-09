@@ -309,6 +309,7 @@ class EntryPointGroup(Base):
 
     id = S.Column(S.Integer, primary_key=True, nullable=False)  # noqa: B001
     name        = S.Column(S.Unicode(2048), nullable=False, unique=True)
+    summary     = S.Column(S.Unicode(2048), nullable=True, default=None)
     description = S.Column(S.Unicode(65535), nullable=True, default=None)
 
     def __repr__(self):

@@ -1,5 +1,7 @@
 import os
-from   flask import Flask
+from   pathlib       import Path
+from   flask         import Flask
+from   flask_migrate import Migrate
 
 DEFAULT_CONFIG = {
     "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
@@ -20,6 +22,7 @@ def create_app():
         app.config.from_envvar("WHEELODEX_CONFIG")
     from .models import db
     db.init_app(app)
+    Migrate(app, db, str(Path(__file__).with_name('migrations')))
     from .views import web
     app.register_blueprint(web)
     return app
