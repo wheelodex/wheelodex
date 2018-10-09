@@ -108,7 +108,7 @@ def rdepends(name):
     )
 
 @web.route('/entry-points/')
-def entry_point_list():
+def entry_point_groups():
     per_page = current_app.config["WHEELODEX_ENTRY_POINT_GROUPS_PER_PAGE"]
     # Omission of groups for which no entry points are defined is intentional.
     ### TODO: Use preferred wheel:
@@ -121,7 +121,7 @@ def entry_point_list():
                        .group_by(EntryPointGroup)\
                        .order_by(EntryPointGroup.name.asc())\
                        .paginate(per_page=per_page)
-    return render_template('entry_point_list.html', groups=groups)
+    return render_template('entry_point_groups.html', groups=groups)
 
 @web.route('/entry-points/<group>/')
 def entry_point(group):
