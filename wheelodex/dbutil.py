@@ -1,3 +1,5 @@
+""" Utility functions for working with the database """
+
 from   contextlib      import contextmanager
 from   datetime        import datetime, timezone
 import logging
@@ -13,6 +15,10 @@ log = logging.getLogger(__name__)
 
 @contextmanager
 def dbcontext():
+    """
+    A context manager that yields the current application's database session,
+    commits on success, and rolls back on error
+    """
     try:
         yield db.session
         db.session.commit()
@@ -28,6 +34,10 @@ def get_serial() -> Optional[int]:
     return ps and ps.serial
 
 def set_serial(value: int):
+    """
+    Advances the serial ID of the last seen PyPI event to ``value``.  If
+    ``value`` is less than the currently-stored serial, no change is made.
+    """
     ps = PyPISerial.query.one_or_none()
     if ps is None:
         db.session.add(PyPISerial(serial=value))
@@ -35,6 +45,12 @@ def set_serial(value: int):
         ps.serial = max(ps.serial, value)
 
 def add_wheel(version: 'Version', filename, url, size, md5, sha256, uploaded):
+    r"""
+    Registers a wheel for the given `Version` and updates the ``ordering``
+    values for the `Version`'s `Wheel`\ s.  The new `Wheel` object is returned.
+    If a wheel with the given filename is already registered, no change is made
+    to the database, and the already-registered wheel is returned.
+    """
     whl = Wheel.query.filter(Wheel.filename == filename).one_or_none()
     if whl is None:
         whl = Wheel(
@@ -57,8 +73,9 @@ def add_wheel(version: 'Version', filename, url, size, md5, sha256, uploaded):
 
 def iterqueue(max_wheel_size=None) -> [Wheel]:
     """
-    Returns a list of all wheels with neither data nor errors for the latest
-    nonempty (i.e., having wheels) version of each project
+    Returns the "queue" of wheels to process: a list of all wheels with neither
+    data nor errors for the latest nonempty (i.e., having wheels) version of
+    each project
 
     :param int max_wheel_size: If set, only wheels this size or smaller are
         returned
@@ -80,6 +97,10 @@ def iterqueue(max_wheel_size=None) -> [Wheel]:
     return q.all()
 
 def remove_wheel(filename: str):
+    r"""
+    Delete all `Wheel`\ s and `OrphanWheel`\ s with the given filename from the
+    database
+    """
     Wheel.query.filter(Wheel.filename == filename).delete()
     OrphanWheel.query.filter(OrphanWheel.filename == filename).delete()
 
@@ -92,24 +113,30 @@ def add_project(name: str):
     return Project.from_name(name)
 
 def get_project(name: str):
+    """
+    Return the `Project` with the given name (*modulo* normalization), or
+    `None` if there is no such project
+    """
     return Project.query.filter(Project.name == normalize(name)).one_or_none()
 
 def remove_project(project: str):
-    # This deletes the project's versions (and thus also wheels) but leaves
-    # the project entry in place in case it's still referenced as a
-    # dependency of other wheels.
-    #
-    # Note that this filters by PyPI project, not by wheel filename
-    # project, as this method is meant to be called in response to "remove"
-    # events in the PyPI changelog.
+    r"""
+    Delete all `Version`\ s (and `Wheel`\ s etc.) for the `Project` with the
+    given name (*modulo* normalization).  The `Project` entry itself is
+    retained in case it's still referenced as a dependency of other projects.
+    """
+    # Note that this filters by PyPI project, not by wheel filename project, as
+    # this method is meant to be called in response to "remove" events in the
+    # PyPI changelog.
     ### TODO: Look into doing this as a JOIN + DELETE of some sort
     p = get_project(project)
     if p is not None:
         Version.query.filter(Version.project == p).delete()
 
 def add_version(project: Union[str, 'Project'], version: str):
-    """
-    Create a `Version` with the given project & version string and return it.
+    r"""
+    Create a `Version` with the given project & version string and return it;
+    the ``ordering`` values for the project's `Version`\ s are updated as well.
     If there already exists a version with the same details, do nothing and
     return that instead.
     """
@@ -131,6 +158,10 @@ def add_version(project: Union[str, 'Project'], version: str):
     return v
 
 def get_version(project: Union[str, 'Project'], version: str):
+    """
+    Return the `Version` with the given project and version string (*modulo*
+    canonicalization), or `None` if there is no such version
+    """
     if isinstance(project, str):
         project = get_project(project)
     if project is None:
@@ -140,9 +171,13 @@ def get_version(project: Union[str, 'Project'], version: str):
                         .one_or_none()
 
 def remove_version(project: str, version: str):
-    # Note that this filters by PyPI project & version, not by wheel
-    # filename project & version, as this method is meant to be called in
-    # response to "remove" events in the PyPI changelog.
+    r"""
+    Delete the `Version` (and `Wheel`\ s etc.) for the given project and
+    version string
+    """
+    # Note that this filters by PyPI project & version, not by wheel filename
+    # project & version, as this method is meant to be called in response to
+    # "remove" events in the PyPI changelog.
     ### TODO: Look into doing this as a JOIN + DELETE of some sort
     p = get_project(project)
     if p is not None:
@@ -189,6 +224,12 @@ def purge_old_versions():
     log.info('END purge_old_versions')
 
 def add_orphan_wheel(version: Version, filename, uploaded_epoch):
+    """
+    Register an `OrphanWheel` for the given version, with the given filename,
+    uploaded at ``uploaded_epoch`` seconds after the Unix epoch.  If an orphan
+    wheel with the given filename has already been registered, update its
+    ``uploaded`` timestamp and do nothing else.
+    """
     uploaded = datetime.fromtimestamp(uploaded_epoch, timezone.utc)
     whl = OrphanWheel.query.filter(Wheel.filename == filename).one_or_none()
     if whl is None:
@@ -203,9 +244,9 @@ def add_orphan_wheel(version: Version, filename, uploaded_epoch):
         whl.uploaded = uploaded
 
 def rdepends_query(project: Project):
-    """
-    Returns a query object that returns all Projects that depend on the given
-    Project.  No ordering is applied to the query.
+    r"""
+    Returns a query object that returns all `Project`\ s that depend on the
+    given `Project`.  No ordering is applied to the query.
     """
     src = aliased(Project)
     ### TODO: Use preferred wheel?:
