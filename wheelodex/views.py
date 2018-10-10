@@ -14,12 +14,12 @@ web = Blueprint('web', __name__)
 
 from . import macros  # noqa
 
-def canonicalize_project_url(f):
+def project_view(f):
     """
-    A decorator for views that take a ``project`` parameter; if the project
-    name is not in normalized form, a 301 redirect is issued.  This also allows
-    the decorated views to skip the call to `normalize()` when fetching the
-    `Project` object from the database.
+    A decorator for views that take a ``project`` parameter.  If the project
+    name is not in normalized form, a 301 redirect is issued.  Otherwise, the
+    `Project` object is fetched from the database and passed to the view
+    function as the ``project`` parameter.
     """
     @wraps(f)
     def wrapped(project):
@@ -27,7 +27,8 @@ def canonicalize_project_url(f):
         if normproj != project:
             return redirect(url_for('.'+f.__name__, project=normproj), code=301)
         else:
-            return f(normproj)
+            p = Project.query.filter(Project.name == normproj).first_or_404()
+            return f(project=p)
     return wrapped
 
 @web.route('/')
@@ -101,39 +102,37 @@ def project_list():
     return render_template('project_list.html', projects=projects)
 
 @web.route('/projects/<project>/')
-@canonicalize_project_url
+@project_view
 def project(project):
     """
     A display of the data for a given project, including its "best wheel"
     """
-    p = db.session.query(Project).filter(Project.name == project).first_or_404()
-    rdeps_qty = rdepends_query(p).count()
-    whl = p.best_wheel
+    rdeps_qty = rdepends_query(project).count()
+    whl = project.best_wheel
     if whl is not None:
         return render_template(
             'wheel_data.html',
             whl          = whl,
             rdepends_qty = rdeps_qty,
-            all_wheels   = p.versions_wheels_grid(),
+            all_wheels   = project.versions_wheels_grid(),
         )
     else:
         return render_template(
             'project_nowheel.html',
-            project      = p,
+            project      = project,
             rdepends_qty = rdeps_qty,
         )
 
 @web.route('/projects/<project>/rdepends/')
-@canonicalize_project_url
+@project_view
 def rdepends(project):
     """ A list of reverse dependencies for a project """
     per_page = current_app.config["WHEELODEX_RDEPENDS_PER_PAGE"]
-    p = db.session.query(Project).filter(Project.name == project).first_or_404()
-    rdeps = rdepends_query(p).order_by(Project.name.asc())\
-                             .paginate(per_page=per_page)
+    rdeps = rdepends_query(project).order_by(Project.name.asc())\
+                                   .paginate(per_page=per_page)
     return render_template(
         'rdepends.html',
-        project  = p.display_name,
+        project  = project.display_name,
         rdepends = rdeps,
     )
 
@@ -181,15 +180,14 @@ def entry_point(group):
     )
 
 @web.route('/json/projects/<project>')
-@canonicalize_project_url
+@project_view
 def project_json(project):
     """
     A JSON view of the names of all known wheels (with links) for the given
     project and whether they have data, organized by version
     """
-    p = db.session.query(Project).filter(Project.name == project).first_or_404()
     response = OrderedDict()
-    for v, wheels in p.versions_wheels_grid():
+    for v, wheels in project.versions_wheels_grid():
         lst = []
         for w,d in wheels:
             lst.append({
@@ -201,13 +199,12 @@ def project_json(project):
     return jsonify(response)
 
 @web.route('/json/projects/<project>/data')
-@canonicalize_project_url
+@project_view
 def project_data_json(project):
     """ A JSON view of the data for a given project's best wheel """
-    p = db.session.query(Project).filter(Project.name == project).first_or_404()
     ### TODO: Should this use preferred_wheel instead?  The URL does say
     ### "data"...
-    whl = p.best_wheel
+    whl = project.best_wheel
     if whl is not None:
         return jsonify(whl.as_json())
     else:
@@ -217,13 +214,12 @@ def project_data_json(project):
         )
 
 @web.route('/json/projects/<project>/rdepends')
-@canonicalize_project_url
+@project_view
 def project_rdepends_json(project):
     """ A JSON view of the reverse dependencies for a project """
     per_page = current_app.config["WHEELODEX_RDEPENDS_PER_PAGE"]
-    p = db.session.query(Project).filter(Project.name == project).first_or_404()
-    rdeps = rdepends_query(p).order_by(Project.name.asc())\
-                             .paginate(per_page=per_page)
+    rdeps = rdepends_query(project).order_by(Project.name.asc())\
+                                   .paginate(per_page=per_page)
     return jsonify({
         "items": [{
             "name": proj.display_name,
@@ -233,12 +229,12 @@ def project_rdepends_json(project):
         "links": {
             "next": url_for(
                 '.project_rdepends_json',
-                project = project,
+                project = project.name,
                 page    = rdeps.next_num,
             ) if rdeps.has_next else None,
             "prev": url_for(
                 '.project_rdepends_json',
-                project = project,
+                project = project.name,
                 page    = rdeps.prev_num,
             ) if rdeps.has_prev else None,
         },
