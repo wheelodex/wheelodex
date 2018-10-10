@@ -9,6 +9,15 @@ from   .views          import web
 
 @web.app_template_filter()
 def flatten_metadata(metadata):
+    """
+    Convert a `dict` representation of a ``METADATA`` file as returned by
+    `inspect_wheel()` to a sequence of ``(fieldname, value)`` pairs in which
+    both elements are ready for display in HTML.
+
+    Known fields are listed in an opinionated order.  Unknown fields are listed
+    at the end in lexicographic order.  The ``description`` field is omitted;
+    the caller must render it separately.
+    """
     metadata = metadata.copy()
     for field in '''
         metadata_version name version summary
@@ -78,6 +87,15 @@ def flatten_metadata(metadata):
 
 @web.app_template_filter()
 def flatten_wheel_info(wheel_info):
+    """
+    Convert a `dict` representation of a ``WHEEL`` file as returned by
+    `inspect_wheel()` to a sequence of ``(fieldname, value)`` pairs in which
+    both elements are ready for display in HTML.
+
+    Known fields are listed in an opinionated order.  Unknown fields are listed
+    at the end in lexicographic order.  The ``BODY`` field is omitted; the
+    caller must render it separately.
+    """
     wheel_info = wheel_info.copy()
     for field in 'wheel_version generator root_is_purelib tag build'.split():
         value = wheel_info.pop(field, None)
@@ -104,14 +122,20 @@ def flatten_wheel_info(wheel_info):
 
 @web.app_template_filter()
 def extlink(url):
+    """ Convert a URL to a hyperlink with ``rel="nofollow"`` """
     return Markup(
         '<a href="{0}" rel="nofollow">{0}</a>'.format(Markup.escape(url))
     )
 
 @web.app_template_filter()
 def markdown(src):
+    """ Render Markdown text """
     return Markup(markdown_to_html(src))
 
 @web.app_template_filter()
 def markdown_inline(src):
+    """
+    Render Markdown text for inline display, with outer ``<p> ... </p>`` tags
+    removed
+    """
     return Markup(re.sub(r'^<p>|</p>$', '', markdown_to_html(src)))
