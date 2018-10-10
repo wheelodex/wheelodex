@@ -20,19 +20,21 @@ from   .scan         import scan_pypi, scan_changelog
 log = logging.getLogger(__name__)
 
 # FlaskGroup causes all commands to be run inside an application context,
-# thereby letting `wheelodex.db.db` do database operations.  This does require
-# that `ctx.obj` be left untouched, though.
+# thereby letting `db` do database operations.  This does require that
+# `ctx.obj` be left untouched, though.
 @click.group(cls=FlaskGroup, create_app=create_app)
 @click.option(
     '-l', '--log-level',
     type = click.Choice(['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG']),
     default      = 'INFO',
     show_default = True,
+    help         = 'Set command logging level',
 )
 @click.version_option(
     __version__, '-V', '--version', message='%(prog)s %(version)s',
 )
 def main(log_level):
+    """ Manage a Wheelodex instance """
     logging.basicConfig(
         format  = '%(asctime)s %(levelname)s %(name)s %(message)s',
         datefmt = '%Y-%m-%dT%H:%M:%S%z',
@@ -40,7 +42,7 @@ def main(log_level):
     )
 
 @main.command()
-@click.option('-f', '--force', is_flag=True)
+@click.option('-f', '--force', is_flag=True, help='Force initialization')
 def initdb(force):
     """
     Initialize the database.
@@ -62,11 +64,13 @@ def initdb(force):
 
 @main.command('scan-pypi')
 def scan_pypi_cmd():
+    """ Scan all PyPI projects for wheels """
     with dbcontext():
         scan_pypi()
 
 @main.command('scan-changelog')
 def scan_changelog_cmd():
+    """ Scan the PyPI changelog for new wheels """
     with dbcontext():
         serial = get_serial()
         if serial is None:
@@ -77,6 +81,13 @@ def scan_changelog_cmd():
 @click.option('-S', '--max-wheel-size', type=int,
               help='Maximum size of wheels to process')
 def process_queue_cmd(max_wheel_size):
+    """
+    Analyze new wheels.
+
+    This command downloads & analyzes wheels that have been registered but not
+    analyzed yet and adds their data to the database.  Only wheels for the
+    latest nonempty version of each project are analyzed.
+    """
     if max_wheel_size is None:
         # Setting the option's default to the below expression or a
         # lambdafication thereof doesn't work:
@@ -85,20 +96,44 @@ def process_queue_cmd(max_wheel_size):
         process_queue(max_wheel_size=max_wheel_size)
 
 @main.command()
-@click.option('-A', '--all', 'dump_all', is_flag=True)
-@click.option('-o', '--outfile', default='-')
+@click.option('-A', '--all', 'dump_all', is_flag=True, help='Dump all wheels')
+@click.option('-o', '--outfile', default='-', help='File to dump to')
 def dump(dump_all, outfile):
+    """
+    Dump wheel data as line-delimited JSON.
+
+    This command outputs a JSONification of the wheels in the database to
+    standard output or the file specified with ``--outfile``.  By default, only
+    wheels that have been analyzed are output; use the ``--all`` option to also
+    include registered wheels that have not yet been analyzed.
+
+    The output format is a stream of newline-delimited one-line JSON objects.
+    The order in which the wheels are output is undefined.
+
+    If the output filename contains the substring "%(serial)s", it is replaced
+    with the serial ID of the last seen PyPI event.
+    """
     with dbcontext():
         outfile %= {"serial": get_serial()}
         with click.open_file(outfile, 'w') as fp:
-            for whl in Wheel.query:
-                if dump_all or whl.data is not None:
-                    click.echo(json.dumps(whl.as_json()), file=fp)
+            q = Wheel.query
+            if not dump_all:
+                q = q.filter(Wheel.data.has())
+            for whl in q:
+                click.echo(json.dumps(whl.as_json()), file=fp)
 
 @main.command()
-@click.option('-S', '--serial', type=int)
+@click.option('-S', '--serial', type=int,
+              help='Also update PyPI serial to given value')
 @click.argument('infile', type=click.File())
 def load(infile, serial):
+    """
+    Load wheel data from line-delimited JSON.
+
+    This command reads a file of JSONified wheel data, such as produced by
+    the `dump` command, and adds the wheels to the database.  Wheels in the
+    database that already have data are not modified.
+    """
     with dbcontext(), infile:
         if serial is not None:
             set_serial(serial)
@@ -117,11 +152,21 @@ def load(infile, serial):
 
 @main.command('purge-old-versions')
 def purge_old_versions_cmd():
+    """ Delete old versions from the database """
     with dbcontext():
         purge_old_versions()
 
 @main.command()
 def process_orphan_wheels():
+    """
+    Register or expire orphan wheels.
+
+    This command queries PyPI's JSON API to see if it can find the data for any
+    orphaned wheels.  Those that are found are registered as "normal" wheels
+    and no longer orphaned.  Those that aren't found despite being older than a
+    configured number of seconds are considered expired and deleted from the
+    database.
+    """
     log.info('BEGIN process_orphan_wheels')
     pypi = PyPIAPI()
     max_age = current_app.config["WHEELODEX_MAX_ORPHAN_AGE_SECONDS"]
@@ -160,7 +205,21 @@ def process_orphan_wheels():
     default = resource_filename('wheelodex', 'data/entry_points.ini'),
 )
 def load_entry_points(infile):
-    """ Load entry point group descriptions from a file """
+    """
+    Load entry point group descriptions from a file.
+
+    This command reads descriptions & summaries for entry point groups from
+    either the given file or, if no file is specified, from a pre-made file
+    bundled with Wheelodex; the data read is then stored in the database for
+    display in the web interface when viewing entry point-related data.
+
+    The file must be an INI file as parsed by ``configparser``.  Each section
+    describes the entry point group of the same name and may contain
+    ``summary`` and ``description`` options whose values are Markdown strings
+    to render as the group's summary or description.  Summaries are limited to
+    2048 characters and are expected to be a single line.  Descriptions are
+    limited to 65535 characters and may span multiple lines.
+    """
     epgs = ConfigParser(interpolation=None)
     epgs.read_file(infile)
     with dbcontext():

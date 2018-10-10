@@ -1,5 +1,4 @@
 - Add docstrings
-    - Add `help` strings to commands & their options
 - Split `wheelodex.inspect` into a separate project and use the
   `wheelodex_version` columns (renamed to `wheelodex_inspect_version`) to store
   the version of this project that `wheelodex` uses
@@ -35,6 +34,7 @@
       reanalysis)
     - `dump`: Add an option for including processing errors/wheels with
       processing errors
+    - `load`: Load "errored" state
     - Add a command (`scan-projects`?) that acts as a limited `scan-pypi`, only
       registering wheels for projects listed on the command line?
     - Add a command for setting the serial to the current value on PyPI and
@@ -84,6 +84,7 @@ Wheel Inspection
 - Give `inspect_wheel()` an option for whether to keep long descriptions?
 - Show more detailed information on verification errors
 - Include `pbr.json` contents?
+- Don't proceed with inspecting wheels that fail verification?
 
 Web Interface
 -------------
