@@ -1,3 +1,5 @@
+""" Flask views """
+
 from   collections     import OrderedDict
 from   functools       import wraps
 from   flask           import Blueprint, current_app, jsonify, redirect, \
@@ -13,6 +15,12 @@ web = Blueprint('web', __name__)
 from . import macros  # noqa
 
 def canonicalize_project_url(f):
+    """
+    A decorator for views that take a ``project`` parameter; if the project
+    name is not in normalized form, a 301 redirect is issued.  This also allows
+    the decorated views to skip the call to `normalize()` when fetching the
+    `Project` object from the database.
+    """
     @wraps(f)
     def wrapped(project):
         normproj = normalize(project)
@@ -25,6 +33,7 @@ def canonicalize_project_url(f):
 @web.route('/')
 @web.route('/index.html')
 def index():
+    """ The main page """
     proj_qty = db.session.query(db.func.count(Project.id.distinct()))\
                          .join(Version).join(Wheel).join(WheelData).scalar()
     whl_qty = db.session.query(WheelData).count()
@@ -38,6 +47,7 @@ def index():
 
 @web.route('/wheels.html')
 def wheel_list():
+    """ A list of all wheels with data; for testing purposes only """
     per_page = current_app.config["WHEELODEX_WHEELS_PER_PAGE"]
     wheels = db.session.query(Wheel).join(Version).join(Project)\
                        .filter(Wheel.data.has())\
@@ -50,12 +60,17 @@ def wheel_list():
 
 @web.route('/<wheel>.html')
 def wheel_data(wheel):
+    """ A display of the data for a given wheel """
     whl = db.session.query(Wheel).filter(Wheel.filename == wheel + '.whl')\
                     .first_or_404()
     return render_template('wheel_data.html', whl=whl)
 
 @web.route('/projects/')
 def project_list():
+    """
+    A list of all projects with wheels with data, along with summaries
+    extracted from those wheels
+    """
     per_page = current_app.config["WHEELODEX_PROJECTS_PER_PAGE"]
     ### TODO: Speed up this query!
     subq1 = db.session.query(
@@ -88,6 +103,9 @@ def project_list():
 @web.route('/projects/<project>/')
 @canonicalize_project_url
 def project(project):
+    """
+    A display of the data for a given project, including its "best wheel"
+    """
     p = db.session.query(Project).filter(Project.name == project).first_or_404()
     rdeps_qty = rdepends_query(p).count()
     whl = p.best_wheel
@@ -108,6 +126,7 @@ def project(project):
 @web.route('/projects/<project>/rdepends/')
 @canonicalize_project_url
 def rdepends(project):
+    """ A list of reverse dependencies for a project """
     per_page = current_app.config["WHEELODEX_RDEPENDS_PER_PAGE"]
     p = db.session.query(Project).filter(Project.name == project).first_or_404()
     rdeps = rdepends_query(p).order_by(Project.name.asc())\
@@ -120,8 +139,10 @@ def rdepends(project):
 
 @web.route('/entry-points/')
 def entry_point_groups():
+    """
+    A list of all entry point groups (excluding those without any entry points)
+    """
     per_page = current_app.config["WHEELODEX_ENTRY_POINT_GROUPS_PER_PAGE"]
-    # Omission of groups for which no entry points are defined is intentional.
     ### TODO: Use preferred wheel (or at least weed out duplicate
     ### Project-EntryPoint.name pairs):
     groups = db.session.query(
@@ -137,6 +158,10 @@ def entry_point_groups():
 
 @web.route('/entry-points/<group>/')
 def entry_point(group):
+    """
+    A list of all entry points in a given group and the packages that define
+    them
+    """
     ep_group = db.session.query(EntryPointGroup)\
                          .filter(EntryPointGroup.name == group)\
                          .first_or_404()
@@ -159,8 +184,8 @@ def entry_point(group):
 @canonicalize_project_url
 def project_json(project):
     """
-    Returns the names of all known wheels (with links) for the given project
-    and whether they have data, organized by version
+    A JSON view of the names of all known wheels (with links) for the given
+    project and whether they have data, organized by version
     """
     p = db.session.query(Project).filter(Project.name == project).first_or_404()
     response = OrderedDict()
@@ -178,7 +203,7 @@ def project_json(project):
 @web.route('/json/projects/<project>/data')
 @canonicalize_project_url
 def project_data_json(project):
-    """ Returns the JSON representation of the given project's best wheel """
+    """ A JSON view of the data for a given project's best wheel """
     p = db.session.query(Project).filter(Project.name == project).first_or_404()
     ### TODO: Should this use preferred_wheel instead?  The URL does say
     ### "data"...
@@ -194,6 +219,7 @@ def project_data_json(project):
 @web.route('/json/projects/<project>/rdepends')
 @canonicalize_project_url
 def project_rdepends_json(project):
+    """ A JSON view of the reverse dependencies for a project """
     per_page = current_app.config["WHEELODEX_RDEPENDS_PER_PAGE"]
     p = db.session.query(Project).filter(Project.name == project).first_or_404()
     rdeps = rdepends_query(p).order_by(Project.name.asc())\
@@ -220,5 +246,6 @@ def project_rdepends_json(project):
 
 @web.route('/json/wheels/<wheel>.json')
 def wheel_json(wheel):
+    """ A JSON view of the data for a given wheel """
     whl = db.session.query(Wheel).filter(Wheel.filename == wheel).first_or_404()
     return jsonify(whl.as_json())

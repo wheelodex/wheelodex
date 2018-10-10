@@ -1,3 +1,5 @@
+""" PyPI API client """
+
 import logging
 from   xmlrpc.client import ProtocolError, ServerProxy
 import requests
@@ -6,9 +8,16 @@ from   .util         import USER_AGENT
 
 log = logging.getLogger(__name__)
 
+#: PyPI's XML-RPC and JSON API endpoint
 ENDPOINT = 'https://pypi.org/pypi'
 
 def on_xml_exception(method):
+    """
+    If an XML-RPC request fails due to a 5xx error, this function logs the
+    event and tells `retrying` to try again.
+
+    :param str method: the name of the XML-RPC method
+    """
     def on_exc(e):
         if isinstance(e, ProtocolError) and 500 <= e.errcode:
             log.warning('XML-RPC request to %s returned %d; retrying',
@@ -19,6 +28,10 @@ def on_xml_exception(method):
     return on_exc
 
 def on_json_exception(e):
+    """
+    If a JSON API request fails due to a 5xx error, this function logs the
+    event and tells `retrying` to try again.
+    """
     if isinstance(e, requests.HTTPError) and 500 <= e.response.status_code:
         log.warning('JSON API request returned %d; retrying',
                     e.response.status_code)
@@ -27,6 +40,11 @@ def on_json_exception(e):
         return False
 
 class PyPIAPI:
+    """
+    A client for PyPI's XML-RPC and JSON APIs with automatic retrying of
+    requests that fail due to server errors
+    """
+
     def __init__(self):
         self.client = ServerProxy(ENDPOINT, use_builtin_types=True)
         self.s = requests.Session()
@@ -38,6 +56,7 @@ class PyPIAPI:
         wait_exponential_max        = 10000,
     )
     def changelog_last_serial(self):
+        """ Returns the serial ID of the last event on PyPI """
         return self.client.changelog_last_serial()
 
     @retry(
@@ -46,6 +65,7 @@ class PyPIAPI:
         wait_exponential_max        = 10000,
     )
     def list_packages(self):
+        """ Returns a list of the names of all packages on PyPI """
         return self.client.list_packages()
 
     @retry(
@@ -54,6 +74,11 @@ class PyPIAPI:
         wait_exponential_max        = 10000,
     )
     def project_data(self, proj):
+        """
+        Fetch the data for the project ``proj`` from PyPI's JSON API and return
+        it.  If the API returns a 404 (which happens when the project has no
+        releases), `None` is returned.
+        """
         r = self.s.get('{}/{}/json'.format(ENDPOINT, proj))
         if r.status_code == 404:
             # Project has no releases
@@ -62,6 +87,11 @@ class PyPIAPI:
         return r.json()
 
     def asset_data(self, project, version, filename):
+        """
+        Query the JSON API for the data on the asset with the given filename
+        for the given project & version.  If the asset cannot be found, return
+        `None`.
+        """
         data = self.project_data(project)
         if data is None:
             return None
@@ -76,4 +106,7 @@ class PyPIAPI:
         wait_exponential_max        = 10000,
     )
     def changelog_since_serial(self, since):
+        """
+        Return a list of PyPI changelog entries since the given serial ID
+        """
         return self.client.changelog_since_serial(since)

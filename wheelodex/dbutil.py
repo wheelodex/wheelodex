@@ -1,4 +1,9 @@
-""" Utility functions for working with the database """
+"""
+Utility functions for working with the database.
+
+All of these functions require a Flask application context with a database
+connection to be in effect.
+"""
 
 from   contextlib      import contextmanager
 from   datetime        import datetime, timezone

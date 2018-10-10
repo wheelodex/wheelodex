@@ -9,6 +9,8 @@ import requests
 import requests_download
 from   .                 import __url__, __version__
 
+#: The User-Agent header used for requests to PyPI's JSON API and when
+#: downloading wheels
 USER_AGENT = 'wheelodex/{} ({}) requests/{} requests_download/{} {}/{}'.format(
     __version__,
     __url__,
@@ -27,10 +29,18 @@ def latest_version(versions):
     return max(versions, key=version_sort_key, default=None)
 
 def version_sort_key(v):
+    """
+    Returns a sort key for the given version string that sorts in PEP 440
+    order, but with prereleases sorted less than non-prereleases
+    """
     v = parse(v)
     return (not v.is_prerelease, v)
 
 def reprify(obj, fields):
+    """
+    Returns a string suitable as a ``__repr__`` for ``obj`` that includes the
+    fields in the list ``fields``
+    """
     return '{0.__module__}.{0.__name__}({1})'.format(
         type(obj),
         ', '.join('{}={!r}'.format(f, getattr(obj, f)) for f in fields),
@@ -68,6 +78,13 @@ ARCH_PREFERENCES = defaultdict(lambda: -1, {
 
 @total_ordering
 class VersionNoDot:
+    """
+    This class represents "``py_version_nodot``" strings as used in PEP 425
+    Python and ABI tags.  Comparison between `VersionNoDot` objects treats
+    ``'12'`` as more general than, and thus "larger" than, ``'123'``;
+    comparison when one string is not a prefix of the other is lexicographic.
+    """
+
     def __init__(self, vstr):
         self.vstr = vstr
 
@@ -99,24 +116,24 @@ def wheel_sort_key(filename):
       are ever compared, and so those parts of the filename are ignored.
 
     - Prefer more general wheels (e.g., pure Python) to more specific (e.g.,
-      platform specific)
+      platform specific).
 
-        - Prefer compability with more versions to fewer
+        - Prefer compability with more versions to fewer.
         - "any" is the most preferred platform.
         - "none" is the most preferred ABI.
 
-    - Prefer compability with higher versions to lower
+    - Prefer compability with higher versions to lower.
 
     - Unrecognized values are ignored if possible, otherwise sorted at the
-      bottom
+      bottom.
 
     Specific, arbitrary preferences:
 
     - Sort by Python tag first, then platform tag, then ABI tag, then
-      "pyver-abi-platform" string (as a tiebreaker), then build tag
+      "pyver-abi-platform" string (as a tiebreaker), then build tag.
 
     - Filenames that can't be parsed sort the lowest and sort relative to each
-      other based on filename
+      other based on filename.
 
     - Python implementations: py (generic) > cp (CPython) > pp (PyPy) > jy
       (Jython) > ip (IronPython) > everything else
@@ -187,6 +204,7 @@ def wheel_sort_key(filename):
     return (1, pyver_rank, platform_rank, abi_rank, tiebreaker, build_rank)
 
 def json_response(obj, status_code=200):
+    """ Like `flask.jsonify()`, but supports setting a custom status code """
     return Response(
         response = dumps(obj),
         status   = status_code,

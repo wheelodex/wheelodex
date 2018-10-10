@@ -1,13 +1,23 @@
+""" Functions for scanning PyPI for wheels to register """
+
 import logging
-from   .pypi_api import PyPIAPI
 from   .dbutil   import add_orphan_wheel, add_project, add_version, add_wheel, \
                             remove_project, remove_version, remove_wheel, \
                             set_serial
+from   .pypi_api import PyPIAPI
 from   .util     import latest_version
 
 log = logging.getLogger(__name__)
 
 def scan_pypi():
+    """
+    Use PyPI's XML-RPC and JSON APIs to find & register all wheels for the
+    latest version of every project on PyPI.  The database's serial ID is also
+    set to PyPI's current value as of the start of the function.
+
+    This function requires a Flask application context with a database
+    connection to be in effect.
+    """
     log.info('BEGIN scan_pypi')
     pypi = PyPIAPI()
     serial = pypi.changelog_last_serial()
@@ -45,6 +55,15 @@ def scan_pypi():
     log.info('END scan_pypi')
 
 def scan_changelog(since):
+    """
+    Use PyPI's XML-RPC and JSON APIs to update the wheel registry based on all
+    events that have happened on PyPI since serial ID ``since``.  The
+    database's serial ID is also set to PyPI's current value as of the start of
+    the function.
+
+    This function requires a Flask application context with a database
+    connection to be in effect.
+    """
     log.info('BEGIN scan_changelog(%d)', since)
     pypi = PyPIAPI()
     for proj, rel, ts, action, serial in pypi.changelog_since_serial(since):

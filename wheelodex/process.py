@@ -1,3 +1,5 @@
+""" Functions for downloading & analyzing wheels """
+
 import logging
 import os
 import os.path
@@ -12,6 +14,18 @@ from   .util             import USER_AGENT
 log = logging.getLogger(__name__)
 
 def process_queue(max_wheel_size=None):
+    """
+    Process all of the wheels returned by `iterqueue()` one by one and store
+    the results in the database.  If an error occurs, the traceback is stored
+    as a `ProcessingError` for the wheel.  The database session is committed
+    after each wheel in order to save memory.
+
+    This function requires a Flask application context with a database
+    connection to be in effect.
+
+    :param int max_wheel_size: If set, only wheels this size or smaller are
+        analyzed
+    """
     with TemporaryDirectory() as tmpdir:
         for whl in iterqueue(max_wheel_size=max_wheel_size):
             try:
@@ -37,6 +51,14 @@ def process_queue(max_wheel_size=None):
                 db.session.commit()
 
 def process_wheel(filename, url, size, md5, sha256, tmpdir):
+    """
+    Process an individual wheel.  The wheel is downloaded from ``url`` to the
+    directory ``tmpdir``, analyzed with `inspect_wheel()`, and then deleted.
+    The wheel's size and digests are also checked against ``size``, ``md5``,
+    and ``sha256`` (provided by PyPI) to verify download integrity.
+
+    :return: the results of the call to `inspect_wheel()`
+    """
     fpath = os.path.join(tmpdir, filename)
     log.info('Downloading %s from %s ...', filename, url)
     # Write "user-agent" in lowercase so it overrides requests_download's
