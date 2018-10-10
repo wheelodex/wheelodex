@@ -74,12 +74,15 @@ def scan_changelog_cmd():
         scan_changelog(serial)
 
 @main.command('process-queue')
-### TODO: Add a command-line option for setting `max_wheel_size`
-def process_queue_cmd():
+@click.option('-S', '--max-wheel-size', type=int,
+              help='Maximum size of wheels to process')
+def process_queue_cmd(max_wheel_size):
+    if max_wheel_size is None:
+        # Setting the option's default to the below expression or a
+        # lambdafication thereof doesn't work:
+        max_wheel_size = current_app.config.get("WHEELODEX_MAX_WHEEL_SIZE")
     with dbcontext():
-        process_queue(
-            max_wheel_size=current_app.config.get("WHEELODEX_MAX_WHEEL_SIZE")
-        )
+        process_queue(max_wheel_size=max_wheel_size)
 
 @main.command()
 @click.option('-A', '--all', 'dump_all', is_flag=True)
