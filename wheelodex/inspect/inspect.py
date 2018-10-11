@@ -63,13 +63,13 @@ def inspect_wheel(fname):
     try:
         whl.verify()
     except Exception as e:
-        about["verifies"] = False
-        about["verify_error"] = {
+        about["valid"] = False
+        about["validation_error"] = {
             "type": type(e).__name__,
             "str": str(e),
         }
     else:
-        about["verifies"] = True
+        about["valid"] = True
 
     about["file"] = {"size": os.path.getsize(fname)}
     digests = {

@@ -42,7 +42,7 @@ FOOBAR_1_WHEEL = {
 FOOBAR_1_DATA = {
     "project": "FooBar",
     "version": "1.0",
-    "verifies": True,
+    "valid": True,
     "dist_info": {},
     "derived": {
         "dependencies": [],
@@ -72,7 +72,7 @@ FOOBAR_2_WHEEL = {
 FOOBAR_2_DATA = {
     "project": "FooBar",
     "version": "2.0",
-    "verifies": True,
+    "valid": True,
     "dist_info": {},
     "derived": {
         "dependencies": [],

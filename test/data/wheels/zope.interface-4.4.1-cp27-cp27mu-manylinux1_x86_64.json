@@ -6,7 +6,7 @@
     "pyver": ["cp27"],
     "abi": ["cp27mu"],
     "arch": ["manylinux1_x86_64"],
-    "verifies": true,
+    "valid": true,
 
     "file": {
         "size": 169361,

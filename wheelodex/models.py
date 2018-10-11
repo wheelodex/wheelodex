@@ -298,7 +298,7 @@ class WheelData(Base):
     dependencies = relationship('Project', secondary=dependency_tbl,
                                 backref='rdepends')
     summary   = S.Column(S.Unicode(2048), nullable=True)
-    verified  = S.Column(S.Boolean, nullable=False)
+    valid     = S.Column(S.Boolean, nullable=False)
 
     @classmethod
     def from_raw_data(cls, raw_data: dict):
@@ -323,7 +323,7 @@ class WheelData(Base):
                 for p in raw_data["derived"]["dependencies"]
             ],
             summary = summary[:2048] if summary is not None else None,
-            verified = raw_data["verifies"],
+            valid = raw_data["valid"],
             keywords = [
                 Keyword(name=k) for k in raw_data["derived"]["keywords"]
             ],

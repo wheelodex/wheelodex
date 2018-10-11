@@ -9,7 +9,7 @@ SCHEMA = {
         "pyver",
         "abi",
         "arch",
-        "verifies",
+        "valid",
         "file",
         "dist_info",
         "derived"
@@ -47,14 +47,14 @@ SCHEMA = {
             "items": {"type": "string"},
             "description": "A list of architectures with which the wheel is compatible as extracted from the filename"
         },
-        "verifies": {
+        "valid": {
             "type": "boolean",
             "description": "Whether the wheel is well-formed with an accurate RECORD"
         },
 
-        "verify_error": {
+        "validation_error": {
             "type": "object",
-            "description": "If the wheel could not be verified, this field contains information on the Python exception raised by `distlib.wheel.Wheel.verify()`.",
+            "description": "If the wheel is invalid, this field contains information on the Python exception raised by `distlib.wheel.Wheel.verify()`.",
             "required": ["type", "str"],
             "additionalProperties": False,
             "properties": {

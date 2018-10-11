@@ -84,9 +84,9 @@ Wheel Inspection
   (See PEP 561)
 - Remove duplicates from `.derived.keywords`?
 - Give `inspect_wheel()` an option for whether to keep long descriptions?
-- Show more detailed information on verification errors
+- Show more detailed information on validation errors
 - Include `pbr.json` contents?
-- Don't proceed with inspecting wheels that fail verification?
+- Don't proceed with inspecting wheels that fail validation?
 
 Web Interface
 -------------
@@ -100,7 +100,7 @@ Web Interface
       wheel has data and/or is the wheel being currently viewed
     - Show a message if we know there's a newer version but it doesn't have any
       wheels?
-    - Include whether the wheel was verified
+    - Include whether the wheel is valid
     - `METADATA` display:
         - Make each keyword into a hyperlink?
         - Make each classifier into a hyperlink?

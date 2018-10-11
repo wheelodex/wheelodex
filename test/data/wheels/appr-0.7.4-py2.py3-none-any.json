@@ -2045,6 +2045,6 @@
         "py2",
         "py3"
     ],
-    "verifies": true,
+    "valid": true,
     "version": "0.7.4"
 }

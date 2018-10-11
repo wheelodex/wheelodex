@@ -6,7 +6,7 @@
     "pyver": ["py3"],
     "abi": ["none"],
     "arch": ["any"],
-    "verifies": true,
+    "valid": true,
 
     "file": {
         "size": 16158,
