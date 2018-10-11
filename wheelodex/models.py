@@ -307,6 +307,11 @@ class WheelData(Base):
         the return value of a call to `inspect_wheel()`
         """
         summary = raw_data["dist_info"].get("metadata", {}).get("summary")
+        file_paths = {
+            # Make this a set because some wheels have duplicate entries in
+            # their RECORDs
+            f["path"] for f in raw_data["dist_info"].get("record", [])
+        }
         return cls(
             raw_data  = raw_data,
             processed = datetime.now(timezone.utc),
@@ -327,10 +332,7 @@ class WheelData(Base):
             keywords = [
                 Keyword(name=k) for k in raw_data["derived"]["keywords"]
             ],
-            files = [
-                File(path=f["path"])
-                for f in raw_data["dist_info"].get("record", [])
-            ],
+            files = [File(path=f) for f in file_paths],
             modules = [Module(name=m) for m in raw_data["derived"]["modules"]],
         )
 

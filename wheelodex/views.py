@@ -41,6 +41,7 @@ def index():
     proj_qty = db.session.query(db.func.count(Project.id.distinct()))\
                          .join(Version).join(Wheel).join(WheelData).scalar()
     whl_qty = db.session.query(WheelData).count()
+    ### TODO: Don't count entry point groups without entry points:
     epg_qty = db.session.query(EntryPointGroup).count()
     return render_template(
         'index.html',
