@@ -46,19 +46,6 @@ def index():
         epg_qty  = epg_qty,
     )
 
-@web.route('/wheels.html')
-def wheel_list():
-    """ A list of all wheels with data; for testing purposes only """
-    per_page = current_app.config["WHEELODEX_WHEELS_PER_PAGE"]
-    wheels = db.session.query(Wheel).join(Version).join(Project)\
-                       .filter(Wheel.data.has())\
-                       .order_by(
-                            Project.name.asc(),
-                            Version.ordering.asc(),
-                            Wheel.ordering.desc(),
-                       ).paginate(per_page=per_page)
-    return render_template('wheel_list.html', wheels=wheels)
-
 @web.route('/<wheel>.html')
 def wheel_data(wheel):
     """ A display of the data for a given wheel """

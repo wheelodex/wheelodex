@@ -28,7 +28,7 @@
 
 - Commands:
     - Give `load` an option for overwriting any `WheelData` that's already in
-      the database?  (This would require first fixing `add_wheel_data()`; see
+      the database?  (This would require first fixing `Wheel.set_data()`; see
       the comment in its source.)
     - Add a command for analyzing the wheels for given projects (including an
       option for forcing reanalysis)
@@ -93,7 +93,6 @@ Web Interface
 - Make things look good
     - Add breadcrumbs to pages
     - Improve page `<title>`s
-- Get rid of the wheel list; it's just for testing
 - Main page: Show statistics on wheels registered, wheels analyzed, and
   projects known (or something like that)
 - Wheel data:
