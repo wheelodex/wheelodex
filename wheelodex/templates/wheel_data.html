@@ -15,7 +15,7 @@
             <td class="version">{{v|e}}</td>
             {% for w,d in wheels %}
                 <td class="{% if d %}wheel-data{% else %}wheel-nodata{% endif %}">
-                    <tt><a href="{{url_for('.wheel_data', wheel=w.filename, project=project.name)}}">{{w.filename|e}}</a></tt>
+                    <code><a href="{{url_for('.wheel_data', wheel=w.filename, project=project.name)}}">{{w.filename|e}}</a></code>
                 </td>
             {% endfor %}
         </tr>
@@ -50,7 +50,7 @@
         {% if whl.md5 == None %}
         <td>[Unknown]</td>
         {% else %}
-        <td><tt>{{whl.md5}}</tt></td>
+        <td><code>{{whl.md5}}</code></td>
         {% endif %}
     </tr>
     <tr>
@@ -58,7 +58,7 @@
         {% if whl.sha256 == None %}
         <td>[Unknown]</td>
         {% else %}
-        <td><tt>{{whl.sha256}}</tt></td>
+        <td><code>{{whl.sha256}}</code></td>
         {% endif %}
     </tr>
     <tr>
