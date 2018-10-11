@@ -288,10 +288,6 @@ class WheelData(Base):
                         passive_deletes=True),
     )
     raw_data  = S.Column(JSONType, nullable=False)
-    #: The project name as extracted from the wheel filename.  This may differ
-    #: from the project name as reported on PyPI, even after normalization.
-    project   = S.Column(S.Unicode(2048), nullable=False)
-    version   = S.Column(S.Unicode(2048), nullable=False)
     #: The time at which the raw data was extracted from the wheel and added to
     #: the database
     processed = S.Column(S.DateTime(timezone=True), nullable=False)
@@ -315,8 +311,6 @@ class WheelData(Base):
             raw_data  = raw_data,
             processed = datetime.now(timezone.utc),
             wheelodex_version = __version__,
-            project = raw_data["project"],
-            version = raw_data["version"],
             entry_points = [
                 EntryPoint(group=grobj, name=e)
                 for group, eps in raw_data["dist_info"].get("entry_points", {})
@@ -334,11 +328,8 @@ class WheelData(Base):
                 Keyword(name=k) for k in raw_data["derived"]["keywords"]
             ],
             files = [
-                File(
-                    path=f["path"],
-                    size=f["size"],
-                    sha256_base64=f["digests"].get("sha256"),
-                ) for f in raw_data["dist_info"].get("record", [])
+                File(path=f["path"])
+                for f in raw_data["dist_info"].get("record", [])
             ],
             modules = [Module(name=m) for m in raw_data["derived"]["modules"]],
         )
@@ -419,9 +410,7 @@ class File(Base):
         backref=backref('files', cascade='all, delete-orphan',
                         passive_deletes=True),
     )
-    path          = S.Column(S.Unicode(2048), nullable=False)
-    size          = S.Column(S.Integer, nullable=True)
-    sha256_base64 = S.Column(S.Unicode(43), nullable=True)
+    path = S.Column(S.Unicode(2048), nullable=False)
 
 
 class Module(Base):
