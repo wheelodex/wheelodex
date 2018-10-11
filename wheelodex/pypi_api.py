@@ -2,6 +2,7 @@
 
 import logging
 from   xmlrpc.client import ProtocolError, ServerProxy
+from   pypi_simple   import PyPISimple
 import requests
 from   retrying      import retry
 from   .util         import USER_AGENT
@@ -27,21 +28,21 @@ def on_xml_exception(method):
             return False
     return on_exc
 
-def on_json_exception(e):
+def on_http_exception(e):
     """
-    If a JSON API request fails due to a 5xx error, this function logs the
-    event and tells `retrying` to try again.
+    If an HTTP request fails due to a 5xx error, this function logs the event
+    and tells `retrying` to try again.
     """
     if isinstance(e, requests.HTTPError) and 500 <= e.response.status_code:
-        log.warning('JSON API request returned %d; retrying',
-                    e.response.status_code)
+        log.warning('Request to %s returned %d; retrying',
+                    e.response.request.url, e.response.status_code)
         return True
     else:
         return False
 
 class PyPIAPI:
     """
-    A client for PyPI's XML-RPC and JSON APIs with automatic retrying of
+    A client for select features of PyPI's APIs with automatic retrying of
     requests that fail due to server errors
     """
 
@@ -60,16 +61,18 @@ class PyPIAPI:
         return self.client.changelog_last_serial()
 
     @retry(
-        retry_on_exception          = on_xml_exception('list_packages'),
+        retry_on_exception          = on_http_exception,
         wait_exponential_multiplier = 1000,
         wait_exponential_max        = 10000,
     )
     def list_packages(self):
         """ Returns a list of the names of all packages on PyPI """
-        return self.client.list_packages()
+        # The Warehouse devs prefer it if the Simple API is used for this
+        # instead of the XML-RPC API.
+        return PyPISimple().get_projects()
 
     @retry(
-        retry_on_exception          = on_json_exception,
+        retry_on_exception          = on_http_exception,
         wait_exponential_multiplier = 1000,
         wait_exponential_max        = 10000,
     )
