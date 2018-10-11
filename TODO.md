@@ -100,7 +100,6 @@ Web Interface
       wheel has data and/or is the wheel being currently viewed
     - Show a message if we know there's a newer version but it doesn't have any
       wheels?
-    - Include whether the wheel is valid
     - `METADATA` display:
         - Make each keyword into a hyperlink?
         - Make each classifier into a hyperlink?

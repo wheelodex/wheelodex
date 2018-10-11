@@ -70,6 +70,11 @@
 {% if whl.data != None %}
 {% set data = whl.data.raw_data %}
 
+{% if not data['valid'] %}
+<p>This wheel failed validation with <code>distlib.wheel.Wheel.verify()</code>;
+the error message was: <code>{{data['validation_error']['str']|e}}</code></p>
+{% endif %}
+
 <h2>dist-info</h2>
 
 <p class="dist_info_links">
@@ -220,5 +225,7 @@
 <p>An error occurred while processing this wheel; it might be malformed.</p>
 {% elif whl.size > config["WHEELODEX_MAX_WHEEL_SIZE"] %}
 <p>This wheel exceeds Wheelodex's maximum wheel size policy; it will not be analyzed.</p>
+{% else %}
+<p>This wheel has not yet been analyzed.</p>
 {% endif %}
 {% endblock %}
