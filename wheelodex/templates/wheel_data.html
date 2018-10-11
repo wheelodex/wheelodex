@@ -1,28 +1,26 @@
 {% extends 'base.html' %}
 
-{% block title %}{{whl.filename|e}}{% endblock %}
+{% block title %}Wheelodex &#x2014; {{project.display_name|e}}{% endblock %}
 
 {% block content %}
-<a href="https://pypi.org/project/{{whl.project.display_name|e}}/{{whl.version.display_name|e}}/">[pypi]</a>
-<a href="{{url_for('.project_json', project=whl.project.name)}}">[project json]</a>
-<a href="{{url_for('.project_data_json', project=whl.project.name)}}">[project data json]</a>
+<a href="https://pypi.org/project/{{project.display_name|e}}/{{whl.version.display_name|e}}/">[pypi]</a>
+<a href="{{url_for('.project_json', project=project.name)}}">[project json]</a>
+<a href="{{url_for('.project_data_json', project=project.name)}}">[project data json]</a>
 <a href="{{url_for('.wheel_json', wheel=whl.filename)}}">[wheel json]</a>
-<a href="{{url_for('.rdepends', project=whl.project.name)}}">[Reverse Dependencies]</a> ({{rdepends_qty}})
+<a href="{{url_for('.rdepends', project=project.name)}}">[Reverse Dependencies]</a> ({{rdepends_qty}})
 
-{% if all_wheels is defined %}
-    <table class="versions-wheels-grid">
-        {% for v, wheels in all_wheels %}
-            <tr>
-                <td class="version">{{v|e}}</td>
-                {% for w,d in wheels %}
-                    <td class="{% if d %}wheel-data{% else %}wheel-nodata{% endif %}">
-                        <tt><a href="{{url_for('.wheel_data', wheel=w.filename[:-4])}}">{{w.filename|e}}</a></tt>
-                    </td>
-                {% endfor %}
-            </tr>
-        {% endfor %}
-    </table>
-{% endif %}
+<table class="versions-wheels-grid">
+    {% for v, wheels in all_wheels %}
+        <tr>
+            <td class="version">{{v|e}}</td>
+            {% for w,d in wheels %}
+                <td class="{% if d %}wheel-data{% else %}wheel-nodata{% endif %}">
+                    <tt><a href="{{url_for('.wheel_data', wheel=w.filename, project=project.name)}}">{{w.filename|e}}</a></tt>
+                </td>
+            {% endfor %}
+        </tr>
+    {% endfor %}
+</table>
 
 <h2>Details</h2>
 

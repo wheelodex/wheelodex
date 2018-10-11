@@ -22,13 +22,16 @@ def project_view(f):
     function as the ``project`` parameter.
     """
     @wraps(f)
-    def wrapped(project):
+    def wrapped(project, **kwargs):
         normproj = normalize(project)
         if normproj != project:
-            return redirect(url_for('.'+f.__name__, project=normproj), code=301)
+            return redirect(
+                url_for('.'+f.__name__, project=normproj, **kwargs),
+                code=301,
+            )
         else:
             p = Project.query.filter(Project.name == normproj).first_or_404()
-            return f(project=p)
+            return f(project=p, **kwargs)
     return wrapped
 
 @web.route('/')
@@ -45,13 +48,6 @@ def index():
         whl_qty  = whl_qty,
         epg_qty  = epg_qty,
     )
-
-@web.route('/<wheel>.html')
-def wheel_data(wheel):
-    """ A display of the data for a given wheel """
-    whl = db.session.query(Wheel).filter(Wheel.filename == wheel + '.whl')\
-                    .first_or_404()
-    return render_template('wheel_data.html', whl=whl)
 
 @web.route('/projects/')
 def project_list():
@@ -100,6 +96,7 @@ def project(project):
         return render_template(
             'wheel_data.html',
             whl          = whl,
+            project      = project,
             rdepends_qty = rdeps_qty,
             all_wheels   = project.versions_wheels_grid(),
         )
@@ -109,6 +106,24 @@ def project(project):
             project      = project,
             rdepends_qty = rdeps_qty,
         )
+
+@web.route('/projects/<project>/wheels/<wheel>/')
+@project_view
+def wheel_data(project, wheel):
+    """
+    A display of the data for a project, focused on a given wheel.  If the
+    wheel is unknown, redirect to the project's main page.
+    """
+    whl = Wheel.query.filter(Wheel.filename == wheel).one_or_none()
+    if whl is None:
+        return redirect(url_for('.project', project=project.name), code=302)
+    return render_template(
+        'wheel_data.html',
+        whl          = whl,
+        project      = project,
+        rdepends_qty = rdepends_query(project).count(),
+        all_wheels   = project.versions_wheels_grid(),
+    )
 
 @web.route('/projects/<project>/rdepends/')
 @project_view

@@ -95,7 +95,11 @@ Web Interface
     - Improve page `<title>`s
 - Main page: Show statistics on wheels registered, wheels analyzed, and
   projects known (or something like that)
-- Wheel data:
+- Project/wheel data:
+    - Highlight the entries in the versions-wheels grid based on whether each
+      wheel has data and/or is the wheel being currently viewed
+    - Show a message if we know there's a newer version but it doesn't have any
+      wheels?
     - Include whether the wheel was verified
     - Include TOC-like links at the top linking to each section on the page
     - `METADATA` display:
@@ -109,17 +113,6 @@ Web Interface
     - Add a dedicated box for Python packages defined by the wheel?
     - Include (at least some) reverse dependencies on the page itself
     - Show human-readable descriptions of the tags in a wheel's filename?
-- Do exactly one of the following:
-    - Eliminate individual wheel pages; when the user clicks on a wheel in the
-      grid at the top of a project page, use JavaScript to rewrite the page to
-      show the data for the new wheel
-    - Make individual wheel pages look exactly like project pages, differing
-      only in which wheel is selected
-- Project page:
-    - Highlight the entries in the versions-wheels grid based on whether each
-      wheel has data and/or is the wheel being currently viewed
-    - Show a message if we know there's a newer version but it doesn't have any
-      wheels?
 - Entry point groups:
     - Add an option for sorting by quantity?
 - Entry points:
