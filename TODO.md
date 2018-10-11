@@ -1,11 +1,8 @@
-- Add docstrings
 - Split `wheelodex.inspect` into a separate project and use the
   `wheelodex_version` columns (renamed to `wheelodex_inspect_version`) to store
   the version of this project that `wheelodex` uses
 - If the latest version of a project doesn't have any wheels, should
   `scan_pypi()` register the latest version that does?
-- Replace `WheelData.update_structure()` with Alembic
-- Rename `process_queue` (the function and the command) and `iterqueue()`
 - Write descriptions for more entry points
 - Try to make `wheel_sort_key()` both more efficient and more comprehensive
 - Should the code just assume that all "uploaded" timestamps in the JSON API
@@ -15,6 +12,8 @@
 - Add tests for the commands
 - Add tests for the views somehow
 - Use eager loading to speed up various database queries
+    - Use eager loading to eliminate the boolean fields in the return value of
+      `Project.versions_wheels_grid()`
 
 - There are several database queries (marked with "TODO: Use preferred wheel")
   that need to be amended to only return results for one wheel (the preferred

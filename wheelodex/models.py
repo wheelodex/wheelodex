@@ -1,3 +1,5 @@
+""" Database classes """
+
 from   datetime         import datetime, timezone
 from   itertools        import groupby
 from   flask_sqlalchemy import SQLAlchemy
@@ -12,6 +14,11 @@ db = SQLAlchemy()
 Base = db.Model
 
 class PyPISerial(Base):
+    """
+    A table for storing the serial ID of the last PyPI event seen.  There
+    should never be more than one row in this table.
+    """
+
     __tablename__ = 'pypi_serial'
 
     id     = S.Column(S.Integer, primary_key=True, nullable=False)  # noqa: B001
@@ -22,6 +29,8 @@ class PyPISerial(Base):
 
 
 class Project(Base):
+    """ A PyPI project """
+
     __tablename__ = 'projects'
 
     id = S.Column(S.Integer, primary_key=True, nullable=False)  # noqa: B001
@@ -35,6 +44,10 @@ class Project(Base):
 
     @classmethod
     def from_name(cls, name: str):
+        """
+        Construct a `Project` with the given name and return it.  If such a
+        project already exists, return that one instead.
+        """
         proj = cls.query.filter(cls.name == normalize(name)).one_or_none()
         if proj is None:
             proj = cls(name=normalize(name), display_name=name)
@@ -43,12 +56,20 @@ class Project(Base):
 
     @property
     def latest_version(self):
+        r"""
+        The `Version` for this `Project` with the highest ``ordering`` value,
+        or `None` if there are no `Version`\ s
+        """
         return Version.query.filter(Version.project == self)\
                             .order_by(Version.ordering.desc())\
                             .first()
 
     @property
     def preferred_wheel(self):
+        """
+        The project's "preferred wheel": the highest-ordered wheel with data
+        for the highest-ordered version
+        """
         return Wheel.query.join(Version)\
                           .filter(Version.project == self)\
                           .filter(Wheel.data.has())\
@@ -59,9 +80,9 @@ class Project(Base):
     @property
     def best_wheel(self):
         """
-        Returns the project's preferred wheel if it exists (i.e., if any of the
-        project's wheels have data); otherwise returns the highest-ordered
-        wheel for the highest ordered version.
+        The project's preferred wheel, if it exists (i.e., if any of the
+        project's wheels have data); otherwise, the highest-ordered wheel for
+        the highest-ordered version
         """
         return Wheel.query.join(Version)\
                           .filter(Version.project == self)\
@@ -72,6 +93,16 @@ class Project(Base):
                           .first()
 
     def versions_wheels_grid(self):
+        r"""
+        Returns a "grid" of all of this project's `Wheel`\ s, arranged by
+        `Version`.  The return value is a list of pairs in which the first
+        element is a `Version`'s ``display_name`` and the second element is a
+        list of ``(Wheel, bool)`` pairs listing the wheels for that version and
+        whether they have data.  The versions are ordered from highest
+        ``ordering`` to lowest, and the `Wheel`\ s within each version are
+        ordered from highest ``ordering`` to lowest.  Versions that do not have
+        wheels are ignored.
+        """
         q = db.session.query(Version.display_name, Wheel, WheelData.id.isnot(None))\
                       .join(Wheel)\
                       .outerjoin(WheelData)\
@@ -85,6 +116,8 @@ class Project(Base):
 
 
 class Version(Base):
+    """ A version (a.k.a. release) of a `Project` """
+
     __tablename__ = 'versions'
     __table_args__ = (S.UniqueConstraint('project_id', 'name'),)
 
@@ -114,6 +147,8 @@ class Version(Base):
 
 
 class Wheel(Base):
+    """ A wheel belonging to a `Version` """
+
     __tablename__ = 'wheels'
 
     id = S.Column(S.Integer, primary_key=True, nullable=False)  # noqa: B001
@@ -143,15 +178,23 @@ class Wheel(Base):
 
     @property
     def project(self):
+        """ The `Project` to which the wheel belongs """
         return self.version.project
 
     def set_data(self, raw_data: dict):
+        """
+        Use the results of a call to `inspect_wheel()` to populate this wheel's
+        `WheelData`
+        """
         ### TODO: This errors if `self.data` is already non-None (because then
         ### there are temporarily two WheelData objects with the same
         ### `wheel_id`).  Fix this.
         self.data = WheelData.from_raw_data(raw_data)
 
     def add_error(self, errmsg: str):
+        """
+        Register an error that occurred while processing this wheel for data
+        """
         self.errors.append(ProcessingError(
             errmsg            = errmsg[-65535:],
             timestamp         = datetime.now(timezone.utc),
@@ -159,6 +202,11 @@ class Wheel(Base):
         ))
 
     def as_json(self):
+        """
+        Returns a JSONable representation (i.e., a `dict` composed entirely of
+        primitive types that can be directly serialized to JSON) of the wheel
+        and its data, if any
+        """
         about = {
             "pypi": {
                 "filename": self.filename,
@@ -183,6 +231,8 @@ class Wheel(Base):
 
 
 class ProcessingError(Base):
+    """ An error that occurred while processing a `Wheel` for data """
+
     __tablename__ = 'processing_errors'
 
     id = S.Column(S.Integer, primary_key=True, nullable=False)  # noqa: B001
@@ -201,6 +251,8 @@ class ProcessingError(Base):
     wheelodex_version = S.Column(S.Unicode(32), nullable=False)
 
 
+#: A mapping between `WheelData` values and the `Project`\ s listed in their
+#: :mailheader:`Requires-Dist` fields
 dependency_tbl = S.Table('dependency_tbl', Base.metadata,
     S.Column(
         'wheel_data_id',
@@ -219,6 +271,8 @@ dependency_tbl = S.Table('dependency_tbl', Base.metadata,
 
 
 class WheelData(Base):
+    """ Information about a `Wheel` produced with `inspect_wheel()` """
+
     __tablename__ = 'wheel_data'
 
     id = S.Column(S.Integer, primary_key=True, nullable=False)  # noqa: B001
@@ -241,8 +295,7 @@ class WheelData(Base):
     #: The time at which the raw data was extracted from the wheel and added to
     #: the database
     processed = S.Column(S.DateTime(timezone=True), nullable=False)
-    #: The version of `wheelodex` under which the WheelData's columns and
-    #: relations were filled in
+    #: The version of Wheelodex under which the ``raw_data`` was produced
     wheelodex_version = S.Column(S.Unicode(32), nullable=False)
     ### TODO: What are the right `cascade` and `passive_deletes` settings for
     ### this relationship?
@@ -253,63 +306,56 @@ class WheelData(Base):
 
     @classmethod
     def from_raw_data(cls, raw_data: dict):
+        """
+        Construct a new `WheelData` object, complete with related objects, from
+        the return value of a call to `inspect_wheel()`
+        """
+        summary = raw_data["dist_info"].get("metadata", {}).get("summary")
         return cls(
             raw_data  = raw_data,
             processed = datetime.now(timezone.utc),
-            **cls.parse_raw_data(raw_data),
-        )
-
-    @staticmethod
-    def parse_raw_data(raw_data: dict):
-        summary = raw_data["dist_info"].get("metadata", {}).get("summary")
-        return {
-            "wheelodex_version": __version__,
-            "project": raw_data["project"],
-            "version": raw_data["version"],
-            "entry_points": [
+            wheelodex_version = __version__,
+            project = raw_data["project"],
+            version = raw_data["version"],
+            entry_points = [
                 EntryPoint(group=grobj, name=e)
                 for group, eps in raw_data["dist_info"].get("entry_points", {})
                                                        .items()
                 for grobj in [EntryPointGroup.from_name(group)]
                 for e in eps
             ],
-            "dependencies": [
+            dependencies = [
                 Project.from_name(p)
                 for p in raw_data["derived"]["dependencies"]
             ],
-            "summary": summary[:2048] if summary is not None else None,
-            "verified": raw_data["verifies"],
-            "keywords": [
+            summary = summary[:2048] if summary is not None else None,
+            verified = raw_data["verifies"],
+            keywords = [
                 Keyword(name=k) for k in raw_data["derived"]["keywords"]
             ],
-            "files": [
+            files = [
                 File(
                     path=f["path"],
                     size=f["size"],
                     sha256_base64=f["digests"].get("sha256"),
                 ) for f in raw_data["dist_info"].get("record", [])
             ],
-            "modules": [Module(name=m) for m in raw_data["derived"]["modules"]],
-        }
-
-    def update_structure(self):
-        """
-        Update the `WheelData` and its subobjects for the current database
-        schema
-        """
-        ### TODO: For subobjects like EntryPoints, try to eliminate replacing
-        ### unchanged subobjects with equal subobjects with new IDs every time
-        ### this method is called
-        for k,v in self.parse_raw_data(self.raw_data):
-            setattr(self, k, v)
+            modules = [Module(name=m) for m in raw_data["derived"]["modules"]],
+        )
 
 
 class EntryPointGroup(Base):
+    """ An entry point group """
+
     __tablename__ = 'entry_point_groups'
 
     id = S.Column(S.Integer, primary_key=True, nullable=False)  # noqa: B001
     name        = S.Column(S.Unicode(2048), nullable=False, unique=True)
+    #: A brief Markdown description of the group for display in the web
+    #: interface
     summary     = S.Column(S.Unicode(2048), nullable=True, default=None)
+    #: A longer Markdown description of the group for display in the web
+    #: interface
     description = S.Column(S.Unicode(65535), nullable=True, default=None)
 
     def __repr__(self):
@@ -317,6 +363,10 @@ class EntryPointGroup(Base):
 
     @classmethod
     def from_name(cls, name: str):
+        """
+        Construct an `EntryPointGroup` with the given name and return it.  If
+        such a group already exists, return that one instead.
+        """
         epg = cls.query.filter(cls.name == name).one_or_none()
         if epg is None:
             epg = cls(name=name)
@@ -325,6 +375,8 @@ class EntryPointGroup(Base):
 
 
 class EntryPoint(Base):
+    """ An entry point registered by a wheel """
+
     __tablename__ = 'entry_points'
 
     id = S.Column(S.Integer, primary_key=True, nullable=False)  # noqa: B001
@@ -351,6 +403,8 @@ class EntryPoint(Base):
 
 
 class File(Base):
+    """ A file in a wheel """
+
     __tablename__ = 'files'
     __table_args__ = (S.UniqueConstraint('wheel_data_id', 'path'),)
 
@@ -371,6 +425,8 @@ class File(Base):
 
 
 class Module(Base):
+    """ A Python module in a wheel """
+
     __tablename__ = 'modules'
     __table_args__ = (S.UniqueConstraint('wheel_data_id', 'name'),)
 
@@ -389,6 +445,8 @@ class Module(Base):
 
 
 class Keyword(Base):
+    """ A keyword declared by a wheel """
+
     __tablename__ = 'keywords'
     #__table_args__ = (S.UniqueConstraint('wheel_data_id', 'name'),)
 
@@ -409,7 +467,7 @@ class Keyword(Base):
 class OrphanWheel(Base):
     """
     If the XML-RPC changelog reports the uploading of a wheel that can't be
-    found in the JSON API, we blame caching and add the wheel to the "orphan
+    found in the JSON API, we blame caching and add the wheel to this "orphan
     wheel" table for periodic re-checking until either it's found or it's been
     so long that we give up.
 
@@ -441,4 +499,5 @@ class OrphanWheel(Base):
 
     @property
     def project(self):
+        """ The `Project` to which the wheel belongs """
         return self.version.project
