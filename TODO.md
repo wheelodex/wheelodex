@@ -102,7 +102,6 @@ Web Interface
       wheels?
     - Include whether the wheel was verified
     - `METADATA` display:
-        - Obfuscate e-mail addresses
         - Make each keyword into a hyperlink?
         - Make each classifier into a hyperlink?
     - Sort `RECORD` entries?

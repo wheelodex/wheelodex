@@ -69,6 +69,10 @@ def flatten_metadata(metadata):
                     )
         elif field in ('home_page', 'download_url'):
             yield (fieldname, extlink(value))
+        elif field in ('author_email', 'maintainer_email'):
+            value = Markup('<span class="at">[at]</span>')\
+                    .join(map(Markup.escape, value.split('@')))
+            yield (fieldname, value)
         elif isinstance(value, list):
             for v in value:
                 yield (fieldname, v)

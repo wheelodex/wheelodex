@@ -108,3 +108,8 @@ td.nil {
 .epgroup:first {
     margin-top: 0ex;
 }
+
+.at {
+    /* "[at]" used to "obfuscate" e-mail addresses */
+    color: #0000ff;
+}
