@@ -101,7 +101,6 @@ Web Interface
     - Show a message if we know there's a newer version but it doesn't have any
       wheels?
     - Include whether the wheel was verified
-    - Include TOC-like links at the top linking to each section on the page
     - `METADATA` display:
         - Obfuscate e-mail addresses
         - Make each keyword into a hyperlink?

@@ -70,8 +70,30 @@
 {% if whl.data != None %}
 {% set data = whl.data.raw_data %}
 
+<h2>dist-info</h2>
+
+<p class="dist_info_links">
+    {% set middot = joiner('·') %}
+    {% if 'metadata' in data['dist_info'] %}{{middot()}} <a href="#metadata">METADATA</a>{% endif %}
+    {% if 'wheel' in data['dist_info'] %}{{middot()}} <a href="#wheel">WHEEL</a>{% endif %}
+    {% if 'record' in data['dist_info'] %}{{middot()}} <a href="#record">RECORD</a>{% endif %}
+    {% if 'top_level' in data['dist_info'] %}{{middot()}} <a href="#top_level">top_level.txt</a>{% endif %}
+    {% if 'entry_points' in data['dist_info'] %}{{middot()}} <a href="#entry_points">entry_points.txt</a>{% endif %}
+    {% if 'namespace_packages' in data['dist_info'] %}{{middot()}} <a href="#namespace_packages">namespace_packages.txt</a>{% endif %}
+    {% if 'dependency_links' in data['dist_info'] %}{{middot()}} <a href="#dependency_links">dependency_links.txt</a>{% endif %}
+    {% if 'zip_safe' in data['dist_info'] %}
+        {{middot()}} <a href="#zip_safe">
+            {% if data['dist_info']['zip_safe'] %}
+                zip-safe
+            {% else %}
+                not-zip-safe
+            {% endif %}
+        </a>
+    {% endif %}
+</p>
+
 {% if 'metadata' in data['dist_info'] %}
-    <h2 class="dist_info_filename">METADATA</h2>
+    <h3 class="dist_info_filename" id="metadata">METADATA</h3>
     <div class="dist_info_file metadata">
         {% set metadata = data['dist_info']['metadata'] %}
         <table class="keyvalues">
@@ -91,7 +113,7 @@
 {% endif %}
 
 {% if 'wheel' in data['dist_info'] %}
-    <h2 class="dist_info_filename">WHEEL</h2>
+    <h3 class="dist_info_filename" id="wheel">WHEEL</h3>
     <div class="dist_info_file">
         {% set wheelinfo = data['dist_info']['wheel'] %}
         <table class="keyvalues">
@@ -109,7 +131,7 @@
 {% endif %}
 
 {% if 'record' in data['dist_info'] %}
-    <h2 class="dist_info_filename">RECORD</h2>
+    <h3 class="dist_info_filename" id="record">RECORD</h3>
     <table class="record">
         <tr>
             <th>Path</th>
@@ -140,7 +162,7 @@
 {% endif %}
 
 {% if 'top_level' in data['dist_info'] %}
-    <h2 class="dist_info_filename">top_level.txt</h2>
+    <h3 class="dist_info_filename" id="top_level">top_level.txt</h3>
     <div class="dist_info_file">
         {% for pkg in data["dist_info"]["top_level"] %}
             <div>{{pkg|e}}</div>
@@ -149,7 +171,7 @@
 {% endif %}
 
 {% if 'entry_points' in data['dist_info'] %}
-    <h2 class="dist_info_filename">entry_points.txt</h2>
+    <h3 class="dist_info_filename" id="entry_points">entry_points.txt</h3>
     <div class="dist_info_file entry_points">
         {% for group, eps in data['dist_info']['entry_points'].items()|sort %}
             <div class="epgroup">
@@ -167,7 +189,7 @@
 {% endif %}
 
 {% if 'namespace_packages' in data['dist_info'] %}
-    <h2 class="dist_info_filename">namespace_packages.txt</h2>
+    <h3 class="dist_info_filename" id="namespace_packages">namespace_packages.txt</h3>
     <div class="dist_info_file">
         {% for pkg in data["dist_info"]["namespace_packages"] %}
             <div>{{pkg|e}}</div>
@@ -176,7 +198,7 @@
 {% endif %}
 
 {% if 'dependency_links' in data['dist_info'] %}
-    <h2 class="dist_info_filename">dependency_links.txt</h2>
+    <h3 class="dist_info_filename" id="dependency_links">dependency_links.txt</h3>
     <div class="dist_info_file">
         {% for url in data["dist_info"]["dependency_links"] %}
             <div>{{url|extlink}}</div>
@@ -185,13 +207,13 @@
 {% endif %}
 
 {% if 'zip_safe' in data['dist_info'] %}
-    <h2 class="dist_info_filename">
+    <h3 class="dist_info_filename" id="zip_safe">
         {% if data['dist_info']['zip_safe'] %}
             zip-safe
         {% else %}
             not-zip-safe
         {% endif %}
-    </h2>
+    </h3>
 {% endif %}
 
 {% elif whl.errors %}

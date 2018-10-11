@@ -52,6 +52,10 @@ a:hover   {color: #ffff00; text-decoration: underline; }
 a:active  {color: #ffff00; text-decoration: none; }
 a:visited {color: #ff0000; text-decoration: underline; }
 
+.dist_info_links {
+    text-align: center;
+}
+
 .dist_info_file {
     background-color: #dddddd;
     font-family: monospace;
