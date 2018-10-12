@@ -7,6 +7,7 @@ from   packaging.utils  import canonicalize_name as normalize
 import sqlalchemy as S
 from   sqlalchemy.orm   import backref, relationship
 from   sqlalchemy_utils import JSONType
+from   wheel_inspect    import __version__ as wheel_inspect_version
 from   .                import __version__
 from   .util            import reprify
 
@@ -223,7 +224,7 @@ class Wheel(Base):
             about["data"] = self.data.raw_data
             about["wheelodex"] = {
                 "processed": str(self.data.processed),
-                "wheelodex_version": self.data.wheelodex_version,
+                "wheel_inspect_version": self.data.wheel_inspect_version,
             }
         if self.errors:
             about["errored"] = True
@@ -291,8 +292,8 @@ class WheelData(Base):
     #: The time at which the raw data was extracted from the wheel and added to
     #: the database
     processed = S.Column(S.DateTime(timezone=True), nullable=False)
-    #: The version of Wheelodex under which the ``raw_data`` was produced
-    wheelodex_version = S.Column(S.Unicode(32), nullable=False)
+    #: The version of wheel-inspect that produced the ``raw_data``
+    wheel_inspect_version = S.Column(S.Unicode(32), nullable=False)
     ### TODO: What are the right `cascade` and `passive_deletes` settings for
     ### this relationship?
     dependencies = relationship('Project', secondary=dependency_tbl,
@@ -315,7 +316,7 @@ class WheelData(Base):
         return cls(
             raw_data  = raw_data,
             processed = datetime.now(timezone.utc),
-            wheelodex_version = __version__,
+            wheel_inspect_version = wheel_inspect_version,
             entry_points = [
                 EntryPoint(group=grobj, name=e)
                 for group, eps in raw_data["dist_info"].get("entry_points", {})

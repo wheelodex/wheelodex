@@ -147,8 +147,8 @@ def load(infile, serial):
             if "data" in about and whl.data is None:
                 whl.set_data(about["data"])
                 whl.data.processed = about["wheelodex"]["processed"]
-                whl.data.wheelodex_version \
-                    = about["wheelodex"]["wheelodex_version"]
+                whl.data.wheel_inspect_version \
+                    = about["wheelodex"]["wheel_inspect_version"]
 
 @main.command('purge-old-versions')
 def purge_old_versions_cmd():

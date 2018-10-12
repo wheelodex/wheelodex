@@ -1,6 +1,3 @@
-- Split `wheelodex.inspect` into a separate project and use the
-  `wheelodex_version` columns (renamed to `wheelodex_inspect_version`) to store
-  the version of this project that `wheelodex` uses
 - If the latest version of a project doesn't have any wheels, should
   `scan_pypi()` register the latest version that does?
 - Write descriptions for more entry points
