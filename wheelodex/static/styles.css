@@ -1,8 +1,8 @@
 body {
- font-family: helvetica, sans-serif;
- font-size: 15px;
- color: #000000;
- background-color: #ffffff;
+    font-family: helvetica, sans-serif;
+    font-size: 15px;
+    color: #000000;
+    background-color: #ffffff;
 }
 
 div.main {width: 500pt; margin-left: auto; margin-right: auto; }
@@ -13,24 +13,13 @@ h3 {font-size: 18px; text-align: center; }
 h4 {font-size: 16px; text-align: center; }
 h5 {font-size: 13px; text-align: center; }
 h6 {font-size: 10px; text-align: center; }
-h2 tt, h4 tt {font-size: 80%; }
+h2 code, h4 code {font-size: 80%; }
 
-p       {text-align: justify; }
-p.text  {text-indent: 0.5in; margin: 0px; }
-p.more  {margin: 0px; } /* paragraph continuation after an "embedded" block */
-p.link  {text-align: center; }
-p.cited {margin-left: 0.5in; text-indent: -0.5in; } /* bibliography entry */
+p {text-align: justify; }
 
-p.footnote {
- font-size: 10px;
- text-align: center;
- margin-left: 0.5in;
- margin-right: 0.5in;
-}
-
-tt, code, pre, p.ident {  /* p.ident is for RCS $Id$ lines. */
- font-size: 10px;  /* Should font-size be 80% instead? */
- font-family: monaco, courier, monospace;
+code, pre {
+    font-size: 10px;  /* Should font-size be 80% instead? */
+    font-family: monaco, courier, monospace;
 }
 
 ul {list-style-type: disc; }
