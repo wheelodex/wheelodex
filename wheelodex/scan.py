@@ -17,6 +17,15 @@ def scan_pypi():
 
     This function requires a Flask application context with a database
     connection to be in effect.
+
+    .. warning::
+
+        There is a potential for Wheelodex's database to get out of sync with
+        PyPI if `scan_pypi()` is run when one or more "remove" actions have
+        transpired on PyPI since the last-seen changelog event.  It is
+        recommended to only call this function either when no calls to
+        `scan_pypi()` or `scan_changelog()` have been made yet or immediately
+        after a call to `scan_changelog()`.
     """
     log.info('BEGIN scan_pypi')
     pypi = PyPIAPI()
