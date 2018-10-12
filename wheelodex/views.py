@@ -58,31 +58,24 @@ def project_list():
     """
     per_page = current_app.config["WHEELODEX_PROJECTS_PER_PAGE"]
     ### TODO: Speed up this query!
-    subq1 = db.session.query(
-        Version.id,
-        Version.project_id,
-        Version.ordering,
-        db.func.max(Wheel.ordering).label('max_wheel'),
-    ).join(Wheel).join(WheelData).group_by(Version.id).subquery()
-    subq2 = db.session.query(
-        subq1.c.project_id,
-        db.func.max(subq1.c.ordering).label('max_version'),
-    ).group_by(subq1.c.project_id).subquery()
-    q = db.session.query(Project.name, Project.display_name, WheelData.summary)\
-                  .join(Version)\
-                  .join(subq2, (Project.id == subq2.c.project_id)
-                         & (Version.ordering == subq2.c.max_version))\
-                  .join(Wheel)\
-                  .join(subq1, (Version.id == subq1.c.id)
-                         & (Wheel.ordering == subq1.c.max_wheel))\
-                  .join(WheelData)\
-                  .order_by(Project.name.asc())\
-                  .cte()
+    subq = db.session.query(
+        Project.name,
+        Project.display_name,
+        WheelData.summary,
+        db.func.ROW_NUMBER().over(
+            partition_by=Project.id,
+            order_by=(Version.ordering.desc(), Wheel.ordering.desc()),
+        ).label('rownum'),
+    ).join(Version).join(Wheel).join(WheelData)\
+     .order_by(Project.name.asc())\
+     .cte()
     # The query needs to be converted to a CTE with the ORDER BY on the inside
     # and paginate's LIMIT on the outside; otherwise, PostgreSQL's notorious
     # optimization problems with ORDER BY + LIMIT will kick in, and the query
     # will take two and a half minutes to run.
-    projects = db.session.query(q).paginate(per_page=per_page)
+    projects = db.session.query(subq.c.name,subq.c.display_name,subq.c.summary)\
+                         .filter(subq.c.rownum == 1)\
+                         .paginate(per_page=per_page)
     return render_template('project_list.html', projects=projects)
 
 @web.route('/projects/<project>/')
