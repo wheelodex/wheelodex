@@ -96,8 +96,6 @@ Web Interface
 - Main page: Show statistics on wheels registered, wheels analyzed, and
   projects known (or something like that)
 - Project/wheel data:
-    - Highlight the entries in the versions-wheels grid based on whether each
-      wheel has data and/or is the wheel being currently viewed
     - Show a message if we know there's a newer version but it doesn't have any
       wheels?
     - `METADATA` display:

@@ -96,9 +96,20 @@ td.nil {
     color: #cccccc;
 }
 
-.wheel-nodata {
+.versions-wheels-grid .wheel-data {
+    font-size: 10px;
+    font-family: monaco, courier, monospace;
+}
+
+.versions-wheels-grid .wheel-nodata {
+    font-size: 10px;
+    font-family: monaco, courier, monospace;
     font-style: italic;
-    color: #cccccc;
+    /*color: #cccccc;*/
+}
+
+.versions-wheels-grid .current-wheel {
+    font-weight: bold;
 }
 
 .epgroup {
