@@ -14,11 +14,14 @@
         <tr>
             <td class="version">{{v|e}}</td>
             {% for w,d in wheels %}
+                {% if not loop.first %}
+                    <tr><td></td>
+                {% endif %}
                 <td class="{% if d %}wheel-data{% else %}wheel-nodata{% endif %}{% if w.id == whl.id %} current-wheel{% endif %}">
                     <a href="{{url_for('.wheel_data', wheel=w.filename, project=project.name)}}">{{w.filename|e}}</a>
                 </td>
+            </tr>
             {% endfor %}
-        </tr>
     {% endfor %}
 </table>
 
