@@ -6,7 +6,7 @@ import os.path
 from   tempfile          import TemporaryDirectory
 import traceback
 from   requests_download import download
-from   .inspect          import inspect_wheel
+from   wheel_inspect     import inspect_wheel
 from   .models           import db
 from   .dbutil           import iterqueue
 from   .util             import USER_AGENT
