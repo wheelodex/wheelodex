@@ -129,6 +129,7 @@ Web Interface
     - search/browse by keywords, classifiers, etc.?
     - search for wheels that define given metadata fields?
     - search by contents of arbitrary metadata fields?
+    - search by namespace package?
 
 - Add pages of various statistics:
    - wheel generators
