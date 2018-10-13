@@ -119,8 +119,15 @@ def dump(dump_all, outfile):
             q = Wheel.query
             if not dump_all:
                 q = q.filter(Wheel.data.has())
-            for whl in q:
-                click.echo(json.dumps(whl.as_json()), file=fp)
+            # Dumping in pages gives a needed efficiency boost:
+            q = q.paginate(page=1, per_page=100)
+            while True:
+                for whl in q.items:
+                    click.echo(json.dumps(whl.as_json()), file=fp)
+                if q.has_next:
+                    q = q.next()
+                else:
+                    break
 
 @main.command()
 @click.option('-S', '--serial', type=int,
