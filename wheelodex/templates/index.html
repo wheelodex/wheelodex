@@ -14,6 +14,10 @@
     <b>Search for a Project:</b> <input type="text" name="q"/> <input type="submit" value="Search"/>
 </form>
 
+<form action="{{url_for('.search_modules')}}" method="GET">
+    <b>Search for a Module:</b> <input type="text" name="q"/> <input type="submit" value="Search"/>
+</form>
+
 <form action="{{url_for('.search_files')}}" method="GET">
     <b>Search for a File:</b> <input type="text" name="q"/> <input type="submit" value="Search"/>
 </form>

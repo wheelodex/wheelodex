@@ -7,8 +7,8 @@ from   flask           import Blueprint, current_app, jsonify, redirect, \
                                 render_template, request, url_for
 from   packaging.utils import canonicalize_name as normalize
 from   .dbutil         import rdepends_query
-from   .models         import EntryPoint, EntryPointGroup, File, Project, \
-                                Version, Wheel, WheelData, db
+from   .models         import EntryPoint, EntryPointGroup, File, Module, \
+                                Project, Version, Wheel, WheelData, db
 from   .util           import glob2like, json_response, like_escape
 
 web = Blueprint('web', __name__)
@@ -227,13 +227,14 @@ def search_files():
     search_term = request.args.get('q', '')
     if search_term:
         per_page = current_app.config["WHEELODEX_SEARCH_RESULTS_PER_PAGE"]
+        ### TODO: Limit to the latest data-having version of each project?
         q = db.session.query(Project, Wheel, File)\
                       .join(Version).join(Wheel).join(WheelData).join(File)
         if '*' in search_term or '?' in search_term:
             q = q.filter(File.path.ilike(glob2like(search_term)))
         else:
             q = q.filter(
-                (File.path == search_term)
+                (db.func.lower(File.path) == db.func.lower(search_term))
                 | (File.path.ilike('%/' + like_escape(search_term)))
             )
         ### TODO: Order results by something?
@@ -242,6 +243,31 @@ def search_files():
         results = None
     return render_template(
         'search_files.html',
+        search_term = search_term,
+        results     = results,
+    )
+
+@web.route('/search/modules')
+def search_modules():
+    """
+    Search for wheels containing Python modules with a given name or pattern
+    """
+    search_term = request.args.get('q', '')
+    if search_term:
+        per_page = current_app.config["WHEELODEX_SEARCH_RESULTS_PER_PAGE"]
+        ### TODO: Limit to the latest data-having version of each project?
+        q = db.session.query(Project, Wheel, Module)\
+                      .join(Version).join(Wheel).join(WheelData).join(Module)
+        if '*' in search_term or '?' in search_term:
+            q = q.filter(Module.name.ilike(glob2like(search_term)))
+        else:
+            q = q.filter(db.func.lower(Module.name)==db.func.lower(search_term))
+        ### TODO: Order results by something?
+        results = q.paginate(per_page=per_page)
+    else:
+        results = None
+    return render_template(
+        'search_modules.html',
         search_term = search_term,
         results     = results,
     )
