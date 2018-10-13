@@ -216,3 +216,8 @@ def like_escape(s):
     Escape characters in ``s`` that have special meaning to SQL's ``LIKE``
     """
     return s.replace('\\', r'\\').replace('%', r'\%').replace('_', r'\_')
+
+def glob2like(s):
+    """ Convert a file glob pattern to an equivalent SQL ``LIKE`` pattern """
+    ### TODO: Handle escaped * and ?
+    return like_escape(s).replace('*', '%').replace('?', '_')

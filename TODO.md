@@ -48,6 +48,8 @@
       descriptions from the database
     - Give `load-entry-points` an option for deleting the summaries &
       descriptions of entry point groups not listed in the input file?
+    - Add a command for purging projects that have no wheels or reverse
+      dependencies?
 
 Wheel Inspection
 ----------------
@@ -112,15 +114,21 @@ Web Interface
       or descending
     - Include project summaries in entry point lists?
 - Include project summaries in reverse dependency lists
+    - This will likely require first optimizing the Project-Summary query in
+      `project_list`
+- Project search:
+    - Ignore projects without wheels
+    - Include project summaries in results page
+        - This will likely require first optimizing the Project-Summary query
+          in `project_list`
 - Provide a download of a database export made periodically with `dump`
 - Do something with the keywords table
 - Add an "about" page describing wheels, what the site does, and the JSON "API"
 - Add a page listing recently analyzed wheels?
 - `project_json`: Add links to `/data` and `/rdepends`?
-- Somewhere document that the file search supports `*`
+- Somewhere document that the file & project searches support `*` and `?`
 
 - Add search options:
-    - search by project name
     - searching for wheels that contain a given module
     - search for wheels that define a given command or other entry point?
     - search/browse by keywords, classifiers, etc.?

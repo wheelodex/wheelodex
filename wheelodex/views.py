@@ -2,13 +2,14 @@
 
 from   collections     import OrderedDict
 from   functools       import wraps
+import re
 from   flask           import Blueprint, current_app, jsonify, redirect, \
                                 render_template, request, url_for
 from   packaging.utils import canonicalize_name as normalize
 from   .dbutil         import rdepends_query
 from   .models         import EntryPoint, EntryPointGroup, File, Project, \
                                 Version, Wheel, WheelData, db
-from   .util           import json_response, like_escape
+from   .util           import glob2like, json_response, like_escape
 
 web = Blueprint('web', __name__)
 
@@ -184,6 +185,44 @@ def entry_point(group):
         project_eps = project_eps,
     )
 
+@web.route('/search/projects')
+def search_projects():
+    """
+    Search for projects
+
+    - When given the name of a known project (*modulo* normalization), redirect
+      to that project's page
+
+    - When given an unknown project name, search for all known project names
+      that have it as a prefix
+
+    - When given a search term with a ``*`` in it, normalize the rest of the
+      search term and perform file glob matching against all known normalized
+      project names
+    """
+    search_term = request.args.get('q', '')
+    if search_term:
+        per_page = current_app.config["WHEELODEX_SEARCH_RESULTS_PER_PAGE"]
+        normterm = re.sub(r'[-_.]+', '-', search_term.lower())
+        if '*' in normterm or '?' in normterm:
+            q = Project.query.filter(Project.name.like(glob2like(normterm)))
+        else:
+            p = Project.query.filter(Project.name == normterm).one_or_none()
+            if p is not None:
+                return redirect(url_for('.project', project=normterm), code=307)
+            else:
+                q = Project.query.filter(
+                    Project.name.like(like_escape(normterm) + '%')
+                )
+        results = q.order_by(Project.name.asc()).paginate(per_page=per_page)
+    else:
+        results = None
+    return render_template(
+        'search_projects.html',
+        search_term = search_term,
+        results     = results,
+    )
+
 @web.route('/search/files')
 def search_files():
     """ Search for wheels containing files with a given name or pattern """
@@ -192,10 +231,8 @@ def search_files():
         per_page = current_app.config["WHEELODEX_SEARCH_RESULTS_PER_PAGE"]
         q = db.session.query(Project, Wheel, File)\
                       .join(Version).join(Wheel).join(WheelData).join(File)
-        if '*' in search_term:
-            q = q.filter(
-                File.path.ilike(like_escape(search_term).replace('*', '%'))
-            )
+        if '*' in search_term or '?' in search_term:
+            q = q.filter(File.path.ilike(glob2like(search_term)))
         else:
             q = q.filter(
                 (File.path == search_term)

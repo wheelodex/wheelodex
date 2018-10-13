@@ -1,0 +1,25 @@
+{% from 'macros.j2' import render_pagination %}
+{% extends 'base.html' %}
+
+{% block title %}Wheelodex &#x2014; Search Projects{% if search_term %} &#x2014; {{search_term|e}}{% endif %}{% endblock %}
+
+{% block content %}
+
+<form action="{{url_for('.search_projects')}}" method="GET">
+    <b>Search for a Project:</b> <input type="text" name="q" value="{{search_term|e}}"/> <input type="submit" value="Search"/>
+</form>
+
+{% if results != None %}
+    {% if results.total == 0 %}
+        No results
+    {% else %}
+        <ul>
+            {% for p in results.items %}
+                <li><a href="{{url_for('.project', project=p.name)}}">{{p.display_name|e}}</a></li>
+            {% endfor %}
+        </ul>
+        {{render_pagination(results, '.search_projects', q=search_term)}}
+    {% endif %}
+{% endif %}
+
+{% endblock %}
