@@ -16,7 +16,7 @@
     </tr>
     {% for project, ep in project_eps.items %}
         <tr>
-            <td class="project"><a href="{{url_for('.project', project=project)}}">{{project|e}}</a></td>
+            <td class="project"><a href="{{url_for('.project', project=project.name)}}">{{project.display_name|e}}</a></td>
             <td class="epname">{{ep|e}}</td>
         </tr>
     {% endfor %}

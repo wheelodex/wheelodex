@@ -161,11 +161,12 @@ def entry_point(group):
                          .filter(EntryPointGroup.name == group)\
                          .first_or_404()
     per_page = current_app.config["WHEELODEX_ENTRY_POINTS_PER_PAGE"]
-    ### TODO: Use preferred wheel (or at least weed out duplicate lines):
-    project_eps = db.session.query(Project.display_name, EntryPoint.name)\
+    ### TODO: Use preferred wheel:
+    project_eps = db.session.query(Project, EntryPoint.name)\
                             .join(Version).join(Wheel).join(WheelData)\
                             .join(EntryPoint)\
                             .filter(EntryPoint.group == ep_group)\
+                            .group_by(Project, EntryPoint.name)\
                             .order_by(
                                 Project.name.asc(), EntryPoint.name.asc()
                             ).paginate(per_page=per_page)
