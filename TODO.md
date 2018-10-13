@@ -116,11 +116,9 @@ Web Interface
 - Include project summaries in reverse dependency lists
     - This will likely require first optimizing the Project-Summary query in
       `project_list`
-- Project search:
-    - Ignore projects without wheels
-    - Include project summaries in results page
-        - This will likely require first optimizing the Project-Summary query
-          in `project_list`
+- Include project summaries in project search results page
+    - This will likely require first optimizing the Project-Summary query in
+      `project_list`
 - Provide a download of a database export made periodically with `dump`
 - Do something with the keywords table
 - Add an "about" page describing wheels, what the site does, and the JSON "API"

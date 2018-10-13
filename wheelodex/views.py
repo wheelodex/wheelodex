@@ -204,16 +204,14 @@ def search_projects():
     if search_term:
         per_page = current_app.config["WHEELODEX_SEARCH_RESULTS_PER_PAGE"]
         normterm = re.sub(r'[-_.]+', '-', search_term.lower())
+        # Only search projects that have wheels:
+        q = Project.query.join(Version).join(Wheel).group_by(Project)
         if '*' in normterm or '?' in normterm:
-            q = Project.query.filter(Project.name.like(glob2like(normterm)))
+            q = q.filter(Project.name.like(glob2like(normterm)))
+        elif q.filter(Project.name == normterm).one_or_none() is not None:
+            return redirect(url_for('.project', project=normterm), code=307)
         else:
-            p = Project.query.filter(Project.name == normterm).one_or_none()
-            if p is not None:
-                return redirect(url_for('.project', project=normterm), code=307)
-            else:
-                q = Project.query.filter(
-                    Project.name.like(like_escape(normterm) + '%')
-                )
+            q = q.filter(Project.name.like(like_escape(normterm) + '%'))
         results = q.order_by(Project.name.asc()).paginate(per_page=per_page)
     else:
         results = None
