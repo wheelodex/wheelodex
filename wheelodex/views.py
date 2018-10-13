@@ -138,14 +138,21 @@ def entry_point_groups():
     A list of all entry point groups (excluding those without any entry points)
     """
     per_page = current_app.config["WHEELODEX_ENTRY_POINT_GROUPS_PER_PAGE"]
-    ### TODO: Use preferred wheel (or at least weed out duplicate
-    ### Project-EntryPoint.name pairs):
+    ### TODO: Use preferred wheel (Alternatively, limit to the latest
+    ### data-having version of each project):
+    # The point of this subquery is to weed out duplicate
+    # Project-EntryPoint.name pairs before counting.  There's probably a better
+    # way to do this.
+    subq = db.session.query(EntryPoint.group_id)\
+                     .join(WheelData).join(Wheel).join(Version).join(Project)\
+                     .group_by(EntryPoint.group_id,EntryPoint.name,Project.id)\
+                     .subquery()
     groups = db.session.query(
                             EntryPointGroup.name,
                             EntryPointGroup.summary,
-                            db.func.COUNT(EntryPoint.id),
+                            db.func.count(),
                         )\
-                       .join(EntryPoint)\
+                       .join(subq, EntryPointGroup.id == subq.c.group_id)\
                        .group_by(EntryPointGroup)\
                        .order_by(EntryPointGroup.name.asc())\
                        .paginate(per_page=per_page)
@@ -161,7 +168,8 @@ def entry_point(group):
                          .filter(EntryPointGroup.name == group)\
                          .first_or_404()
     per_page = current_app.config["WHEELODEX_ENTRY_POINTS_PER_PAGE"]
-    ### TODO: Use preferred wheel:
+    ### TODO: Use preferred wheel (Alternatively, limit to the latest
+    ### data-having version of each project):
     project_eps = db.session.query(Project, EntryPoint.name)\
                             .join(Version).join(Wheel).join(WheelData)\
                             .join(EntryPoint)\
