@@ -1,5 +1,6 @@
 import pytest
-from   wheelodex.util import VersionNoDot, latest_version, wheel_sort_key
+from   wheelodex.util import VersionNoDot, glob2like, latest_version, \
+                                wheel_sort_key
 
 @pytest.mark.parametrize('versions,latest', [
     ([], None),
@@ -103,3 +104,17 @@ VERSIONS_NO_DOTS = [
 )
 def test_version_no_dot(lower, higher):
     assert VersionNoDot(lower) < VersionNoDot(higher)
+
+@pytest.mark.parametrize('glob,like', [
+    ('python*', 'python%'),
+    ('p?thon', 'p_thon'),
+    (r'python\*', 'python*'),
+    (r'p\?thon', 'p?thon'),
+    ('__init__.*', r'\_\_init\_\_.%'),
+    ('mod%ulo', r'mod\%ulo'),
+    (r'foo\bar', r'foo\\bar'),
+    (r'foo\%bar', r'foo\\\%bar'),
+    (r'foo\_bar', r'foo\\\_bar'),
+])
+def test_glob2like(glob, like):
+    assert glob2like(glob) == like

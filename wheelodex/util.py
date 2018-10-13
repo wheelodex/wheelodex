@@ -219,5 +219,20 @@ def like_escape(s):
 
 def glob2like(s):
     """ Convert a file glob pattern to an equivalent SQL ``LIKE`` pattern """
-    ### TODO: Handle escaped * and ?
-    return like_escape(s).replace('*', '%').replace('?', '_')
+    def subber(m):
+        t = m.group(1)*2
+        x = m.group(2)
+        if x in ('%', '_'):
+            t += '\\' + x
+        elif x == '*':
+            t += '%'
+        elif x == '?':
+            t += '_'
+        elif x in (r'\*', r'\?'):
+            t += x[-1]
+        elif x in (r'\%', r'\_', r'\\'):
+            t += r'\\' + x
+        else:
+            t += '\\' + x
+        return t
+    return re.sub(r'(?<!\x5C)((?:\x5C\x5C)*)(\x5C.|[?*%_])', subber, s)
