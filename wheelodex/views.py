@@ -3,12 +3,12 @@
 from   collections     import OrderedDict
 from   functools       import wraps
 from   flask           import Blueprint, current_app, jsonify, redirect, \
-                                render_template, url_for
+                                render_template, request, url_for
 from   packaging.utils import canonicalize_name as normalize
 from   .dbutil         import rdepends_query
-from   .models         import EntryPoint, EntryPointGroup, Project, Version, \
-                                Wheel, WheelData, db
-from   .util           import json_response
+from   .models         import EntryPoint, EntryPointGroup, File, Project, \
+                                Version, Wheel, WheelData, db
+from   .util           import json_response, like_escape
 
 web = Blueprint('web', __name__)
 
@@ -182,6 +182,33 @@ def entry_point(group):
         'entry_point.html',
         ep_group    = ep_group,
         project_eps = project_eps,
+    )
+
+@web.route('/search/files')
+def search_files():
+    """ Search for wheels containing files with a given name or pattern """
+    search_term = request.args.get('q', '')
+    if search_term:
+        per_page = current_app.config["WHEELODEX_SEARCH_RESULTS_PER_PAGE"]
+        q = db.session.query(Project, Wheel, File)\
+                      .join(Version).join(Wheel).join(WheelData).join(File)
+        if '*' in search_term:
+            q = q.filter(
+                File.path.ilike(like_escape(search_term).replace('*', '%'))
+            )
+        else:
+            q = q.filter(
+                (File.path == search_term)
+                | (File.path.ilike('%/' + like_escape(search_term)))
+            )
+        ### TODO: Order results by something?
+        results = q.paginate(per_page=per_page)
+    else:
+        results = None
+    return render_template(
+        'search_files.html',
+        search_term = search_term,
+        results     = results,
     )
 
 @web.route('/json/projects/<project>')

@@ -210,3 +210,9 @@ def json_response(obj, status_code=200):
         status   = status_code,
         mimetype = 'application/json',
     )
+
+def like_escape(s):
+    """
+    Escape characters in ``s`` that have special meaning to SQL's ``LIKE``
+    """
+    return s.replace('\\', r'\\').replace('%', r'\%').replace('_', r'\_')

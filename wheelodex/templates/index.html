@@ -10,4 +10,8 @@
     <li><a href="{{url_for('.entry_point_groups')}}">Entry Point Groups</a> ({{epg_qty}})</li>
 </ul>
 
+<form action="{{url_for('.search_files')}}" method="GET">
+    <b>Search for a File:</b> <input type="text" name="q"/> <input type="submit" value="Search"/>
+</form>
+
 {% endblock %}

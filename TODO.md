@@ -117,11 +117,11 @@ Web Interface
 - Add an "about" page describing wheels, what the site does, and the JSON "API"
 - Add a page listing recently analyzed wheels?
 - `project_json`: Add links to `/data` and `/rdepends`?
+- Somewhere document that the file search supports `*`
 
 - Add search options:
     - search by project name
     - searching for wheels that contain a given module
-    - searching for wheels that contain a given file, with glob support
     - search for wheels that define a given command or other entry point?
     - search/browse by keywords, classifiers, etc.?
     - search for wheels that define given metadata fields?
