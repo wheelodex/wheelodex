@@ -7,7 +7,7 @@
 - Come up with a better way of logging processing errors (e.g., so that people
   actually see them)
 - Add tests for the commands
-- Add tests for the views somehow
+- Add more thorough tests for the views somehow
 - Use eager loading to speed up various database queries
     - Use eager loading to eliminate the boolean fields in the return value of
       `Project.versions_wheels_grid()`
@@ -90,6 +90,8 @@ Web Interface
 - Should `search_commands` do a prefix-matching search for globless input?
 - Should `search_modules` do a prefix-matching search (limited using regexes to
   not match additional `.`) for globless input?
+- Provide a clear way for users to view reverse dependencies of projects that
+  don't have wheels
 
 - Add search options:
     - search entry points other than `console_scripts`

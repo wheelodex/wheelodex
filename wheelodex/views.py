@@ -171,7 +171,7 @@ def entry_point(group):
         project_eps = project_eps,
     )
 
-@web.route('/search/projects')
+@web.route('/search/projects/')
 def search_projects():
     """
     Search for projects
@@ -193,11 +193,13 @@ def search_projects():
         # Only search projects that have wheels:
         q = Project.query.join(Version).join(Wheel).group_by(Project)
         if '*' in normterm or '?' in normterm:
-            q = q.filter(Project.name.like(glob2like(normterm)))
+            q = q.filter(Project.name.like(glob2like(normterm), escape='\\'))
         elif q.filter(Project.name == normterm).one_or_none() is not None:
             return redirect(url_for('.project', project=normterm), code=307)
         else:
-            q = q.filter(Project.name.like(like_escape(normterm) + '%'))
+            q = q.filter(
+                Project.name.like(like_escape(normterm) + '%', escape='\\')
+            )
         results = q.order_by(Project.name.asc()).paginate(per_page=per_page)
     else:
         results = None
@@ -207,7 +209,7 @@ def search_projects():
         results     = results,
     )
 
-@web.route('/search/files')
+@web.route('/search/files/')
 def search_files():
     """ Search for wheels containing files with a given name or pattern """
     search_term = request.args.get('q', '')
@@ -217,11 +219,11 @@ def search_files():
         q = db.session.query(Project, Wheel, File)\
                       .join(Version).join(Wheel).join(WheelData).join(File)
         if '*' in search_term or '?' in search_term:
-            q = q.filter(File.path.ilike(glob2like(search_term)))
+            q = q.filter(File.path.ilike(glob2like(search_term), escape='\\'))
         else:
             q = q.filter(
                 (db.func.lower(File.path) == db.func.lower(search_term))
-                | (File.path.ilike('%/' + like_escape(search_term)))
+                | (File.path.ilike('%/'+like_escape(search_term), escape='\\'))
             )
         ### TODO: Order results by something?
         results = q.paginate(per_page=per_page)
@@ -233,7 +235,7 @@ def search_files():
         results     = results,
     )
 
-@web.route('/search/modules')
+@web.route('/search/modules/')
 def search_modules():
     """
     Search for wheels containing Python modules with a given name or pattern
@@ -245,7 +247,7 @@ def search_modules():
         q = db.session.query(Project, Wheel, Module)\
                       .join(Version).join(Wheel).join(WheelData).join(Module)
         if '*' in search_term or '?' in search_term:
-            q = q.filter(Module.name.ilike(glob2like(search_term)))
+            q = q.filter(Module.name.ilike(glob2like(search_term), escape='\\'))
         else:
             q = q.filter(db.func.lower(Module.name)==db.func.lower(search_term))
         ### TODO: Order results by something?
@@ -258,7 +260,7 @@ def search_modules():
         results     = results,
     )
 
-@web.route('/search/commands')
+@web.route('/search/commands/')
 def search_commands():
     """ Search for wheels defining a given ``console_scripts`` command """
     search_term = request.args.get('q', '')
@@ -273,7 +275,9 @@ def search_commands():
                       .join(EntryPoint)\
                       .filter(EntryPoint.group_id == group.id)
         if '*' in search_term or '?' in search_term:
-            q = q.filter(EntryPoint.name.ilike(glob2like(search_term)))
+            q = q.filter(
+                EntryPoint.name.ilike(glob2like(search_term), escape='\\')
+            )
         else:
             q = q.filter(
                 db.func.lower(EntryPoint.name) == db.func.lower(search_term)

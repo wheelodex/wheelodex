@@ -11,6 +11,7 @@ import logging
 from   typing          import Optional, Union
 from   packaging.utils import canonicalize_name as normalize, \
                                 canonicalize_version as normversion
+import pyrfc3339
 from   sqlalchemy.orm  import aliased
 from   .models         import OrphanWheel, Project, PyPISerial, Version, \
                                 Wheel, WheelData, db, dependency_tbl
@@ -75,6 +76,22 @@ def add_wheel(version: 'Version', filename, url, size, md5, sha256, uploaded):
         ):
             w.ordering = i
     return whl
+
+def add_wheel_from_json(about: dict):
+    """
+    Add a wheel (possibly with data) from a structure produced by
+    `Wheel.as_json()`
+    """
+    version = add_version(
+        about["pypi"].pop("project"),
+        about["pypi"].pop("version"),
+    )
+    whl = add_wheel(version, **about["pypi"])
+    if "data" in about and whl.data is None:
+        whl.set_data(about["data"])
+        whl.data.processed = pyrfc3339.parse(about["wheelodex"]["processed"])
+        whl.data.wheel_inspect_version \
+            = about["wheelodex"]["wheel_inspect_version"]
 
 def iterqueue(max_wheel_size=None) -> [Wheel]:
     """

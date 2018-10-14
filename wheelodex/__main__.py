@@ -11,8 +11,8 @@ from   sqlalchemy    import inspect
 from   .             import __version__
 from   .app          import create_app
 from   .models       import EntryPointGroup, OrphanWheel, Wheel, db
-from   .dbutil       import dbcontext, add_version, add_wheel, get_serial, \
-                                purge_old_versions, set_serial
+from   .dbutil       import dbcontext, add_wheel, add_wheel_from_json, \
+                                get_serial, purge_old_versions, set_serial
 from   .process      import process_queue
 from   .pypi_api     import PyPIAPI
 from   .scan         import scan_pypi, scan_changelog
@@ -146,17 +146,7 @@ def load(infile, serial):
         if serial is not None:
             set_serial(serial)
         for line in infile:
-            about = json.loads(line)
-            version = add_version(
-                about["pypi"].pop("project"),
-                about["pypi"].pop("version"),
-            )
-            whl = add_wheel(version, **about["pypi"])
-            if "data" in about and whl.data is None:
-                whl.set_data(about["data"])
-                whl.data.processed = about["wheelodex"]["processed"]
-                whl.data.wheel_inspect_version \
-                    = about["wheelodex"]["wheel_inspect_version"]
+            add_wheel_from_json(json.loads(line))
 
 @main.command('purge-old-versions')
 def purge_old_versions_cmd():

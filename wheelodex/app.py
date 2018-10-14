@@ -15,11 +15,12 @@ DEFAULT_CONFIG = {
     "WHEELODEX_SEARCH_RESULTS_PER_PAGE": 100,
 }
 
-def create_app():
+def create_app(**kwargs):
     app = Flask('wheelodex')
     app.config.update(DEFAULT_CONFIG)
     if "WHEELODEX_CONFIG" in os.environ:
         app.config.from_envvar("WHEELODEX_CONFIG")
+    app.config.update(kwargs)
     from .models import db
     db.init_app(app)
     Migrate(app, db, str(Path(__file__).with_name('migrations')))

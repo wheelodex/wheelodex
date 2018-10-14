@@ -12,9 +12,9 @@ from   wheelodex.dbutil import (
 @pytest.fixture(scope='session')
 def tmpdb_inited():
     with create_app().app_context():
-        db.create_all()
         # See <https://docs.sqlalchemy.org/en/latest/dialects/sqlite.html#foreign-key-support>:
         db.session.execute("PRAGMA foreign_keys=ON")
+        db.create_all()
         yield
 
 @pytest.fixture(autouse=True)

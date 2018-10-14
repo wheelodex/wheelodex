@@ -231,7 +231,7 @@ class Wheel(Base):
         if self.data is not None:
             about["data"] = self.data.raw_data
             about["wheelodex"] = {
-                "processed": str(self.data.processed),
+                "processed": self.data.processed.isoformat(),
                 "wheel_inspect_version": self.data.wheel_inspect_version,
             }
         if self.errors:
