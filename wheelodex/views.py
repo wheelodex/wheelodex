@@ -3,8 +3,8 @@
 from   collections     import OrderedDict
 from   functools       import wraps
 import re
-from   flask           import Blueprint, current_app, jsonify, redirect, \
-                                render_template, request, url_for
+from   flask           import Blueprint, abort, current_app, jsonify, \
+                                redirect, render_template, request, url_for
 from   packaging.utils import canonicalize_name as normalize
 from   .dbutil         import rdepends_query
 from   .models         import EntryPoint, EntryPointGroup, File, Module, \
@@ -112,13 +112,16 @@ def wheel_data(project, wheel):
     whl = Wheel.query.filter(Wheel.filename == wheel).one_or_none()
     if whl is None:
         return redirect(url_for('.project', project=project.name), code=302)
-    return render_template(
-        'wheel_data.html',
-        whl          = whl,
-        project      = project,
-        rdepends_qty = rdepends_query(project).count(),
-        all_wheels   = project.versions_wheels_grid(),
-    )
+    elif whl.project != project:
+        abort(404)
+    else:
+        return render_template(
+            'wheel_data.html',
+            whl          = whl,
+            project      = project,
+            rdepends_qty = rdepends_query(project).count(),
+            all_wheels   = project.versions_wheels_grid(),
+        )
 
 @web.route('/projects/<project>/rdepends/')
 @project_view
