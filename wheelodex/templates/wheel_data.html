@@ -3,6 +3,17 @@
 {% block title %}Wheelodex &#x2014; {{project.display_name|e}}{% endblock %}
 
 {% block content %}
+<div class="breadcrumbs">
+    <a href="{{url_for('.index')}}">Wheelodex</a>
+    &#xBB; <a href="{{url_for('.project_list')}}">Projects</a>
+    {% if not subpage %}
+        &#xBB; {{project.display_name|e}}
+    {% else %}
+        &#xBB; <a href="{{url_for('.project', project=project.name)}}">{{project.display_name|e}}</a>
+        &#xBB; {{whl.filename}}
+    {% endif %}
+</div>
+
 <a href="https://pypi.org/project/{{project.display_name|e}}/{{whl.version.display_name|e}}/">[pypi]</a>
 <a href="{{url_for('.project_json', project=project.name)}}">[project json]</a>
 <a href="{{url_for('.project_data_json', project=project.name)}}">[project data json]</a>

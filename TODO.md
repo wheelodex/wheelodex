@@ -54,7 +54,6 @@
 Web Interface
 -------------
 - Make things look good
-    - Add breadcrumbs to pages
     - Show wheelodex version at the bottom of every page?
     - Show link to wheelodex's GitHub at the bottom of every page?
     - Add a search box at the top of the page for searching by projects (or

@@ -94,6 +94,7 @@ def project(project):
             project      = project,
             rdepends_qty = rdeps_qty,
             all_wheels   = project.versions_wheels_grid(),
+            subpage      = False,
         )
     else:
         return render_template(
@@ -121,6 +122,7 @@ def wheel_data(project, wheel):
             project      = project,
             rdepends_qty = rdepends_query(project).count(),
             all_wheels   = project.versions_wheels_grid(),
+            subpage      = True,
         )
 
 @web.route('/projects/<project>/rdepends/')
@@ -132,7 +134,7 @@ def rdepends(project):
                                    .paginate(per_page=per_page)
     return render_template(
         'rdepends.html',
-        project  = project.display_name,
+        project  = project,
         rdepends = rdeps,
     )
 

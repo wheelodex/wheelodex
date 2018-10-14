@@ -4,6 +4,10 @@
 {% block title %}Wheelodex &#x2014; Search Projects{% if search_term %} &#x2014; {{search_term|e}}{% endif %}{% endblock %}
 
 {% block content %}
+<div class="breadcrumbs">
+    <a href="{{url_for('.index')}}">Wheelodex</a>
+    &#xBB; Search Projects
+</div>
 
 <form action="{{url_for('.search_projects')}}" method="GET">
     <b>Search for a Project:</b> <input type="text" name="q" value="{{search_term|e}}"/> <input type="submit" value="Search"/>

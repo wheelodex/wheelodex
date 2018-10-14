@@ -4,6 +4,10 @@
 {% block title %}Wheelodex &#x2014; Entry Point Groups{% endblock %}
 
 {% block content %}
+<div class="breadcrumbs">
+    <a href="{{url_for('.index')}}">Wheelodex</a>
+    &#xBB; Entry Points
+</div>
 
 <ul>
     {% for name, summary, qty in groups.items %}

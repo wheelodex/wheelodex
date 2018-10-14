@@ -4,6 +4,12 @@
 {% block title %}Wheelodex &#x2014; {{ep_group.name|e}}{% endblock %}
 
 {% block content %}
+<div class="breadcrumbs">
+    <a href="{{url_for('.index')}}">Wheelodex</a>
+    &#xBB; <a href="{{url_for('.entry_point_groups')}}">Entry Points</a>
+    &#xBB; {{ep_group.name|e}}
+</div>
+
 <h2>{{ep_group.name|e}}</h2>
 
 {% if ep_group.description %}
