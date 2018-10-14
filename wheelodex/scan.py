@@ -144,5 +144,8 @@ def scan_changelog(since):
                      rel, proj)
             remove_version(proj, rel)
 
+        else:
+            log.debug('Event %d: %r: ignoring', serial, action)
+
         set_serial(serial)
     log.info('END scan_changelog')
