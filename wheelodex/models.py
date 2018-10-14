@@ -39,6 +39,12 @@ class Project(Base):
     name         = S.Column(S.Unicode(2048), nullable=False, unique=True)
     #: The preferred non-normalized form of the project's name
     display_name = S.Column(S.Unicode(2048), nullable=False, unique=True)
+    #: A summary of the project taken from its most recently-analyzed wheel.
+    #: (The summary is stored here instead of in `WheelData` because storing it
+    #: in `WheelData` would mean that listing projects with their summaries
+    #: would involve a complicated query that ends up being noticeably too
+    #: slow.)
+    summary      = S.Column(S.Unicode(2048), nullable=True)
 
     def __repr__(self):
         return reprify(self, 'name display_name'.split())
@@ -191,6 +197,8 @@ class Wheel(Base):
         ### there are temporarily two WheelData objects with the same
         ### `wheel_id`).  Fix this.
         self.data = WheelData.from_raw_data(raw_data)
+        summary = raw_data["dist_info"].get("metadata", {}).get("summary")
+        self.project.summary = summary[:2048] if summary is not None else None
 
     def add_error(self, errmsg: str):
         """
@@ -298,7 +306,6 @@ class WheelData(Base):
     ### this relationship?
     dependencies = relationship('Project', secondary=dependency_tbl,
                                 backref='rdepends')
-    summary   = S.Column(S.Unicode(2048), nullable=True)
     valid     = S.Column(S.Boolean, nullable=False)
 
     @classmethod
@@ -307,7 +314,6 @@ class WheelData(Base):
         Construct a new `WheelData` object, complete with related objects, from
         the return value of a call to `inspect_wheel()`
         """
-        summary = raw_data["dist_info"].get("metadata", {}).get("summary")
         file_paths = {
             # Make this a set because some wheels have duplicate entries in
             # their RECORDs
@@ -328,7 +334,6 @@ class WheelData(Base):
                 Project.from_name(p)
                 for p in raw_data["derived"]["dependencies"]
             ],
-            summary = summary[:2048] if summary is not None else None,
             valid = raw_data["valid"],
             keywords = [
                 Keyword(name=k) for k in raw_data["derived"]["keywords"]

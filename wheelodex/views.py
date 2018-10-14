@@ -40,7 +40,7 @@ def project_view(f):
 def index():
     """ The main page """
     proj_qty = db.session.query(db.func.count(Project.id.distinct()))\
-                         .join(Version).join(Wheel).join(WheelData).scalar()
+                         .join(Version).join(Wheel).scalar()
     whl_qty = db.session.query(WheelData).count()
     ### TODO: Don't count entry point groups without entry points:
     epg_qty = db.session.query(EntryPointGroup).count()
@@ -53,30 +53,11 @@ def index():
 
 @web.route('/projects/')
 def project_list():
-    """
-    A list of all projects with wheels with data, along with summaries
-    extracted from those wheels
-    """
+    """ A list of all projects with wheels """
     per_page = current_app.config["WHEELODEX_PROJECTS_PER_PAGE"]
-    ### TODO: Speed up this query!
-    subq = db.session.query(
-        Project.name,
-        Project.display_name,
-        WheelData.summary,
-        db.func.ROW_NUMBER().over(
-            partition_by=Project.id,
-            order_by=(Version.ordering.desc(), Wheel.ordering.desc()),
-        ).label('rownum'),
-    ).join(Version).join(Wheel).join(WheelData)\
-     .order_by(Project.name.asc())\
-     .cte()
-    # The query needs to be converted to a CTE with the ORDER BY on the inside
-    # and paginate's LIMIT on the outside; otherwise, PostgreSQL's notorious
-    # optimization problems with ORDER BY + LIMIT will kick in, and the query
-    # will take two and a half minutes to run.
-    projects = db.session.query(subq.c.name,subq.c.display_name,subq.c.summary)\
-                         .filter(subq.c.rownum == 1)\
-                         .paginate(per_page=per_page)
+    projects = Project.query.filter(Project.versions.any(Version.wheels.any()))\
+                            .order_by(Project.name.asc())\
+                            .paginate(per_page=per_page)
     return render_template('project_list.html', projects=projects)
 
 @web.route('/projects/<project>/')
