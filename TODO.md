@@ -55,9 +55,10 @@ Web Interface
 -------------
 - Make things look good
     - Add breadcrumbs to pages
-    - Improve page `<title>`s
     - Show wheelodex version at the bottom of every page?
     - Show link to wheelodex's GitHub at the bottom of every page?
+    - Add a search box at the top of the page for searching by projects (or
+      something else?) ?
 - Main page: Show statistics on wheels registered, wheels analyzed, and
   projects known (or something like that)
 - Project/wheel data:

@@ -4,7 +4,7 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<title>{% block title %}{% endblock %}</title>
+<title>{% block title %}{% endblock %}{% if request.args.get('page', '1') != '1' %} &#x2014; Page {{request.args['page']}}{% endif %}</title>
 <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='styles.css')}}"/>
 </head>
 <body>

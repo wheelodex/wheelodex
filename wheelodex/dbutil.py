@@ -133,7 +133,6 @@ def remove_project(project: str):
     # Note that this filters by PyPI project, not by wheel filename project, as
     # this method is meant to be called in response to "remove" events in the
     # PyPI changelog.
-    ### TODO: Look into doing this as a JOIN + DELETE of some sort
     p = get_project(project)
     if p is not None:
         Version.query.filter(Version.project == p).delete()
@@ -183,7 +182,6 @@ def remove_version(project: str, version: str):
     # Note that this filters by PyPI project & version, not by wheel filename
     # project & version, as this method is meant to be called in response to
     # "remove" events in the PyPI changelog.
-    ### TODO: Look into doing this as a JOIN + DELETE of some sort
     p = get_project(project)
     if p is not None:
         Version.query.filter(Version.project == p)\
