@@ -126,7 +126,7 @@ def dump(dump_all, outfile):
                 for whl in q.items:
                     click.echo(json.dumps(whl.as_json()), file=fp)
                 if q.has_next:
-                    q = q.next()
+                    q = q.next()  # noqa: B305
                 else:
                     break
 

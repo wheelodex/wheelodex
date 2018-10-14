@@ -272,6 +272,35 @@ def search_modules():
         results     = results,
     )
 
+@web.route('/search/commands')
+def search_commands():
+    """ Search for wheels defining a given ``console_scripts`` command """
+    search_term = request.args.get('q', '')
+    if search_term:
+        per_page = current_app.config["WHEELODEX_SEARCH_RESULTS_PER_PAGE"]
+        group = EntryPointGroup.query.filter(
+            EntryPointGroup.name == 'console_scripts'
+        ).first_or_404()
+        ### TODO: Limit to the latest data-having version of each project?
+        q = db.session.query(Project, Wheel, EntryPoint)\
+                      .join(Version).join(Wheel).join(WheelData)\
+                      .join(EntryPoint)\
+                      .filter(EntryPoint.group_id == group.id)
+        if '*' in search_term or '?' in search_term:
+            q = q.filter(EntryPoint.name.ilike(glob2like(search_term)))
+        else:
+            q = q.filter(
+                db.func.lower(EntryPoint.name) == db.func.lower(search_term)
+            )
+        results = q.order_by(EntryPoint.name.asc()).paginate(per_page=per_page)
+    else:
+        results = None
+    return render_template(
+        'search_commands.html',
+        search_term = search_term,
+        results     = results,
+    )
+
 @web.route('/json/projects/<project>')
 @project_view
 def project_json(project):

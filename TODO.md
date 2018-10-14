@@ -56,6 +56,8 @@ Web Interface
 - Make things look good
     - Add breadcrumbs to pages
     - Improve page `<title>`s
+    - Show wheelodex version at the bottom of every page?
+    - Show link to wheelodex's GitHub at the bottom of every page?
 - Main page: Show statistics on wheels registered, wheels analyzed, and
   projects known (or something like that)
 - Project/wheel data:
@@ -89,9 +91,12 @@ Web Interface
 - Add a page listing recently analyzed wheels?
 - `project_json`: Add links to `/data` and `/rdepends`?
 - Somewhere document that the searches support `*` and `?`
+- Should `search_commands` do a prefix-matching search for globless input?
+- Should `search_modules` do a prefix-matching search (limited using regexes to
+  not match additional `.`) for globless input?
 
 - Add search options:
-    - search for wheels that define a given command or other entry point?
+    - search entry points other than `console_scripts`
     - search/browse by keywords, classifiers, etc.?
     - search for wheels that define given metadata fields?
     - search by contents of arbitrary metadata fields?
