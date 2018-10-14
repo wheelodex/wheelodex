@@ -121,6 +121,7 @@ def dump(dump_all, outfile):
                 q = q.filter(Wheel.data.has())
             # Dumping in pages gives a needed efficiency boost:
             q = q.paginate(page=1, per_page=100)
+            ### TODO: Should the query be ordered by something?
             while True:
                 for whl in q.items:
                     click.echo(json.dumps(whl.as_json()), file=fp)

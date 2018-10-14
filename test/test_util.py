@@ -115,6 +115,7 @@ def test_version_no_dot(lower, higher):
     (r'foo\bar', r'foo\\bar'),
     (r'foo\%bar', r'foo\\\%bar'),
     (r'foo\_bar', r'foo\\\_bar'),
+    (r'foo\\bar', r'foo\\bar'),
 ])
 def test_glob2like(glob, like):
     assert glob2like(glob) == like
