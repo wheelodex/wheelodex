@@ -15,7 +15,7 @@
 
 <ul>
     {% for rd in rdepends.items %}
-        <li><a href="{{url_for('.project', project=rd.name)}}">{{rd.display_name|e}}</a></li>
+        <li><a href="{{url_for('.project', project=rd.name)}}">{{rd.display_name|e}}</a> &#x2014; {% if rd.summary != None %}{{rd.summary|e}}{% else %}<span class="no-summary">no summary</span>{% endif %}</li>
     {% endfor %}
 </ul>
 

@@ -79,7 +79,6 @@ Web Interface
     - Add options for sorting by either project or entry point name, ascending
       or descending
     - Include project summaries in entry point lists?
-- Include project summaries in reverse dependency lists
 - Provide a download of a database export made periodically with `dump`
 - Do something with the keywords table
 - Add an "about" page describing wheels, what the site does, and the JSON "API"
