@@ -19,7 +19,7 @@
     {% else %}
         <ul>
             {% for p in results.items %}
-                <li><a href="{{url_for('.project', project=p.name)}}">{{p.display_name|e}}</a></li>
+                <li><a href="{{url_for('.project', project=p.name)}}">{{p.display_name|e}}</a> &#x2014; {% if p.summary != None %}{{p.summary|e}}{% else %}<span class="no-summary">no summary</span>{% endif %}</li>
             {% endfor %}
         </ul>
         {{render_pagination(results, '.search_projects', q=search_term)}}
