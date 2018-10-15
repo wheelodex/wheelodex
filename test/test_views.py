@@ -27,6 +27,14 @@ def test_index_200(client):
     rv = client.get('/')
     assert rv.status_code == 200
 
+def test_about_200(client):
+    rv = client.get('/about/')
+    assert rv.status_code == 200
+
+def test_json_api_200(client):
+    rv = client.get('/json-api/')
+    assert rv.status_code == 200
+
 def test_project_list_200(client):
     rv = client.get('/projects/')
     assert rv.status_code == 200

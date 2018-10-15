@@ -51,6 +51,18 @@ def index():
         epg_qty  = epg_qty,
     )
 
+@web.route('/about/')
+def about():
+    """ The "About" page """
+    return render_template('about.html')
+
+@web.route('/json-api/')
+def json_api():
+    """ The "JSON API" page """
+    p = Project.query.filter(Project.name == 'requests').one_or_none()
+    example_wheel = p and p.best_wheel
+    return render_template('json_api.html', example_wheel=example_wheel)
+
 @web.route('/projects/')
 def project_list():
     """ A list of all projects with wheels """

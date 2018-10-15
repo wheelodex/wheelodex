@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}Wheelodex &#x2014; About{% endblock %}
+
+{% block content %}
+<div class="breadcrumbs">
+    <a href="{{url_for('.index')}}">Wheelodex</a>
+    &#xBB; About
+</div>
+
+<p>Packaged projects for the <a href="https://www.python.org">Python</a>
+programming language are distributed in two main formats: <em>sdists</em>
+(archives of code and other files that require processing before they can be
+installed) and <em>wheels</em> (zipfiles of code ready for immediate
+installation).  A project's wheel contains the complete information about what
+modules, files, &amp; commands the project installs, along with information
+about what other projects the project depends on, but <a
+href="https://pypi.org">the Python Package Index (PyPI)</a> (where wheels are
+distributed) doesn't expose any of this information!  This is the problem that
+Wheelodex is here to solve.</p>
+
+<p>Wheelodex scans PyPI for wheel files, analyzes them, and stores &amp;
+displays the results.  The site allows users to view the complete metadata
+inside wheels, search for wheels containing a given Python module or file,
+browse or search for wheels that define a given command or other entry point,
+and even find out projects' reverse dependencies.</p>
+
+<p>Note that, in order to save disk space, Wheelodex only records data on
+wheels from the latest version of each PyPI project; wheels from older versions
+are periodically purged from the database.  Projects' long descriptions aren't
+even recorded at all.</p>
+
+<p>Wheelodex was created by John T. Wodder II.  The source code is available on
+GitHub at &lt;<a
+href="https://github.com/jwodder/wheelodex">https://github.com/jwodder/wheelodex</a>&gt;.</p>
+
+{% endblock %}

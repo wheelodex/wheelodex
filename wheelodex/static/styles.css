@@ -113,3 +113,7 @@ td.nil {
     /* "[at]" used to "obfuscate" e-mail addresses */
     color: #0000ff;
 }
+
+.url-placeholder {
+    font-style: italic;
+}

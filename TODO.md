@@ -81,7 +81,6 @@ Web Interface
     - Include project summaries in entry point lists?
 - Provide a download of a database export made periodically with `dump`
 - Do something with the keywords table
-- Add an "about" page describing wheels, what the site does, and the JSON "API"
 - Add a page listing recently analyzed wheels?
 - `project_json`: Add links to `/data` and `/rdepends`?
 - Somewhere document that the searches support `*` and `?`
