@@ -1,0 +1,5 @@
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/mail-systemd-failure %i
+User=nobody
+Group=systemd-journal

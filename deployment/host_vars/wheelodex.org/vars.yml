@@ -1,0 +1,22 @@
+---
+ansible_host: 174.138.60.140
+# We have to use root instead of a dedicated sudo user because, with the
+# latter config, Ansible can't properly become the postgres user and connect to
+# PostgreSQL:
+ansible_user: root
+
+config_options:
+    WHEELODEX_MAX_WHEEL_SIZE: 2097152  # 2 MiB
+
+server_names:
+    - www.wheelodex.org
+    - wheelodex.org
+
+register_wheels_per_day: 3
+register_wheels_start: 0
+
+process_wheels_per_day: 1
+process_wheels_start: 6
+
+uwsgi_processes: 4
+uwsgi_threads: 2

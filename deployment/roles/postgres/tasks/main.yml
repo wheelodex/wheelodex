@@ -1,0 +1,28 @@
+---
+- name: Install PostgreSQL
+  apt:
+    name:
+        - postgresql
+        - python-psycopg2  # Needed by Ansible's postgresql_* modules
+    state: present
+    update_cache: false
+
+- name: Create database user
+  postgresql_user:
+    name: "{{dbuser}}"
+    password: "{{dbpass}}"
+    encrypted: true
+    state: present
+    role_attr_flags: NOSUPERUSER,NOCREATEDB,CREATEROLE,LOGIN
+  become_user: postgres
+
+- name: Create database
+  postgresql_db:
+    name: "{{dbname}}"
+    owner: "{{dbuser}}"
+    encoding: UNICODE
+    lc_collate: C
+    lc_ctype: C
+    template: template0
+    state: present
+  become_user: postgres

@@ -1,0 +1,81 @@
+---
+- name: Create dedicated Wheelodex user
+  user:
+    name: "{{user}}"
+    home: "/home/{{user}}"
+    create_home: true
+    shell: /bin/bash
+
+- name: Check if pip is installed for user
+  stat:
+    path: "/home/{{user}}/.local/bin/pip3"
+  register: pipstat
+
+- block:
+    - get_url:
+        url: https://bootstrap.pypa.io/get-pip.py
+        dest: /tmp/get-pip.py
+        force: true
+    - command: python3 /tmp/get-pip.py --user --upgrade
+      become_user: "{{user}}"
+  when: not pipstat.stat.exists or upgrade_pip
+
+- name: Install virtualenv for user
+  pip:
+    name: virtualenv
+    extra_args: --user
+    executable: ~/.local/bin/pip3
+    state: "{{upgrade_pip|ternary('latest', 'present')}}"
+  become_user: "{{user}}"
+
+- name: Create WSGI file
+  copy:
+    src: wsgi.py
+    dest: "{{wsgi_file}}"
+    owner: "{{user}}"
+  notify:
+    - Restart uWSGI
+
+- name: Create config file
+  template:
+    src: config.py
+    dest: "{{config_file}}"
+    owner: "{{user}}"
+  notify:
+    - Restart uWSGI
+
+- name: Create wheelodex wrapper script
+  template:
+    src: wheelodex.sh
+    dest: /usr/local/bin/wheelodex
+    mode: 0755
+    owner: "{{user}}"
+
+- include: new_code.yml
+  when: wheel_src is defined
+
+- name: Install systemd failure notification script
+  template:
+    src: mail-systemd-failure.sh
+    dest: /usr/local/bin/mail-systemd-failure
+    mode: 0755
+
+- name: Configure systemd jobs
+  template:
+    src: "{{item}}"
+    dest: "/etc/systemd/system/{{item}}"
+  with_items:
+    - mail-systemd-failure@.service
+    - process-wheels.service
+    - process-wheels.timer
+    - register-wheels.service
+    - register-wheels.timer
+  register: systemd_cfg
+
+- systemd: daemon_reload=true
+  ###when: system_cfg is changed  # Ansible bug?
+
+- systemd: name=process-wheels.timer  enabled=true
+- systemd: name=register-wheels.timer enabled=true
+- systemd: name=process-wheels.timer  state=started
+- systemd: name=register-wheels.timer state=started

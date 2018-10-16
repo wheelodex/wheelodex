@@ -1,0 +1,46 @@
+---
+- name: apt-get update
+  apt: update_cache=true
+
+- name: Install core packages
+  apt:
+    name:
+        - build-essential
+        - python3
+        - python3-dev
+        - unattended-upgrades
+    state: present
+    update_cache: false
+
+- name: Create swap space
+  command: fallocate -l {{ansible_memtotal_mb * 2}}M /swapfile
+  args:
+    creates: /swapfile
+  register: createdSwap
+
+- block:
+    - file: path=/swapfile mode=0600
+    - command: mkswap /swapfile
+    - lineinfile: dest=/etc/fstab line="/swapfile none swap sw 0 0"
+    - command: swapon /swapfile
+  when: createdSwap is changed
+
+- name: Set timezone to UTC
+  timezone: name=Etc/UTC
+
+- name: Enable unattended upgrades
+  debconf:
+    name: unattended-upgrades
+    question: unattended-upgrades/enable_auto_updates
+    vtype: boolean
+    value: true
+  register: unattup
+
+- name: Enable new unattended-upgrades settings
+  command: dpkg-reconfigure -f noninteractive unattended-upgrades
+  when: unattup is changed
+
+- name: Configure APT and unattended-upgrades
+  copy:
+    src: apt.conf
+    dest: /etc/apt/apt.conf.d/99local

@@ -1,0 +1,8 @@
+---
+uwsgi_socket: /tmp/wheelodex.sock
+uwsgi_processes: 4
+uwsgi_threads: 2
+user: wheelodex
+venv_path: "/home/{{user}}/virtualenv"
+config_file: "/home/{{user}}/config.py"
+wsgi_file: "/home/{{user}}/wsgi.py"

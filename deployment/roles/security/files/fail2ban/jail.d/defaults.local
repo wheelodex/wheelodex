@@ -1,0 +1,5 @@
+[DEFAULT]
+bantime = 86400
+findtime = 86400
+
+# vim:set ft=cfg:

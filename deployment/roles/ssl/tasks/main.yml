@@ -1,0 +1,28 @@
+---
+- assert: that='server_names is defined and (server_names|length > 0)'
+
+- name: Install software-properties-common  # for add-apt-repository
+  apt: name=software-properties-common state=present update_cache=false
+
+- name: Add Certbot PPA
+  apt_repository: repo='ppa:certbot/certbot' update_cache=true
+
+- name: Install Certbot for Nginx
+  apt: name=python-certbot-nginx state=present update_cache=false
+
+- name: Get SSL certificates
+  ### TODO: Ensure this does nothing when server_names is unchanged
+  command: |
+    certbot run
+        --nginx
+        --rsa-key-size 4096
+        --expand
+        --cert-name {{certname|quote}}
+        --email {{certbot_email|quote}}
+        --domains {{server_names|join(',')|quote}}
+        --non-interactive
+        --agree-tos
+  #args:
+  #  creates: /etc/letsencrypt
+
+# Cert autorenewal is done by a cronjob installed by the certbot package

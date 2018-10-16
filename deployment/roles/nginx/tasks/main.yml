@@ -1,0 +1,34 @@
+---
+- name: Configure Nginx
+  template:
+    src: wheelodex.conf
+    dest: /etc/nginx/sites-available/wheelodex.conf
+  notify:
+    - Restart Nginx
+
+- name: Enable Nginx site configuration
+  file:
+    src: /etc/nginx/sites-available/wheelodex.conf
+    path: /etc/nginx/sites-enabled/wheelodex.conf
+    state: link
+  notify:
+    - Restart Nginx
+
+- name: Disable default Nginx site configuration
+  file: path=/etc/nginx/sites-enabled/default state=absent
+  notify:
+    - Restart Nginx
+
+- name: 'Create "Down for Maintenance" page'
+  copy:
+    src: maintenance.html
+    dest: /var/www/html/maintenance.html
+
+- name: Create scripts for starting & stopping maintenance mode
+  copy:
+    src: "{{item}}.sh"
+    dest: "/usr/local/bin/{{item}}"
+    mode: 0755
+  with_items:
+    - start-maintenance
+    - stop-maintenance

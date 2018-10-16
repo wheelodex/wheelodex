@@ -1,0 +1,5 @@
+[Definition]
+# Needed for recidive to work:
+dbpurgeage = 432000  ; 5 days
+
+# vim:set ft=cfg:

@@ -1,0 +1,15 @@
+---
+- hosts: all
+  become: true
+  roles:
+    - core
+    - security
+    - postgres
+    - uwsgi
+    - nginx-base
+    - ssl
+    - nginx
+    # The `wheelodex` role needs to run after `nginx` so it can call
+    # {start,stop}-maintenance, and it needs to run after `uwsgi` so it can
+    # restart uWSGI.
+    - wheelodex

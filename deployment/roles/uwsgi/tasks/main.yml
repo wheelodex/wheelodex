@@ -1,0 +1,23 @@
+---
+- name: Install uWSGI
+  apt:
+    name:
+        - uwsgi
+        - uwsgi-plugin-python3
+    state: present
+    update_cache: false
+
+- name: Configure uWSGI
+  template:
+    src: wheelodex.ini
+    dest: /etc/uwsgi/apps-available/wheelodex.ini
+  notify:
+    - Restart uWSGI
+
+- name: Enable uWSGI app configuration
+  file:
+    src: /etc/uwsgi/apps-available/wheelodex.ini
+    path: /etc/uwsgi/apps-enabled/wheelodex.ini
+    state: link
+  notify:
+    - Restart uWSGI

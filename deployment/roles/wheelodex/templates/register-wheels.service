@@ -1,0 +1,10 @@
+[Unit]
+Description=Register new wheels
+OnFailure=mail-systemd-failure@%n.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/wheelodex process-orphan-wheels
+ExecStart=/usr/local/bin/wheelodex scan-changelog
+User={{user}}
+Group={{user}}

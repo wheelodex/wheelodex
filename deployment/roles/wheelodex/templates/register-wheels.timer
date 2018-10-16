@@ -1,0 +1,9 @@
+[Unit]
+Description=Run register-wheels periodically
+
+[Timer]
+Unit=register-wheels.service
+OnCalendar={{register_wheels_per_day|mkcron(register_wheels_start)}}
+
+[Install]
+WantedBy=timers.target

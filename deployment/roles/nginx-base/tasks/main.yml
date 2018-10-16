@@ -1,0 +1,6 @@
+---
+# Nginx needs to be installed before running the ssl role, which in turn needs
+# to be run before the main nginx role.  Hence, this mini-role.
+
+- name: Install Nginx
+  apt: name=nginx-full state=present update_cache=false

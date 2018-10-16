@@ -1,0 +1,4 @@
+[sshd]
+enabled = true
+
+# vim:set ft=cfg:

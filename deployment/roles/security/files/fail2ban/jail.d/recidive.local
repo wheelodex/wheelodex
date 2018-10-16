@@ -1,0 +1,7 @@
+[recidive]
+enabled  = true
+maxretry = 3
+findtime = 345600   ;  4 days
+bantime  = 1209600  ; 14 days
+
+# vim:set ft=cfg:
