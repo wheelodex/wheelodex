@@ -74,6 +74,8 @@ Web Interface
     - Show human-readable descriptions of the tags in a wheel's filename?
     - If a dist-info file is empty (not including `{not-,}zip-safe`?), display
       "[empty]" in place of its contents
+    - Don't list wheels for versions that would be deleted by an immediate call
+      to `purge_old_versions()`?
 - Entry point groups:
     - Add an option for sorting by quantity?
 - Entry points:
