@@ -35,8 +35,8 @@ def project_view(f):
             return f(project=p, **kwargs)
     return wrapped
 
-@web.route('/')
 @web.route('/index.html')
+@web.route('/')
 def index():
     """ The main page """
     return render_template(
