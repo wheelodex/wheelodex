@@ -117,3 +117,8 @@ td.nil {
 .url-placeholder {
     font-style: italic;
 }
+
+.slogan {
+    font-style: italic;
+    text-align: center;
+}

@@ -6,26 +6,40 @@
 
 <p><a href="{{url_for('.about')}}">About</a> &#xB7; <a href="{{url_for('.json_api')}}">JSON API</a></p>
 
-<ul>
-    <li><a href="{{url_for('.project_list')}}">Projects</a> ({{proj_qty}})</li>
-    <li>{{whl_qty}} Analyzed Wheels</li>
-    <li><a href="{{url_for('.entry_point_groups')}}">Entry Point Groups</a> ({{epg_qty}})</li>
-</ul>
+<h1>Wheelodex</h1>
+
+<p class="slogan">An Index of Python Wheels</p>
+
+Serving data for {{proj_qty}} projects and {{whl_qty}} wheels
+
+<p><a href="{{url_for('.project_list')}}">Browse Projects</a></p>
+
+<p><a href="{{url_for('.entry_point_groups')}}">Browse Entry Point Groups</a></p>
+
+<fieldset>
+
+<legend>Search Wheels:</legend>
 
 <form action="{{url_for('.search_projects')}}" method="GET">
-    <b>Search for a Project:</b> <input type="text" name="q"/> <input type="submit" value="Search"/>
+    <b>Project Name:</b> <input type="text" name="q"/> <input type="submit" value="Search"/>
 </form>
 
 <form action="{{url_for('.search_modules')}}" method="GET">
-    <b>Search for a Module:</b> <input type="text" name="q"/> <input type="submit" value="Search"/>
+    <b>Python Module:</b> <input type="text" name="q"/> <input type="submit" value="Search"/>
 </form>
 
 <form action="{{url_for('.search_files')}}" method="GET">
-    <b>Search for a File:</b> <input type="text" name="q"/> <input type="submit" value="Search"/>
+    <b>File:</b> <input type="text" name="q"/> <input type="submit" value="Search"/>
 </form>
 
 <form action="{{url_for('.search_commands')}}" method="GET">
-    <b>Search for a Command:</b> <input type="text" name="q"/> <input type="submit" value="Search"/>
+    <b>Command:</b> <input type="text" name="q"/> <input type="submit" value="Search"/>
 </form>
+
+<p>All searches are case-insensitive and support globbing with <code>*</code> and <code>?</code>.</p>
+
+</fieldset>
+
+<p><a href="https://github.com/jwodder/wheelodex">Wheelodex on GitHub</a></p>
 
 {% endblock %}

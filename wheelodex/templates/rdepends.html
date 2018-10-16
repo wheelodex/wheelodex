@@ -13,6 +13,11 @@
 
 <h2>Reverse Dependencies of {{project.display_name|e}}</h2>
 
+{% if rdepends.total == 0 %}
+<p>There are no known projects with a declared dependency on {{project.display_name|e}}.</p>
+{% else %}
+<p>The following projects have a declared dependency on {{project.display_name|e}}:</p>
+
 <ul>
     {% for rd in rdepends.items %}
         <li><a href="{{url_for('.project', project=rd.name)}}">{{rd.display_name|e}}</a> &#x2014; {% if rd.summary != None %}{{rd.summary|e}}{% else %}<span class="no-summary">no summary</span>{% endif %}</li>
@@ -20,5 +25,6 @@
 </ul>
 
 {{render_pagination(rdepends, '.rdepends', project=project.name)}}
+{% endif %}
 
 {% endblock %}

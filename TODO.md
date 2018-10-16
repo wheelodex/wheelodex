@@ -58,8 +58,7 @@ Web Interface
     - Show link to wheelodex's GitHub at the bottom of every page?
     - Add a search box at the top of the page for searching by projects (or
       something else?) ?
-- Main page: Show statistics on wheels registered, wheels analyzed, and
-  projects known (or something like that)
+- Main page: Show how many analyzed wheels there are?
 - Project/wheel data:
     - Show a message if we know there's a newer version but it doesn't have any
       wheels?
@@ -73,6 +72,8 @@ Web Interface
     - Add a dedicated box for Python packages defined by the wheel?
     - Include (at least some) reverse dependencies on the page itself
     - Show human-readable descriptions of the tags in a wheel's filename?
+    - If a dist-info file is empty (not including `{not-,}zip-safe`?), display
+      "[empty]" in place of its contents
 - Entry point groups:
     - Add an option for sorting by quantity?
 - Entry points:
@@ -83,7 +84,6 @@ Web Interface
 - Do something with the keywords table
 - Add a page listing recently analyzed wheels?
 - `project_json`: Add links to `/data` and `/rdepends`?
-- Somewhere document that the searches support `*` and `?`
 - Should `search_commands` do a prefix-matching search for globless input?
 - Should `search_modules` do a prefix-matching search (limited using regexes to
   not match additional `.`) for globless input?

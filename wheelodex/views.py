@@ -39,16 +39,12 @@ def project_view(f):
 @web.route('/index.html')
 def index():
     """ The main page """
-    proj_qty = db.session.query(db.func.count(Project.id.distinct()))\
-                         .join(Version).join(Wheel).scalar()
-    whl_qty = db.session.query(WheelData).count()
-    ### TODO: Don't count entry point groups without entry points:
-    epg_qty = db.session.query(EntryPointGroup).count()
     return render_template(
         'index.html',
-        proj_qty = proj_qty,
-        whl_qty  = whl_qty,
-        epg_qty  = epg_qty,
+        proj_qty = db.session.query(db.func.count(Project.id.distinct()))
+                             .join(Version).join(Wheel).scalar(),
+        whl_qty  = Wheel.query.count(),
+        #data_qty = WheelData.query.count(),
     )
 
 @web.route('/about/')
