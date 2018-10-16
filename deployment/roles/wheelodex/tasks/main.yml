@@ -73,7 +73,7 @@
   register: systemd_cfg
 
 - systemd: daemon_reload=true
-  ###when: system_cfg is changed  # Ansible bug?
+  when: systemd_cfg is changed
 
 - systemd: name=process-wheels.timer  enabled=true
 - systemd: name=register-wheels.timer enabled=true
