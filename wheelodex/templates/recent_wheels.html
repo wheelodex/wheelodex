@@ -1,0 +1,31 @@
+{% from 'macros.j2' import render_pagination %}
+{% extends 'base.html' %}
+
+{% block title %}Wheelodex &#x2014; Recently-Analyzed Wheels{% endblock %}
+
+{% block content %}
+<div class="breadcrumbs">
+    <a href="{{url_for('.index')}}">Wheelodex</a>
+    &#xBB; Recently-Analyzed Wheels
+</div>
+
+<h2>Recently-Analyzed Wheels</h2>
+
+<table border="1">
+    <tr>
+        <th>Project</th>
+        <th>Version</th>
+        <th>Wheel</th>
+        <th>Analyzed</th>
+    </tr>
+    {% for p,v,w,d in recents %}
+        <tr>
+            <td><a href="{{url_for('.project', project=p.name)}}">{{p.display_name|e}}</a></td>
+            <td>{{v.display_name|e}}</td>
+            <td><a href="{{url_for('.wheel_data', project=p.name, wheel=w.filename)}}">{{w.filename|e}}</a></td>
+            <td>{{d.processed.strftime("%Y-%m-%d\xA0%H:%M:%S\xA0%Z")}}</td>
+        </tr>
+    {% endfor %}
+</table>
+
+{% endblock %}

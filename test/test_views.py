@@ -35,6 +35,10 @@ def test_json_api_200(client):
     rv = client.get('/json-api/')
     assert rv.status_code == 200
 
+def test_recent_wheels_200(client):
+    rv = client.get('/recent/')
+    assert rv.status_code == 200
+
 def test_project_list_200(client):
     rv = client.get('/projects/')
     assert rv.status_code == 200

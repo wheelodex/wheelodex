@@ -82,7 +82,6 @@ Web Interface
     - Include project summaries in entry point lists?
 - Provide a download of a database export made periodically with `dump`
 - Do something with the keywords table
-- Add a page listing recently analyzed wheels?
 - `project_json`: Add links to `/data` and `/rdepends`?
 - Should `search_commands` do a prefix-matching search for globless input?
 - Should `search_modules` do a prefix-matching search (limited using regexes to

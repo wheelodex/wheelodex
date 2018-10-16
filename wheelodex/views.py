@@ -59,6 +59,16 @@ def json_api():
     example_wheel = p and p.best_wheel
     return render_template('json_api.html', example_wheel=example_wheel)
 
+@web.route('/recent/')
+def recent_wheels():
+    """ A list of recently-analyzed wheels """
+    qty = current_app.config["WHEELODEX_RECENT_WHEELS_QTY"]
+    recents = db.session.query(Project, Version, Wheel, WheelData)\
+                        .join(Version).join(Wheel).join(WheelData)\
+                        .order_by(WheelData.processed.desc())\
+                        .limit(qty)
+    return render_template('recent_wheels.html', recents=recents)
+
 @web.route('/projects/')
 def project_list():
     """ A list of all projects with wheels """
