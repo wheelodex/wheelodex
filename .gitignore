@@ -13,3 +13,4 @@ dist/
 docs/_build/
 playbook.retry
 venv/
+version.txt
