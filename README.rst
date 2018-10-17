@@ -13,6 +13,9 @@
     :target: https://opensource.org/licenses/MIT
     :alt: MIT License
 
+.. image:: https://img.shields.io/badge/Say%20Thanks-!-1EAEDB.svg
+    :target: https://saythanks.io/to/jwodder
+
 `Site <https://www.wheelodex.org>`_
 | `GitHub <https://github.com/jwodder/wheelodex>`_
 | `Issues <https://github.com/jwodder/wheelodex/issues>`_
@@ -37,3 +40,5 @@ Note that, in order to save disk space, Wheelodex only records data on wheels
 from the latest version of each PyPI project; wheels from older versions are
 periodically purged from the database.  Projects' long descriptions aren't even
 recorded at all.
+
+Suggestions and pull requests are welcome.
