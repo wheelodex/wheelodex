@@ -72,8 +72,6 @@ Web Interface
     - Add a dedicated box for Python packages defined by the wheel?
     - Include (at least some) reverse dependencies on the page itself
     - Show human-readable descriptions of the tags in a wheel's filename?
-    - If a dist-info file is empty (not including `{not-,}zip-safe`?), display
-      "[empty]" in place of its contents
     - Don't list wheels for versions that would be deleted by an immediate call
       to `purge_old_versions()`?
 - Entry point groups:

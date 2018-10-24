@@ -114,116 +114,144 @@ the error message was: <code>{{data['validation_error']['str']|e}}</code></p>
 
 {% if 'metadata' in data['dist_info'] %}
     <h3 class="dist_info_filename" id="metadata">METADATA</h3>
-    <div class="dist_info_file metadata">
-        {% set metadata = data['dist_info']['metadata'] %}
-        <table class="keyvalues">
-            {% for field, value in metadata|flatten_metadata %}
-                <tr>
-                    <td class="key">{{field|e}}:</td>
-                    <td class="value">{{value|e}}</td>
-                </tr>
-            {% endfor %}
-        </table>
-        {% if metadata.get('description') != None %}
-            <div class="body">[Description omitted; length: {{metadata["description"]["length"]}} characters{% if not data["derived"]["readme_renders"] %}; fails to render{% endif %}]</div>
-        {% else %}
-            <div class="body">[No description]</div>
-        {% endif %}
-    </div>
+    {% set metadata = data['dist_info']['metadata'] %}
+    {% if metadata %}
+        <div class="dist_info_file metadata">
+            <table class="keyvalues">
+                {% for field, value in metadata|flatten_metadata %}
+                    <tr>
+                        <td class="key">{{field|e}}:</td>
+                        <td class="value">{{value|e}}</td>
+                    </tr>
+                {% endfor %}
+            </table>
+            {% if metadata.get('description') != None %}
+                <div class="body">[Description omitted; length: {{metadata["description"]["length"]}} characters{% if not data["derived"]["readme_renders"] %}; fails to render{% endif %}]</div>
+            {% else %}
+                <div class="body">[No description]</div>
+            {% endif %}
+        </div>
+    {% else %}
+        <div class="empty-file">[empty]</div>
+    {% endif %}
 {% endif %}
 
 {% if 'wheel' in data['dist_info'] %}
     <h3 class="dist_info_filename" id="wheel">WHEEL</h3>
-    <div class="dist_info_file">
-        {% set wheelinfo = data['dist_info']['wheel'] %}
-        <table class="keyvalues">
-            {% for field, value in wheelinfo|flatten_wheel_info %}
-                <tr>
-                    <td class="key">{{field|e}}:</td>
-                    <td class="value">{{value|e}}</td>
-                </tr>
-            {% endfor %}
-        </table>
-        {% if 'BODY' in wheelinfo %}
-            <div class="body">{{wheelinfo['BODY']|e}}</div>
-        {% endif %}
-    </div>
+    {% set wheelinfo = data['dist_info']['wheel'] %}
+    {% if wheelinfo %}
+        <div class="dist_info_file">
+            <table class="keyvalues">
+                {% for field, value in wheelinfo|flatten_wheel_info %}
+                    <tr>
+                        <td class="key">{{field|e}}:</td>
+                        <td class="value">{{value|e}}</td>
+                    </tr>
+                {% endfor %}
+            </table>
+            {% if 'BODY' in wheelinfo %}
+                <div class="body">{{wheelinfo['BODY']|e}}</div>
+            {% endif %}
+        </div>
+    {% else %}
+        <div class="empty-file">[empty]</div>
+    {% endif %}
 {% endif %}
 
 {% if 'record' in data['dist_info'] %}
     <h3 class="dist_info_filename" id="record">RECORD</h3>
-    <table class="record">
-        <tr>
-            <th>Path</th>
-            <th>Digest</th>
-            <th>Size</th>
-        </tr>
-        {% for entry in data['dist_info']['record'] %}
+    {% if data['dist_info']['record'] %}
+        <table class="record">
             <tr>
-                <td class="path">{{entry['path']|e}}</td>
-                {% if entry['digests'] %}
-                    <td class="digests">
-                        {% set middigest = joiner('<br/>'|safe) %}
-                        {% for alg, value in entry['digests'].items() %}
-                            {{middigest()}}{{alg|e}}={{value|e}}
-                        {% endfor %}
-                    </td>
-                {% else %}
-                    <td class="nil">&#x2014;</td>
-                {% endif %}
-                {% if entry['size'] != None %}
-                    <td class="size">{{entry['size']}}</td>
-                {% else %}
-                    <td class="nil">&#x2014;</td>
-                {% endif %}
+                <th>Path</th>
+                <th>Digest</th>
+                <th>Size</th>
             </tr>
-        {% endfor %}
-    </table>
+            {% for entry in data['dist_info']['record'] %}
+                <tr>
+                    <td class="path">{{entry['path']|e}}</td>
+                    {% if entry['digests'] %}
+                        <td class="digests">
+                            {% set middigest = joiner('<br/>'|safe) %}
+                            {% for alg, value in entry['digests'].items() %}
+                                {{middigest()}}{{alg|e}}={{value|e}}
+                            {% endfor %}
+                        </td>
+                    {% else %}
+                        <td class="nil">&#x2014;</td>
+                    {% endif %}
+                    {% if entry['size'] != None %}
+                        <td class="size">{{entry['size']}}</td>
+                    {% else %}
+                        <td class="nil">&#x2014;</td>
+                    {% endif %}
+                </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <div class="empty-file">[empty]</div>
+    {% endif %}
 {% endif %}
 
 {% if 'top_level' in data['dist_info'] %}
     <h3 class="dist_info_filename" id="top_level">top_level.txt</h3>
-    <div class="dist_info_file">
-        {% for pkg in data["dist_info"]["top_level"] %}
-            <div>{{pkg|e}}</div>
-        {% endfor %}
-    </div>
+    {% if data['dist_info']['top_level'] %}
+        <div class="dist_info_file">
+            {% for pkg in data["dist_info"]["top_level"] %}
+                <div>{{pkg|e}}</div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-file">[empty]</div>
+    {% endif %}
 {% endif %}
 
 {% if 'entry_points' in data['dist_info'] %}
     <h3 class="dist_info_filename" id="entry_points">entry_points.txt</h3>
-    <div class="dist_info_file entry_points">
-        {% for group, eps in data['dist_info']['entry_points'].items()|sort %}
-            <div class="epgroup">
-                <div class="epgroupname">
-                    [<a href="{{url_for('.entry_point', group=group)}}">{{group|e}}</a>]
-                </div>
-                {% for name, ep in eps.items()|sort %}
-                    <div class="ep">
-                        {{name|e}} = {{ep["module"]|e}}{% if ep["attr"] %}:{{ep["attr"]|e}}{% endif %}{% if ep["extras"] %} [{{ep["extras"]|join(",")}}]{% endif %}
+    {% if data['dist_info']['entry_points'] %}
+        <div class="dist_info_file entry_points">
+            {% for group, eps in data['dist_info']['entry_points'].items()|sort %}
+                <div class="epgroup">
+                    <div class="epgroupname">
+                        [<a href="{{url_for('.entry_point', group=group)}}">{{group|e}}</a>]
                     </div>
-                {% endfor %}
-            </div>
-        {% endfor %}
-    </div>
+                    {% for name, ep in eps.items()|sort %}
+                        <div class="ep">
+                            {{name|e}} = {{ep["module"]|e}}{% if ep["attr"] %}:{{ep["attr"]|e}}{% endif %}{% if ep["extras"] %} [{{ep["extras"]|join(",")}}]{% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-file">[empty]</div>
+    {% endif %}
 {% endif %}
 
 {% if 'namespace_packages' in data['dist_info'] %}
     <h3 class="dist_info_filename" id="namespace_packages">namespace_packages.txt</h3>
-    <div class="dist_info_file">
-        {% for pkg in data["dist_info"]["namespace_packages"] %}
-            <div>{{pkg|e}}</div>
-        {% endfor %}
-    </div>
+    {% if data['dist_info']['namespace_packages'] %}
+        <div class="dist_info_file">
+            {% for pkg in data["dist_info"]["namespace_packages"] %}
+                <div>{{pkg|e}}</div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-file">[empty]</div>
+    {% endif %}
 {% endif %}
 
 {% if 'dependency_links' in data['dist_info'] %}
     <h3 class="dist_info_filename" id="dependency_links">dependency_links.txt</h3>
-    <div class="dist_info_file">
-        {% for url in data["dist_info"]["dependency_links"] %}
-            <div>{{url|extlink}}</div>
-        {% endfor %}
-    </div>
+    {% if data['dist_info']['dependency_links'] %}
+        <div class="dist_info_file">
+            {% for url in data["dist_info"]["dependency_links"] %}
+                <div>{{url|extlink}}</div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-file">[empty]</div>
+    {% endif %}
 {% endif %}
 
 {% if 'zip_safe' in data['dist_info'] %}
