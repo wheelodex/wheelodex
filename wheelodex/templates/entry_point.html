@@ -10,6 +10,12 @@
     &#xBB; {{ep_group.name|e}}
 </div>
 
+<div class="search-header">
+    <form action="{{url_for('.search_projects')}}" method="GET">
+        <input type="text" name="q" placeholder="Search Projects"/>
+    </form>
+</div>
+
 <h2>{{ep_group.name|e}}</h2>
 
 {% if ep_group.description %}

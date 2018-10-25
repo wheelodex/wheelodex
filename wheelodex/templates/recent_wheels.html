@@ -9,6 +9,12 @@
     &#xBB; Recently-Analyzed Wheels
 </div>
 
+<div class="search-header">
+    <form action="{{url_for('.search_projects')}}" method="GET">
+        <input type="text" name="q" placeholder="Search Projects"/>
+    </form>
+</div>
+
 <h2>Recently-Analyzed Wheels</h2>
 
 <table border="1">

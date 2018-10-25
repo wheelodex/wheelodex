@@ -56,8 +56,6 @@ Web Interface
 - Make things look good
     - Show wheelodex version at the bottom of every page?
     - Show link to wheelodex's GitHub at the bottom of every page?
-    - Add a search box at the top of the page for searching by projects (or
-      something else?) ?
 - Main page: Show how many analyzed wheels there are?
 - Project/wheel data:
     - Show a message if we know there's a newer version but it doesn't have any

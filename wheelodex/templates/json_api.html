@@ -8,6 +8,12 @@
     &#xBB; JSON API
 </div>
 
+<div class="search-header">
+    <form action="{{url_for('.search_projects')}}" method="GET">
+        <input type="text" name="q" placeholder="Search Projects"/>
+    </form>
+</div>
+
 <p>Wheelodex provides endpoints exposing some of its information as JSON:</p>
 
 <dl>

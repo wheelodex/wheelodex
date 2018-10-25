@@ -9,6 +9,12 @@
     &#xBB; {{project.display_name|e}}
 </div>
 
+<div class="search-header">
+    <form action="{{url_for('.search_projects')}}" method="GET">
+        <input type="text" name="q" placeholder="Search Projects"/>
+    </form>
+</div>
+
 <h1>{{project.display_name|e}}</h1>
 
 <p style="text-align: center">

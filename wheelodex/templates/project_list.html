@@ -9,6 +9,12 @@
     &#xBB; Projects
 </div>
 
+<div class="search-header">
+    <form action="{{url_for('.search_projects')}}" method="GET">
+        <input type="text" name="q" placeholder="Search Projects"/>
+    </form>
+</div>
+
 <h2>Projects</h2>
 
 <ul>

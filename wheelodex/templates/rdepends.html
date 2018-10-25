@@ -11,6 +11,12 @@
     &#xBB; Reverse Dependencies
 </div>
 
+<div class="search-header">
+    <form action="{{url_for('.search_projects')}}" method="GET">
+        <input type="text" name="q" placeholder="Search Projects"/>
+    </form>
+</div>
+
 <h2>Reverse Dependencies of {{project.display_name|e}}</h2>
 
 {% if rdepends.total == 0 %}

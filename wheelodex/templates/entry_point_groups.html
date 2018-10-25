@@ -9,6 +9,12 @@
     &#xBB; Entry Points
 </div>
 
+<div class="search-header">
+    <form action="{{url_for('.search_projects')}}" method="GET">
+        <input type="text" name="q" placeholder="Search Projects"/>
+    </form>
+</div>
+
 <ul>
     {% for name, summary, qty in groups.items %}
         <li><a href="{{url_for('.entry_point', group=name)}}">{{name|e}}</a> ({{qty}}){% if summary %} &#x2014; {{summary|markdown_inline}}{% endif %}</li>
