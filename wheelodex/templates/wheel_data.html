@@ -92,8 +92,8 @@
 {% set data = whl.data.raw_data %}
 
 {% if not data['valid'] %}
-<p>This wheel failed validation with <code>distlib.wheel.Wheel.verify()</code>;
-the error message was: <code>{{data['validation_error']['str']|e}}</code></p>
+<p>This wheel failed validation; the error message was:
+<code>{{data['validation_error']['str']|e}}</code></p>
 {% endif %}
 
 <h2>dist-info</h2>

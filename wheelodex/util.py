@@ -7,6 +7,7 @@ from   flask.json        import dumps
 from   packaging.version import parse
 import requests
 import requests_download
+from   wheel_inspect     import parse_wheel_filename
 from   .                 import __url__, __version__
 
 #: The User-Agent header used for requests to PyPI's JSON API and when
@@ -45,17 +46,6 @@ def reprify(obj, fields):
         type(obj),
         ', '.join('{}={!r}'.format(f, getattr(obj, f)) for f in fields),
     )
-
-# Based on distlib.wheel.FILENAME_RE:
-WHEEL_RGX = re.compile(r'''
-    [^-]+
-    -[^-]+
-    (?:-(?P<buildno>\d+)(?P<buildstr>[^-]*))?
-    -(?P<python>\w+\d+(?:\.\w+\d+)*)
-    -(?P<abi>\w+)
-    -(?P<platform>\w+(?:\.\w+)*)
-    \.whl
-''', re.X)
 
 PYTHON_PREFERENCES = defaultdict(lambda: -1, {
     'py': 4,
@@ -141,26 +131,34 @@ def wheel_sort_key(filename):
     - Platforms: any > manylinux > Linux > Windows > Mac OS X > everything else
     """
 
-    m = WHEEL_RGX.fullmatch(filename)
-    if not m:
+    try:
+        whlname = parse_wheel_filename(filename)
+    except ValueError:
         return (0, filename)
 
-    if m.group('buildno') is not None:
-        build_rank = (int(m.group('buildno')), m.group('buildstr'))
+    if whlname.build is not None:
+        n = re.fullmatch(r'(?P<buildno>\d+)(?P<buildstr>[^-]*)', whlname.build)
+        if not n:
+            return (0, filename)
+        build_rank = (int(n.group('buildno')), n.group('buildstr'))
     else:
         build_rank = (-1, '')
 
     pyver_rank = []
-    for py in m.group('python').split('.'):
+    for py in whlname.python_tags:
         n = re.fullmatch(r'(\w+?)(\d+)', py)
-        assert n
+        if not n:
+            return (0, filename)
         pyver_rank.append((
             PYTHON_PREFERENCES[n.group(1)],
             VersionNoDot(n.group(2)),
         ))
     pyver_rank.sort(reverse=True)
 
-    abi = m.group('abi')
+    ### TODO: distlib expects wheels to have only one ABI tag in their filename
+    ### while wheel_inspect does not.  If the latter turns out to be the
+    ### correct approach, adjust this code to handle multiple tags.
+    abi = whlname.abi_tags[0]
     ### TODO: Should abi3 be given some rank?
     if abi == 'none':
         abi_rank = (1,)
@@ -173,7 +171,7 @@ def wheel_sort_key(filename):
             abi_rank = (0, -1, -1, '')
 
     platform_rank = []
-    for plat in m.group('platform').split('.'):
+    for plat in whlname.platform_tags:
         for rank, rgx in enumerate([
             r'macosx_10_(?P<version>\d+)_(?P<arch>\w+)',
             'macosx',
@@ -198,7 +196,9 @@ def wheel_sort_key(filename):
     platform_rank.sort(reverse=True)
 
     tiebreaker = '{}-{}-{}'.format(
-        m.group('python'), m.group('abi'), m.group('platform'),
+        '.'.join(whlname.python_tags),
+        '.'.join(whlname.abi_tags),
+        '.'.join(whlname.platform_tags),
     )
 
     return (1, pyver_rank, platform_rank, abi_rank, tiebreaker, build_rank)
