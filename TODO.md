@@ -74,6 +74,7 @@ Web Interface
       to `purge_old_versions()`?
 - Entry point groups:
     - Add an option for sorting by quantity?
+    - Add a search box for limiting the list to just those matching a pattern
 - Entry points:
     - Add options for sorting by either project or entry point name, ascending
       or descending
