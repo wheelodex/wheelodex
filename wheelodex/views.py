@@ -143,6 +143,7 @@ def entry_point_groups():
     A list of all entry point groups (excluding those without any entry points)
     """
     per_page = current_app.config["WHEELODEX_ENTRY_POINT_GROUPS_PER_PAGE"]
+    sortby = request.args.get('sortby', '')
     ### TODO: Use preferred wheel (Alternatively, limit to the latest
     ### data-having version of each project):
     # The point of this subquery is to weed out duplicate
@@ -155,13 +156,17 @@ def entry_point_groups():
     groups = db.session.query(
                             EntryPointGroup.name,
                             EntryPointGroup.summary,
-                            db.func.count(),
+                            db.func.count().label('qty'),
                         )\
                        .join(subq, EntryPointGroup.id == subq.c.group_id)\
-                       .group_by(EntryPointGroup)\
-                       .order_by(EntryPointGroup.name.asc())\
-                       .paginate(per_page=per_page)
-    return render_template('entry_point_groups.html', groups=groups)
+                       .group_by(EntryPointGroup)
+    if sortby == 'qty':
+        groups = groups.order_by(db.desc('qty'))
+    else:
+        groups = groups.order_by(EntryPointGroup.name.asc())
+    groups = groups.paginate(per_page=per_page)
+    return render_template('entry_point_groups.html', groups=groups,
+                           sortby=sortby)
 
 @web.route('/entry-points/<group>/')
 def entry_point(group):

@@ -73,7 +73,6 @@ Web Interface
     - Don't list wheels for versions that would be deleted by an immediate call
       to `purge_old_versions()`?
 - Entry point groups:
-    - Add an option for sorting by quantity?
     - Add a search box for limiting the list to just those matching a pattern
 - Entry points:
     - Add options for sorting by either project or entry point name, ascending
@@ -81,6 +80,7 @@ Web Interface
     - Include project summaries in entry point lists?
 - Provide a download of a database export made periodically with `dump`
 - Do something with the keywords table
+    - Make `(keywords.wheel_data_id, keywords.name)` unique
 - `project_json`: Add links to `/data` and `/rdepends`?
 - Should `search_commands` do a prefix-matching search for globless input?
 - Should `search_modules` do a prefix-matching search (limited using regexes to

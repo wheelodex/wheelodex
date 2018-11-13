@@ -3,6 +3,7 @@ In Development
 - "Recently-Analyzed Wheels" page: Use `%z` instead of `%Z` for timestamp
   timezones
 - Added descriptions for the `pygments.*` and `pytest11` entry point groups
+- Support listing entry point groups by entry point quantity
 
 v2018.10.28
 -----------

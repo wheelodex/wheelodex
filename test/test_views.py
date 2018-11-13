@@ -63,6 +63,11 @@ def test_entry_point_groups_200(client):
     assert rv.status_code == 200
     assert 'console_scripts' in rv.get_data(True)
 
+def test_entry_point_groups_sortby_qty_200(client):
+    rv = client.get('/entry-points/', query_string={"sortby": "qty"})
+    assert rv.status_code == 200
+    assert 'console_scripts' in rv.get_data(True)
+
 def test_entry_point_200(client):
     rv = client.get('/entry-points/console_scripts/')
     assert rv.status_code == 200

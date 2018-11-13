@@ -15,12 +15,29 @@
     </form>
 </div>
 
+Order by:
+    {% if sortby == '' or sortby == 'name' %}
+    <strong>Name</strong>
+    {% else %}
+    <a href="{{url_for('.entry_point_groups')}}">Name</a>
+    {% endif %}
+|
+    {% if sortby == 'qty' %}
+    <strong>Entry Points</strong>
+    {% else %}
+    <a href="{{url_for('.entry_point_groups', sortby='qty')}}">Entry Points</a>
+    {% endif %}
+
 <ul>
     {% for name, summary, qty in groups.items %}
         <li><a href="{{url_for('.entry_point', group=name)}}">{{name|e}}</a> ({{qty}}){% if summary %} &#x2014; {{summary|markdown_inline}}{% endif %}</li>
     {% endfor %}
 </ul>
 
-{{render_pagination(groups, '.entry_point_groups')}}
+{% if sortby %}
+    {{render_pagination(groups, '.entry_point_groups', sortby=sortby)}}
+{% else %}
+    {{render_pagination(groups, '.entry_point_groups')}}
+{% endif %}
 
 {% endblock %}
