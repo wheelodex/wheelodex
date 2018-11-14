@@ -1,5 +1,5 @@
-In Development
---------------
+v2018.11.14
+-----------
 - "Recently-Analyzed Wheels" page: Use `%z` instead of `%Z` for timestamp
   timezones
 - Added descriptions for the `pygments.*` and `pytest11` entry point groups
