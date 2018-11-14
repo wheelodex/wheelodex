@@ -36,13 +36,13 @@
 - name: Enable ufw
   ufw: state=enabled
 
-- name: Forbid root login over SSH
-  lineinfile:
-    dest: /etc/ssh/sshd_config
-    regexp: '^#?PermitRootLogin\s+'
-    line: 'PermitRootLogin no'
-  notify:
-    - Restart SSHd
+#- name: Forbid root login over SSH
+#  lineinfile:
+#    dest: /etc/ssh/sshd_config
+#    regexp: '^#?PermitRootLogin\s+'
+#    line: 'PermitRootLogin no'
+#  notify:
+#    - Restart SSHd
 
 - name: Disable password login over SSH
   lineinfile:
