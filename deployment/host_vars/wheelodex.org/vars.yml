@@ -1,9 +1,8 @@
 ---
 ansible_host: 174.138.60.140
-# We have to use root instead of a dedicated sudo user because, with the
-# latter config, Ansible can't properly become the postgres user and connect to
-# PostgreSQL:
-ansible_user: root
+ansible_user: admin
+# DO NOT set `ansible_become_user: root`.  Ansible seems to set that
+# implicitly, and setting it explicitly messes with tasks with `become_user:`.
 
 config_options:
     WHEELODEX_MAX_WHEEL_SIZE: 2097152  # 2 MiB

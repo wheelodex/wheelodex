@@ -48,6 +48,8 @@ Setup Steps that this Playbook does not Cover
 - Provisioning the host
 - Assigning the host's DNS
 - Setting up SSH access to host
+- Creating a dedicated non-root user with sudo privileges and SSH access to use
+  for server administration
 - Setting the host's locale system-wide to something with UTF-8 encoding (This
   should be redundant in this day & age, and doing it properly involves a
   reboot, so we'd want to keep that out of the playbook)
