@@ -64,7 +64,9 @@ def recent_wheels():
     """ A list of recently-analyzed wheels """
     qty = current_app.config["WHEELODEX_RECENT_WHEELS_QTY"]
     recents = db.session.query(Project, Version, Wheel, WheelData)\
-                        .join(Version).join(Wheel).join(WheelData)\
+                        .join(Version, Project.versions)\
+                        .join(Wheel, Version.wheels)\
+                        .join(WheelData, Wheel.data)\
                         .order_by(WheelData.processed.desc())\
                         .limit(qty)
     return render_template('recent_wheels.html', recents=recents)
@@ -240,7 +242,10 @@ def search_files():
         per_page = current_app.config["WHEELODEX_SEARCH_RESULTS_PER_PAGE"]
         ### TODO: Limit to the latest data-having version of each project?
         q = db.session.query(Project, Wheel, File)\
-                      .join(Version).join(Wheel).join(WheelData).join(File)
+                      .join(Version, Project.versions)\
+                      .join(Wheel, Version.wheels)\
+                      .join(WheelData, Wheel.data)\
+                      .join(File, WheelData.files)
         if '*' in search_term or '?' in search_term:
             q = q.filter(File.path.ilike(glob2like(search_term), escape='\\'))
         else:
@@ -268,7 +273,10 @@ def search_modules():
         per_page = current_app.config["WHEELODEX_SEARCH_RESULTS_PER_PAGE"]
         ### TODO: Limit to the latest data-having version of each project?
         q = db.session.query(Project, Wheel, Module)\
-                      .join(Version).join(Wheel).join(WheelData).join(Module)
+                      .join(Version, Project.versions)\
+                      .join(Wheel, Version.wheels)\
+                      .join(WheelData, Wheel.data)\
+                      .join(Module, WheelData.modules)
         if '*' in search_term or '?' in search_term:
             q = q.filter(Module.name.ilike(glob2like(search_term), escape='\\'))
         else:
@@ -294,8 +302,10 @@ def search_commands():
         ).first_or_404()
         ### TODO: Limit to the latest data-having version of each project?
         q = db.session.query(Project, Wheel, EntryPoint)\
-                      .join(Version).join(Wheel).join(WheelData)\
-                      .join(EntryPoint)\
+                      .join(Version, Project.versions)\
+                      .join(Wheel, Version.wheels)\
+                      .join(WheelData, Wheel.data)\
+                      .join(EntryPoint, WheelData.entry_points)\
                       .filter(EntryPoint.group_id == group.id)
         if '*' in search_term or '?' in search_term:
             q = q.filter(

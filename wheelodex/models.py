@@ -111,7 +111,7 @@ class Project(Base):
         wheels are ignored.
         """
         q = db.session.query(Version.display_name, Wheel, WheelData.id.isnot(None))\
-                      .join(Wheel)\
+                      .join(Wheel, Version.wheels)\
                       .outerjoin(WheelData)\
                       .filter(Version.project == self)\
                       .order_by(Version.ordering.desc())\
