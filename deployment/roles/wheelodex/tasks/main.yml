@@ -51,6 +51,22 @@
     mode: 0755
     owner: "{{user}}"
 
+- name: Create log directory
+  file:
+    path: "{{wheelodex_log_path}}"
+    state: directory
+    owner: "{{user}}"
+    mode: 0755
+
+- name: Configure log rotation
+  template:
+    src: logrotate
+    dest: /etc/logrotate.d/wheelodex
+    # The logrotate manpage doesn't mention that you need to chown root, but
+    # it's very necessary.
+    owner: root
+    group: root
+
 - include: new_code.yml
   when: wheel_src is defined
 

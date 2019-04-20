@@ -9,6 +9,8 @@ venv_path: "/home/{{user}}/virtualenv"
 config_file: "/home/{{user}}/config.py"
 wsgi_file: "/home/{{user}}/wsgi.py"
 
+wheelodex_log_path: "/home/{{user}}/logs"
+
 upgrade_pip: false
 purge_venv: false
 

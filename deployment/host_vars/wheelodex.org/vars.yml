@@ -6,6 +6,7 @@ ansible_user: admin
 
 config_options:
     WHEELODEX_MAX_WHEEL_SIZE: 2097152  # 2 MiB
+    WHEELODEX_STATS_LOG_DIR: "{{wheelodex_log_path}}"
 
 server_names:
     - www.wheelodex.org

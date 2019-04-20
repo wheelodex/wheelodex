@@ -1,0 +1,10 @@
+{{wheelodex_log_path}}/*.log {
+    compress
+    create 0644 {{user}} {{user}}
+    daily
+    delaycompress
+    minsize 512k
+    missingok
+    notifempty
+    rotate 5
+}

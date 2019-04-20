@@ -25,6 +25,7 @@ Variables
 | `upgrade_pip` | `false` | Whether to upgrade the dedicated user's versions of `pip` and `virtualenv` |
 | `config_file` | `/home/{{user}}/config.py` | Path at which to place Wheelodex's config file |
 | `wsgi_file` | `/home/{{user}}/wsgi.py` | Path at which to place Wheelodex's WSGI file |
+| `wheelodex_log_path` | `/home/{{user}}/logs` | Directory in which to store Wheelodex's statistics logs |
 | `wheel_src` | — | Path to the `wheelodex` wheel on the local machine; may be left undefined to skip installation |
 | `extras` | `'[postgres]'` | Extras of the wheel to install |
 | `config_options` | `{}` | A `dict` of Wheelodex configuration values |
