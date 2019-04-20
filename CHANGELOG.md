@@ -1,5 +1,5 @@
-In Development
---------------
+v2019.4.20
+----------
 - Use version 1.2.0 of `wheel-inspect`
 - Gave the scheduled commands provisions for logging statistics to files
 
