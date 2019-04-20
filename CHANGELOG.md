@@ -1,6 +1,7 @@
 In Development
 --------------
 - Use version 1.2.0 of `wheel-inspect`
+- Gave the scheduled commands provisions for logging statistics to files
 
 v2018.11.14
 -----------

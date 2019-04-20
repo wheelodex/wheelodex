@@ -8,7 +8,10 @@ connection to be in effect.
 from   contextlib      import contextmanager
 from   datetime        import datetime, timezone
 import logging
+from   os.path         import join
+from   time            import time
 from   typing          import Optional, Union
+from   flask           import current_app
 from   packaging.utils import canonicalize_name as normalize, \
                                 canonicalize_version as normversion
 import pyrfc3339
@@ -212,6 +215,8 @@ def purge_old_versions():
     all other versions.
     """
     log.info('BEGIN purge_old_versions')
+    start_time = time()
+    purged = 0
     for p in Project.query.join(Version)\
                           .group_by(Project)\
                           .having(db.func.count(Version.id) > 1):
@@ -241,6 +246,16 @@ def purge_old_versions():
                 log.info('Project %s: deleting version %s',
                          p.display_name, v.display_name)
                 db.session.delete(v)
+                purged += 1
+    end_time = time()
+    log_dir = current_app.config.get("WHEELODEX_STATS_LOG_DIR")
+    if log_dir is not None:
+        with open(join(log_dir, 'purge_old_versions.log'), 'a') as fp:
+            print(
+                'purge_old_versions|start={}|end={}|purged={}'
+                .format(start_time, end_time, purged),
+                file=fp,
+            )
     log.info('END purge_old_versions')
 
 def add_orphan_wheel(version: Version, filename, uploaded_epoch):

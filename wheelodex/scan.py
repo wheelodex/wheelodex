@@ -1,6 +1,9 @@
 """ Functions for scanning PyPI for wheels to register """
 
 import logging
+from   os.path   import join
+from   time      import time
+from   flask     import current_app
 from   .dbutil   import add_orphan_wheel, add_project, add_version, add_wheel, \
                             remove_project, remove_version, remove_wheel, \
                             set_serial
@@ -28,6 +31,8 @@ def scan_pypi():
         after a call to `scan_changelog()`.
     """
     log.info('BEGIN scan_pypi')
+    start_time = time()
+    total_queued = 0
     pypi = PyPIAPI()
     serial = pypi.changelog_last_serial()
     log.info('changlog_last_serial() = %d', serial)
@@ -51,6 +56,7 @@ def scan_pypi():
             else:
                 log.debug('Asset %s: adding', asset["filename"])
                 qty_queued += 1
+                total_queued += 1
                 add_wheel(
                     version  = vobj,
                     filename = asset["filename"],
@@ -61,6 +67,15 @@ def scan_pypi():
                     uploaded = str(asset["upload_time"]),
                 )
         log.info('%s: %d wheels added', pkg, qty_queued)
+    end_time = time()
+    log_dir = current_app.config.get("WHEELODEX_STATS_LOG_DIR")
+    if log_dir is not None:
+        with open(join(log_dir, 'scan_pypi.log'), 'a') as fp:
+            ### TODO: Also log projects and versions added?
+            ### TODO: Distinguish between actually new wheels and wheels that
+            ### were already in the system?
+            print('scan_pypi|start={}|end={}|wheels_added={}'
+                  .format(start_time, end_time, total_queued), file=fp)
     log.info('END scan_pypi')
 
 def scan_changelog(since):
@@ -74,7 +89,17 @@ def scan_changelog(since):
     connection to be in effect.
     """
     log.info('BEGIN scan_changelog(%d)', since)
+    start_time = time()
     pypi = PyPIAPI()
+    ### TODO: Distinguish between objects that are actually being added/removed
+    ### and those that were already present/absent from the system?
+    wheels_added = 0
+    orphans_added = 0
+    wheels_removed = 0
+    projects_added = 0
+    projects_removed = 0
+    versions_added = 0
+    versions_removed = 0
     for proj, rel, ts, action, serial in pypi.changelog_since_serial(since):
         actwords = action.split()
 
@@ -116,36 +141,56 @@ def scan_changelog(since):
                     sha256   = data["digests"].get("sha256").lower(),
                     uploaded = str(data["upload_time"]),
                 )
+                wheels_added += 1
             else:
                 log.info('Asset %s not found in JSON API; will check later',
                          filename)
                 add_orphan_wheel(v, filename, ts)
+                orphans_added += 1
 
         elif actwords[:2] == ['remove', 'file'] and len(actwords) == 3 and \
                 actwords[2].endswith('.whl'):
             log.info('Event %d: wheel %s removed', serial, actwords[2])
             remove_wheel(actwords[2])
+            wheels_removed += 1
 
         elif action == 'create':
             log.info('Event %d: project %r created', serial, proj)
             add_project(proj)
+            projects_added += 1
 
         elif action == 'remove project':
             log.info('Event %d: project %r removed', serial, proj)
             remove_project(proj)
+            projects_removed += 1
 
         elif action == 'new release':
             log.info('Event %d: version %r of project %r released', serial,
                      rel, proj)
             add_version(proj, rel)
+            versions_added += 1
 
         elif action == 'remove release':
             log.info('Event %d: version %r of project %r removed', serial,
                      rel, proj)
             remove_version(proj, rel)
+            versions_removed += 1
 
         else:
             log.debug('Event %d: %r: ignoring', serial, action)
 
         set_serial(serial)
+
+    end_time = time()
+    log_dir = current_app.config.get("WHEELODEX_STATS_LOG_DIR")
+    if log_dir is not None:
+        with open(join(log_dir, 'scan_changelog.log'), 'a') as fp:
+            print(
+                'scan_changelog|start={}|end={}|projects=+{},-{}'
+                '|versions=+{},-{}|wheels=+{},-{}|orphans={}'
+                .format(start_time, end_time, projects_added, projects_removed,
+                        versions_added, versions_removed, wheels_added,
+                        wheels_removed, orphans_added),
+                file=fp,
+            )
     log.info('END scan_changelog')

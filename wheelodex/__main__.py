@@ -2,6 +2,8 @@ from   configparser  import ConfigParser
 from   datetime      import datetime, timedelta, timezone
 import json
 import logging
+from   os.path       import join
+from   time          import time
 import click
 from   flask         import current_app
 from   flask.cli     import FlaskGroup
@@ -166,6 +168,9 @@ def process_orphan_wheels():
     database.
     """
     log.info('BEGIN process_orphan_wheels')
+    start_time = time()
+    unorphaned = 0
+    remaining = 0
     pypi = PyPIAPI()
     max_age = current_app.config["WHEELODEX_MAX_ORPHAN_AGE_SECONDS"]
     with dbcontext():
@@ -187,13 +192,26 @@ def process_orphan_wheels():
                     uploaded = str(data["upload_time"]),
                 )
                 db.session.delete(orphan)
+                unorphaned += 1
             else:
                 log.info('Wheel %s: data not found', orphan.filename)
+                remaining += 1
         expired = OrphanWheel.query.filter(
             OrphanWheel.uploaded
                 < datetime.now(timezone.utc) - timedelta(seconds=max_age)
         ).delete()
         log.info('%d orphan wheels expired', expired)
+    end_time = time()
+    log_dir = current_app.config.get("WHEELODEX_STATS_LOG_DIR")
+    if log_dir is not None:
+        with open(join(log_dir, 'process_orphan_wheels.log'), 'a') as fp:
+            print(
+                'process_orphan_wheels|start={}|end={}|unorphaned={}'
+                '|expired={}|remain={}'
+                .format(start_time, end_time, unorphaned, expired,
+                        remaining - expired),
+                file=fp,
+            )
     log.info('END process_orphan_wheels')
 
 @main.command()
