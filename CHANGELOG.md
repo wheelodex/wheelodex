@@ -1,3 +1,7 @@
+In Development
+--------------
+- Use version 1.2.0 of `wheel-inspect`
+
 v2018.11.14
 -----------
 - "Recently-Analyzed Wheels" page: Use `%z` instead of `%Z` for timestamp

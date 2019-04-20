@@ -96,11 +96,11 @@ Web Interface
     - search by namespace package?
 
 - Add pages of various statistics:
-   - wheel generators
-   - keywords
-   - Project URL labels
-   - description content types?
-   - license files?
-   - metadata versions?
-   - "Platform" values
-   - projects by number of reverse dependencies?
+    - wheel generators
+    - keywords
+    - Project URL labels
+    - description content types?
+    - license files?
+    - metadata versions?
+    - "Platform" values
+    - projects by number of reverse dependencies?
