@@ -1,5 +1,6 @@
 In Development
 --------------
+- Fix a typo in the "Down for Maintenance" message
 - Fix a bug in handling of "orphan" wheels
 
 v2019.4.20

@@ -544,8 +544,10 @@ def test_add_orphan_wheel():
     assert len(orphans) == 1
     assert orphans[0].version == v1
     assert orphans[0].filename == 'FooBar-1.0-py3-none-any.whl'
-    # Timestamps returned from a SQLite database are naïve:
-    assert orphans[0].uploaded == datetime(2018, 9, 26, 15, 12, 54)
+    # Timestamps returned from a SQLite database are naïve in CPython but aware
+    # in PyPy:
+    assert orphans[0].uploaded.replace(tzinfo=None) \
+        == datetime(2018, 9, 26, 15, 12, 54)
     assert orphans[0].project == p
 
 def test_add_duplicate_orphan_wheel():
@@ -558,8 +560,10 @@ def test_add_duplicate_orphan_wheel():
     assert len(orphans) == 1
     assert orphans[0].version == v1
     assert orphans[0].filename == 'FooBar-1.0-py3-none-any.whl'
-    # Timestamps returned from a SQLite database are naïve:
-    assert orphans[0].uploaded == datetime(2019, 4, 21, 17, 44, 11)
+    # Timestamps returned from a SQLite database are naïve in CPython but aware
+    # in PyPy:
+    assert orphans[0].uploaded.replace(tzinfo=None) \
+        == datetime(2019, 4, 21, 17, 44, 11)
     assert orphans[0].project == p
 
 ### TODO: TO TEST:
