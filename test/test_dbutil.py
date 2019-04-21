@@ -1,7 +1,9 @@
+from   datetime         import datetime
 import pytest
 from   wheelodex.app    import create_app
-from   wheelodex.models import Project, Version, Wheel, db
+from   wheelodex.models import OrphanWheel, Project, Version, Wheel, db
 from   wheelodex.dbutil import (
+    add_orphan_wheel,
     add_project, add_version, add_wheel,
     get_project, get_version,
     iterqueue,
@@ -532,6 +534,33 @@ def test_versions_wheels_grid():
         ('2.0', [(whl2, False)]),
         ('1.0', [(whl1, True), (whl1b, False)]),
     ]
+
+def test_add_orphan_wheel():
+    assert OrphanWheel.query.all() == []
+    p = add_project('FooBar')
+    v1 = add_version(p, '1.0')
+    add_orphan_wheel(v1, 'FooBar-1.0-py3-none-any.whl', 1537974774)
+    orphans = OrphanWheel.query.all()
+    assert len(orphans) == 1
+    assert orphans[0].version == v1
+    assert orphans[0].filename == 'FooBar-1.0-py3-none-any.whl'
+    # Timestamps returned from a SQLite database are naïve:
+    assert orphans[0].uploaded == datetime(2018, 9, 26, 15, 12, 54)
+    assert orphans[0].project == p
+
+def test_add_duplicate_orphan_wheel():
+    assert OrphanWheel.query.all() == []
+    p = add_project('FooBar')
+    v1 = add_version(p, '1.0')
+    add_orphan_wheel(v1, 'FooBar-1.0-py3-none-any.whl', 1537974774)
+    add_orphan_wheel(v1, 'FooBar-1.0-py3-none-any.whl', 1555868651)
+    orphans = OrphanWheel.query.all()
+    assert len(orphans) == 1
+    assert orphans[0].version == v1
+    assert orphans[0].filename == 'FooBar-1.0-py3-none-any.whl'
+    # Timestamps returned from a SQLite database are naïve:
+    assert orphans[0].uploaded == datetime(2019, 4, 21, 17, 44, 11)
+    assert orphans[0].project == p
 
 ### TODO: TO TEST:
 # Adding WheelData with dependencies, entry points, etc.

@@ -1,3 +1,7 @@
+In Development
+--------------
+- Fix a bug in handling of "orphan" wheels
+
 v2019.4.20
 ----------
 - Use version 1.2.0 of `wheel-inspect`

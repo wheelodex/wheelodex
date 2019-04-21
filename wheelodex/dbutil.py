@@ -266,7 +266,8 @@ def add_orphan_wheel(version: Version, filename, uploaded_epoch):
     ``uploaded`` timestamp and do nothing else.
     """
     uploaded = datetime.fromtimestamp(uploaded_epoch, timezone.utc)
-    whl = OrphanWheel.query.filter(Wheel.filename == filename).one_or_none()
+    whl = OrphanWheel.query.filter(OrphanWheel.filename == filename)\
+                           .one_or_none()
     if whl is None:
         whl = OrphanWheel(
             version  = version,
