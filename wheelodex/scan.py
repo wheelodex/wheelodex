@@ -93,6 +93,8 @@ def scan_changelog(since):
     pypi = PyPIAPI()
     ### TODO: Distinguish between objects that are actually being added/removed
     ### and those that were already present/absent from the system?
+    ### TODO: Don't count objects (including orphan wheels) added that are then
+    ### removed by the end of the run?
     wheels_added = 0
     orphans_added = 0
     wheels_removed = 0

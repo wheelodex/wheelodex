@@ -1,3 +1,7 @@
+In Development
+--------------
+- Use version 1.3.0 of `wheel-inspect`
+
 v2019.4.21
 ----------
 - Fix a typo in the "Down for Maintenance" message

@@ -4,6 +4,8 @@
 - Try to make `wheel_sort_key()` both more efficient and more comprehensive
 - Should the code just assume that all "uploaded" timestamps in the JSON API
   are in UTC and convert them to aware `datetime`s?
+    - Be careful when displaying aware `datetime`s returned from the database;
+      PostgreSQL always returns aware timestamps in the local timezone.
 - Come up with a better way of logging processing errors (e.g., so that people
   actually see them)
 - Add tests for the commands
