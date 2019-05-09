@@ -1,5 +1,5 @@
-In Development
---------------
+v2019.5.9
+---------
 - Use version 1.3.0 of `wheel-inspect`
 
 v2019.4.21
