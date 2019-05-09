@@ -19,6 +19,7 @@
 `Site <https://www.wheelodex.org>`_
 | `GitHub <https://github.com/jwodder/wheelodex>`_
 | `Issues <https://github.com/jwodder/wheelodex/issues>`_
+| `Changelog <https://github.com/jwodder/wheelodex/blob/master/CHANGELOG.md>`_
 
 Packaged projects for the `Python <https://www.python.org>`_ programming
 language are distributed in two main formats: *sdists* (archives of code and
