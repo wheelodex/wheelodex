@@ -445,7 +445,7 @@ class Keyword(Base):
     """ A keyword declared by a wheel """
 
     __tablename__ = 'keywords'
-    #__table_args__ = (S.UniqueConstraint('wheel_data_id', 'name'),)
+    __table_args__ = (S.UniqueConstraint('wheel_data_id', 'name'),)
 
     id = S.Column(S.Integer, primary_key=True, nullable=False)  # noqa: B001
     wheel_data_id = S.Column(

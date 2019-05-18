@@ -25,6 +25,8 @@
   wheels registered for a project even though there may be lower-versioned
   releases on PyPI with wheels.  Try to keep this from happening.
 
+- Should package yanking (PEP 592) be honored somehow?
+
 - Commands:
     - Give `load` an option for overwriting any `WheelData` that's already in
       the database?  (This would require first fixing `Wheel.set_data()`; see
@@ -82,7 +84,6 @@ Web Interface
     - Include project summaries in entry point lists?
 - Provide a download of a database export made periodically with `dump`
 - Do something with the keywords table
-    - Make `(keywords.wheel_data_id, keywords.name)` unique
 - `project_json`: Add links to `/data` and `/rdepends`?
 - Should `search_commands` do a prefix-matching search for globless input?
 - Should `search_modules` do a prefix-matching search (limited using regexes to

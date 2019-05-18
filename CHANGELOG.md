@@ -1,3 +1,8 @@
+In Development
+--------------
+- Internal changes:
+    - Added a uniqueness constraint to the keywords table
+
 v2019.5.9
 ---------
 - Use version 1.3.0 of `wheel-inspect`
