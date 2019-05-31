@@ -1,5 +1,6 @@
 In Development
 --------------
+- Highlight alternate rows of RECORD tables
 - Internal changes:
     - Added a uniqueness constraint to the keywords table
 

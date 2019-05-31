@@ -62,6 +62,8 @@ td.nil {
     text-align: center;
 }
 
+.record tr:nth-child(even) {background-color: #FFFF80; }
+
 .record .path {
     font-family: monospace;
     font-size: 80%;
