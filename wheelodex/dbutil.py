@@ -14,11 +14,10 @@ from   typing          import Optional, Union
 from   flask           import current_app
 from   packaging.utils import canonicalize_name as normalize, \
                                 canonicalize_version as normversion
-import pyrfc3339
 from   sqlalchemy.orm  import aliased
 from   .models         import OrphanWheel, Project, PyPISerial, Version, \
                                 Wheel, WheelData, db, dependency_tbl
-from   .util           import version_sort_key, wheel_sort_key
+from   .util           import parse_timestamp, version_sort_key, wheel_sort_key
 
 log = logging.getLogger(__name__)
 
@@ -69,7 +68,7 @@ def add_wheel(version: 'Version', filename, url, size, md5, sha256, uploaded):
             size     = size,
             md5      = md5,
             sha256   = sha256,
-            uploaded = uploaded,
+            uploaded = parse_timestamp(uploaded),
         )
         db.session.add(whl)
         for i,w in enumerate(
@@ -92,7 +91,7 @@ def add_wheel_from_json(about: dict):
     whl = add_wheel(version, **about["pypi"])
     if "data" in about and whl.data is None:
         whl.set_data(about["data"])
-        whl.data.processed = pyrfc3339.parse(about["wheelodex"]["processed"])
+        whl.data.processed = parse_timestamp(about["wheelodex"]["processed"])
         whl.data.wheel_inspect_version \
             = about["wheelodex"]["wheel_inspect_version"]
 

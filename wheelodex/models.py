@@ -174,7 +174,7 @@ class Wheel(Base):
     size     = S.Column(S.Integer, nullable=False)
     md5      = S.Column(S.Unicode(32), nullable=True)
     sha256   = S.Column(S.Unicode(64), nullable=True)
-    uploaded = S.Column(S.Unicode(32), nullable=False)
+    uploaded = S.Column(S.DateTime(timezone=True), nullable=False)
     #: The index of this wheel when all wheels for the version are sorted by
     #: applying `wheel_sort_key()` to their filenames.  This column is set
     #: every time a new wheel is added to the version with `add_wheel()`.
@@ -225,7 +225,7 @@ class Wheel(Base):
                 "size": self.size,
                 "md5": self.md5,
                 "sha256": self.sha256,
-                "uploaded": self.uploaded,
+                "uploaded": self.uploaded.isoformat(),
             },
         }
         if self.data is not None:

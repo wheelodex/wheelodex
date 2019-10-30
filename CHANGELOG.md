@@ -3,6 +3,9 @@ In Development
 - Highlight alternate rows of RECORD tables
 - Internal changes:
     - Added a uniqueness constraint to the keywords table
+    - Convert `wheels.uploaded` to a timestamp type
+    - Use the JSON API's new `"upload_time_iso_8601"` field instead of
+      `"upload_time"`
 - Support Python 3.8
 
 v2019.5.9

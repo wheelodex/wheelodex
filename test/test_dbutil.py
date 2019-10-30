@@ -10,6 +10,7 @@ from   wheelodex.dbutil import (
     purge_old_versions,
     remove_project, remove_version, remove_wheel,
 )
+from   wheelodex.util   import parse_timestamp
 
 @pytest.fixture(scope='session')
 def tmpdb_inited():
@@ -38,7 +39,7 @@ FOOBAR_1_WHEEL = {
     "size":     65535,
     "md5":      '1234567890abcdef1234567890abcdef',
     "sha256":   '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
-    "uploaded": '2018-09-26T15:12:54',
+    "uploaded": '2018-09-26T15:12:54.123456Z',
 }
 
 FOOBAR_1_DATA = {
@@ -59,7 +60,7 @@ FOOBAR_1_WHEEL2 = {
     "size":     65500,
     "md5":      '1234567890abcdef1234567890abcdef',
     "sha256":   '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
-    "uploaded": '2018-10-03T11:27:17',
+    "uploaded": '2018-10-03T11:27:17.234567Z',
 }
 
 FOOBAR_2_WHEEL = {
@@ -68,7 +69,7 @@ FOOBAR_2_WHEEL = {
     "size":     69105,
     "md5":      '1234567890abcdef1234567890abcdef',
     "sha256":   '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
-    "uploaded": '2018-09-26T15:14:33',
+    "uploaded": '2018-09-26T15:14:33.345678Z',
 }
 
 FOOBAR_2_DATA = {
@@ -89,7 +90,7 @@ QUUX_1_5_WHEEL = {
     "size":     2048,
     "md5":      '1234567890abcdef1234567890abcdef',
     "sha256":   '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
-    "uploaded": '2018-09-27T11:29:39',
+    "uploaded": '2018-09-27T11:29:39.456789Z',
 }
 
 def test_add_wheel():
@@ -123,7 +124,7 @@ def test_add_wheel_extant():
         size     = 69105,
         md5      = '1234567890abcdef1234567890abcdef',
         sha256   = '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
-        uploaded = '2018-09-26T15:14:33',
+        uploaded = '2018-09-26T15:14:33.987654Z',
     )
     whl, = Wheel.query.all()
     assert v1.wheels == [whl1]
@@ -131,7 +132,7 @@ def test_add_wheel_extant():
     assert whl.size == FOOBAR_1_WHEEL["size"]
     assert whl.md5 == FOOBAR_1_WHEEL["md5"]
     assert whl.sha256 == FOOBAR_1_WHEEL["sha256"]
-    assert whl.uploaded == FOOBAR_1_WHEEL["uploaded"]
+    assert whl.uploaded == parse_timestamp(FOOBAR_1_WHEEL["uploaded"])
 
 def test_remove_wheel():
     assert Wheel.query.all() == []

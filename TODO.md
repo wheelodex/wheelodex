@@ -16,6 +16,7 @@
 - `scan_changelog()`: Don't do anything for release creation events; wait for
   wheels to be uploaded for the release before bothering to create the
   `Version` object?
+- Add tables & pages for reverse Obsoletes-Dist and Provides-Dist dependencies
 
 - There are several database queries (marked with "TODO: Use preferred wheel")
   that need to be amended to only return results for one wheel (the preferred

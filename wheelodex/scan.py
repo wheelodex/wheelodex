@@ -64,7 +64,7 @@ def scan_pypi():
                     size     = asset["size"],
                     md5      = asset["digests"]["md5"].lower(),
                     sha256   = asset["digests"]["sha256"].lower(),
-                    uploaded = str(asset["upload_time"]),
+                    uploaded = asset["upload_time_iso_8601"],
                 )
         log.info('%s: %d wheels added', pkg, qty_queued)
     end_time = time()
@@ -141,7 +141,7 @@ def scan_changelog(since):
                     size     = data["size"],
                     md5      = data["digests"].get("md5").lower(),
                     sha256   = data["digests"].get("sha256").lower(),
-                    uploaded = str(data["upload_time"]),
+                    uploaded = data["upload_time_iso_8601"],
                 )
                 wheels_added += 1
             else:

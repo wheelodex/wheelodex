@@ -1,6 +1,7 @@
+from   datetime       import datetime, timezone
 import pytest
 from   wheelodex.util import VersionNoDot, glob2like, latest_version, \
-                                wheel_sort_key
+                                parse_timestamp, wheel_sort_key
 
 @pytest.mark.parametrize('versions,latest', [
     ([], None),
@@ -119,3 +120,28 @@ def test_version_no_dot(lower, higher):
 ])
 def test_glob2like(glob, like):
     assert glob2like(glob) == like
+
+@pytest.mark.parametrize('s,dt', [
+    (
+        '2018-09-26T15:12:54',
+        datetime(2018, 9, 26, 15, 12, 54, tzinfo=timezone.utc),
+    ),
+    (
+        '2018-09-26T15:12:54.123456',
+        datetime(2018, 9, 26, 15, 12, 54, 123456, tzinfo=timezone.utc),
+    ),
+    (
+        '2018-09-26T15:12:54Z',
+        datetime(2018, 9, 26, 15, 12, 54, tzinfo=timezone.utc),
+    ),
+    (
+        '2018-09-26T15:12:54.123456Z',
+        datetime(2018, 9, 26, 15, 12, 54, 123456, tzinfo=timezone.utc),
+    ),
+])
+def test_parse_timestamp(s, dt):
+    parsed = parse_timestamp(s)
+    assert parsed == dt
+    assert parsed.replace(tzinfo=None) == dt.replace(tzinfo=None)
+    # pyRFC3339 uses its own UTC type, so this is false:
+    #assert parsed.tzinfo == dt.tzinfo
