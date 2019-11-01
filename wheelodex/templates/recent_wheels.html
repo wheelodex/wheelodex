@@ -29,7 +29,7 @@
             <td><a href="{{url_for('.project', project=p.name)}}">{{p.display_name|e}}</a></td>
             <td>{{v.display_name|e}}</td>
             <td><a href="{{url_for('.wheel_data', project=p.name, wheel=w.filename)}}">{{w.filename|e}}</a></td>
-            <td>{{d.processed.strftime("%Y-%m-%d\xA0%H:%M:%S\xA0%z")}}</td>
+            <td class="timestamp">{{d.processed.strftime("%Y-%m-%d %H:%M:%S %z")}}</td>
         </tr>
     {% endfor %}
 </table>

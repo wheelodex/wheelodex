@@ -128,3 +128,7 @@ td.nil {
 .empty-file {
     font-style: italic;
 }
+
+.timestamp {
+    white-space: nowrap;
+}

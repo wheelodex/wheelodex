@@ -1,3 +1,7 @@
+In Development
+--------------
+- Prevent line-breaking on hyphens in timestamps
+
 v2019.10.30
 -----------
 - Highlight alternate rows of RECORD tables
