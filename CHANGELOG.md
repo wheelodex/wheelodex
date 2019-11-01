@@ -1,6 +1,9 @@
 In Development
 --------------
 - Prevent line-breaking on hyphens in timestamps
+- Internal changes:
+    - Record the `wheel-inspect` version whenever a wheel processing error
+      occurs
 
 v2019.10.30
 -----------

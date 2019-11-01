@@ -208,6 +208,7 @@ class Wheel(Base):
             errmsg            = errmsg[-65535:],
             timestamp         = datetime.now(timezone.utc),
             wheelodex_version = __version__,
+            wheel_inspect_version = wheel_inspect_version,
         ))
 
     def as_json(self):
@@ -258,6 +259,7 @@ class ProcessingError(Base):
     errmsg    = S.Column(S.Unicode(65535), nullable=False)
     timestamp = S.Column(S.DateTime(timezone=True), nullable=False)
     wheelodex_version = S.Column(S.Unicode(32), nullable=False)
+    wheel_inspect_version = S.Column(S.Unicode(32), nullable=True)
 
 
 #: A mapping between `WheelData` values and the `Project`\ s listed in their
