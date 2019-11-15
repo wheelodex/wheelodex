@@ -4,6 +4,7 @@ In Development
 - Internal changes:
     - Record the `wheel-inspect` version whenever a wheel processing error
       occurs
+    - Greatly speed up `purge_old_versions()`
 
 v2019.10.30
 -----------

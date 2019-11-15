@@ -219,28 +219,24 @@ def purge_old_versions():
     for p in Project.query.join(Version)\
                           .group_by(Project)\
                           .having(db.func.count(Version.id) > 1):
-        latest = p.latest_version
-        log.info('Project %s: keeping latest version: %s',
-                 p.display_name, latest.display_name)
-        latest_wheel = Version.query.with_parent(p)\
-                                    .filter(Version.wheels.any())\
-                                    .order_by(Version.ordering.desc())\
-                                    .first()
-        if latest_wheel is not None:
-            log.info('Project %s: keeping latest version with wheels: %s',
-                     p.display_name, latest_wheel.display_name)
-            latest_data = Version.query.with_parent(p)\
-                                       .filter(Version.wheels.any(
-                                           Wheel.data.has()
-                                       ))\
-                                       .order_by(Version.ordering.desc())\
-                                       .first()
-            if latest_data is not None:
+        latest = latest_wheel = latest_data = None
+        for v, vwheels, vdata in db.session.query(
+            Version,
+            Version.wheels.any(),
+            Version.wheels.any(Wheel.data.has()),
+        ).with_parent(p).order_by(Version.ordering.desc()):
+            if latest is None:
+                log.info('Project %s: keeping latest version: %s',
+                         p.display_name, v.display_name)
+                latest = v
+            if vwheels and latest_wheel is None:
+                log.info('Project %s: keeping latest version with wheels: %s',
+                         p.display_name, v.display_name)
+                latest_wheel = v
+            if vdata and latest_data is None:
                 log.info('Project %s: keeping latest version with data: %s',
-                         p.display_name, latest_wheel.display_name)
-        else:
-            latest_data = None
-        for v in p.versions:
+                         p.display_name, v.display_name)
+                latest_data = v
             if v not in (latest, latest_wheel, latest_data):
                 log.info('Project %s: deleting version %s',
                          p.display_name, v.display_name)
