@@ -155,7 +155,7 @@ def wheel_sort_key(filename):
 
     pyver_rank = []
     for py in whlname.python_tags:
-        n = re.fullmatch(r'(\w+?)(\d+)', py)
+        n = re.fullmatch(r'(\w+?)(\d[\d_]*)', py)
         if not n:
             return (0, filename)
         pyver_rank.append((
