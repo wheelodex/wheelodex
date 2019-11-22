@@ -1,3 +1,8 @@
+In Development
+--------------
+- Properly sort `py_version_nodot` strings containing underscores (e.g.,
+  `3_10`)
+
 v2019.11.14
 -----------
 - Prevent line-breaking on hyphens in timestamps

@@ -77,22 +77,30 @@ class VersionNoDot:
     """
 
     def __init__(self, vstr):
-        self.vstr = vstr
+        components = vstr.split('_')
+        if len(components) > 1:
+            self.vs = tuple(int(c) for c in components)
+        else:
+            self.vs = tuple(int(c) for c in components[0])
 
     def __eq__(self, other):
         if type(self) is type(other):
-            return self.vstr == other.vstr
+            return self.vs == other.vs
         else:
             return NotImplemented
 
     def __le__(self, other):
         if type(self) is type(other):
-            return self.vstr.startswith(other.vstr) or self.vstr < other.vstr
+            return self.vs[:len(other.vs)] == other.vs or self.vs < other.vs
         else:
             return NotImplemented
 
     def __repr__(self):
-        return 'VersionNoDot({!r})'.format(self.vstr)
+        if any(c >= 10 for c in self.vs):
+            s = '_'.join(map(str, self.vs))
+        else:
+            s = ''.join(map(str, self.vs))
+        return 'VersionNoDot({!r})'.format(s)
 
 
 def wheel_sort_key(filename):
