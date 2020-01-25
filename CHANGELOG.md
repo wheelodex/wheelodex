@@ -2,6 +2,7 @@ In Development
 --------------
 - Properly sort `py_version_nodot` strings containing underscores (e.g.,
   `3_10`)
+- Use version 1.4.0 of `wheel-inspect`
 
 v2019.11.14
 -----------
