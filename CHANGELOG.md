@@ -3,6 +3,8 @@ In Development
 - Properly sort `py_version_nodot` strings containing underscores (e.g.,
   `3_10`)
 - Use version 1.4.0 of `wheel-inspect`
+- Internal changes:
+    - Trim whitespace from keywords and delete empty keywords in database
 
 v2019.11.14
 -----------
