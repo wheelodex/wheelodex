@@ -1,25 +1,30 @@
-from   configparser  import ConfigParser
-from   datetime      import datetime, timedelta, timezone
+from   configparser        import ConfigParser
+from   datetime            import datetime, timedelta, timezone
 import json
 import logging
-from   os.path       import join
-from   time          import time
+from   os.path             import join
+from   time                import time
 import click
-from   flask         import current_app
-from   flask.cli     import FlaskGroup
-from   flask_migrate import stamp
-from   pkg_resources import resource_filename
-from   sqlalchemy    import inspect
-from   .             import __version__
-from   .app          import create_app
-from   .models       import EntryPointGroup, OrphanWheel, Wheel, db
-from   .dbutil       import dbcontext, add_wheel, add_wheel_from_json, \
-                                get_serial, purge_old_versions, set_serial
-from   .process      import process_queue
-from   .pypi_api     import PyPIAPI
-from   .scan         import scan_pypi, scan_changelog
+from   flask               import current_app
+from   flask.cli           import FlaskGroup
+from   flask_migrate       import stamp
+from   importlib_resources import as_file, files
+from   sqlalchemy          import inspect
+from   .                   import __version__
+from   .app                import create_app
+from   .models             import EntryPointGroup, OrphanWheel, Wheel, db
+from   .dbutil             import dbcontext, add_wheel, add_wheel_from_json, \
+                                      get_serial, purge_old_versions, set_serial
+from   .process            import process_queue
+from   .pypi_api           import PyPIAPI
+from   .scan               import scan_pypi, scan_changelog
 
 log = logging.getLogger(__name__)
+
+with as_file(files('wheelodex') / 'data' / 'entry_points.ini') as ep_path:
+    # Violating the context manager like this means that wheelodex can't be run
+    # from within a zipfile.
+    ep_path = str(ep_path)
 
 # FlaskGroup causes all commands to be run inside an application context,
 # thereby letting `db` do database operations.  This does require that
@@ -215,11 +220,7 @@ def process_orphan_wheels():
     log.info('END process_orphan_wheels')
 
 @main.command()
-@click.argument(
-    'infile',
-    type    = click.File(),
-    default = resource_filename('wheelodex', 'data/entry_points.ini'),
-)
+@click.argument('infile', type=click.File(), default=ep_path)
 def load_entry_points(infile):
     """
     Load entry point group descriptions from a file.

@@ -1,3 +1,9 @@
+In Development
+--------------
+- Internal changes:
+    - Replace the uses of `pkg_resources` with `importlib-metadata` and
+      `importlib-resources`
+
 v2020.2.14
 ----------
 - Properly sort `py_version_nodot` strings containing underscores (e.g.,
