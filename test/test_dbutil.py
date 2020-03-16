@@ -1,7 +1,6 @@
 from   datetime         import datetime
 import pytest
 from   wheelodex.app    import create_app
-from   wheelodex.models import OrphanWheel, Project, Version, Wheel, db
 from   wheelodex.dbutil import (
     add_orphan_wheel,
     add_project, add_version, add_wheel,
@@ -10,6 +9,7 @@ from   wheelodex.dbutil import (
     purge_old_versions,
     remove_project, remove_version, remove_wheel,
 )
+from   wheelodex.models import OrphanWheel, Project, Version, Wheel, db
 from   wheelodex.util   import parse_timestamp
 
 @pytest.fixture(scope='session')

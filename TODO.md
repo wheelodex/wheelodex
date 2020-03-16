@@ -13,6 +13,8 @@
   wheels to be uploaded for the release before bothering to create the
   `Version` object?
 - Add tables & pages for reverse Obsoletes-Dist and Provides-Dist dependencies
+- Add a reference to `wheel-inspect` and its schema in the description of the
+  JSON API
 
 - There are several database queries (marked with "TODO: Use preferred wheel")
   that need to be amended to only return results for one wheel (the preferred

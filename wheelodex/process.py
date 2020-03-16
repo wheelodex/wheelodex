@@ -9,8 +9,8 @@ import traceback
 from   flask             import current_app
 from   requests_download import download
 from   wheel_inspect     import inspect_wheel
-from   .models           import db
 from   .dbutil           import iterqueue
+from   .models           import db
 from   .util             import USER_AGENT
 
 log = logging.getLogger(__name__)

@@ -12,12 +12,12 @@ from   importlib_resources import as_file, files
 from   sqlalchemy          import inspect
 from   .                   import __version__
 from   .app                import create_app
-from   .models             import EntryPointGroup, OrphanWheel, Wheel, db
-from   .dbutil             import dbcontext, add_wheel, add_wheel_from_json, \
+from   .dbutil             import add_wheel, add_wheel_from_json, dbcontext, \
                                       get_serial, purge_old_versions, set_serial
+from   .models             import EntryPointGroup, OrphanWheel, Wheel, db
 from   .process            import process_queue
 from   .pypi_api           import PyPIAPI
-from   .scan               import scan_pypi, scan_changelog
+from   .scan               import scan_changelog, scan_pypi
 
 log = logging.getLogger(__name__)
 
