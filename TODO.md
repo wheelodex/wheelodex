@@ -103,4 +103,3 @@ Web Interface
     - license files?
     - metadata versions?
     - "Platform" values
-    - projects by number of reverse dependencies?
