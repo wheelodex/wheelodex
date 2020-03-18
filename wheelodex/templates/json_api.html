@@ -53,6 +53,10 @@
     to apply to the most users is chosen.  Wheels whose contents have been
     analyzed are preferred over wheels that haven't been analyzed.</p>
 
+    <p>The schema of the returned data is the same as for
+    <code>/json/wheels/<span class="url-placeholder">:wheel</span>.json</code>
+    (see below).<p>
+
     <p>Responds with a 404 if the project doesn't have any wheels.</p>
 </dd>
 
@@ -85,9 +89,33 @@
 </dd>
 
 <dt><code>/json/wheels/<span class="url-placeholder">:wheel</span>.json</code>{% if example_wheel != None %} (<a href="{{url_for('.wheel_json', wheel=example_wheel.filename)}}">[example]</a>){% endif %}</dt>
-<dd>Returns all known data about the given wheel.  <code><span
-class="url-placeholder">:wheel</span></code> must be the entire wheel filename,
-including the "<code>.whl</code>" extension.</dd>
+<dd>
+    <p>Returns all known data about the given wheel.  <code><span
+    class="url-placeholder">:wheel</span></code> must be the entire wheel
+    filename, including the "<code>.whl</code>" extension.</p>
+
+    <p>The returned structure contains the following keys:<p>
+
+    <dl>
+        <dt><code>"pypi"</code></dt>
+        <dd>Data about the wheel acquired from PyPI</dd>
+
+        <dt><code>"data"</code></dt>
+        <dd>(Only present if the wheel has been analyzed) Data about the wheel,
+        produced by <a
+        href="https://pypi.org/project/wheel-inspect/">wheel-inspect</a></dd>
+
+        <dt><code>"wheelodex"</code></dt>
+        <dd>(Only present if the wheel has been analyzed) An object containing
+        two keys: <code>"processed"</code>, the timestamp of when the wheel was
+        analyzed, and <code>"wheel_inspect_version"</code>, the version of
+        wheel-inspect used to analyze the wheel</dd>
+
+        <dt><code>"errored"</code></dt>
+        <dd>A boolean (only present if <code>true</code>) indicating whether
+        any errors occurred while trying to process the wheel</dd>
+    </dl>
+</dd>
 
 </dl>
 
