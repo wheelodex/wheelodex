@@ -39,6 +39,10 @@ def test_recent_wheels_200(client):
     rv = client.get('/recent/')
     assert rv.status_code == 200
 
+def test_rdepends_leaders_200(client):
+    rv = client.get('/rdepends-leaders/')
+    assert rv.status_code == 200
+
 def test_project_list_200(client):
     rv = client.get('/projects/')
     assert rv.status_code == 200
