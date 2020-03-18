@@ -1,5 +1,5 @@
-In Development
---------------
+v2020.3.18
+----------
 - Added a description of the wheel data schema to the JSON API page
 - Internal changes:
     - Replace the uses of `pkg_resources` with `importlib-metadata` and
