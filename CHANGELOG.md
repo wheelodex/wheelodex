@@ -1,6 +1,7 @@
 In Development
 --------------
 - Added a page listing the most depended-on projects
+- Added a description for the `flake8_import_order.styles` entry point group
 
 v2020.3.18
 ----------
