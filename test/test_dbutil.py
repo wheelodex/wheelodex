@@ -567,8 +567,25 @@ def test_add_duplicate_orphan_wheel():
         == datetime(2019, 4, 21, 17, 44, 11)
     assert orphans[0].project == p
 
+def test_set_data_with_dependency():
+    v1 = add_version('foobar', '1.0')
+    whl1 = add_wheel(version=v1, **FOOBAR_1_WHEEL)
+    whl1.set_data({
+        "project": "FooBar",
+        "version": "1.0",
+        "valid": True,
+        "dist_info": {},
+        "derived": {
+            "dependencies": ["glarch"],
+            "keywords": [],
+            "modules": [],
+        },
+    })
+    p = get_project('glarch')
+    assert whl1.data.dependencies == [p]
+
 ### TODO: TO TEST:
-# Adding WheelData with dependencies, entry points, etc.
+# Adding WheelData with (more) dependencies, entry points, etc.
 # `wheel.data = None` deletes the WheelData entry
 # Deleting a Wheel deletes its WheelData
 # Deleting a WheelData deletes its dependencies and entry points
