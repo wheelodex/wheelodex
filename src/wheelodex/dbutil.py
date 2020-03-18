@@ -280,7 +280,8 @@ def rdepends_query(project: Project):
     given `Project`.  No ordering is applied to the query.
     """
     src = aliased(Project)
-    ### TODO: Use preferred wheel?:
+    ### TODO: Use preferred wheel?
+    ### TODO: Rewrite using EXISTS?
     return Project.query.join(Version).join(Wheel).join(WheelData)\
                         .join(dependency_tbl).join(src)\
                         .filter(src.id == project.id)\

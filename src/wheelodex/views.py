@@ -79,20 +79,16 @@ def rdepends_leaders():
     ### TODO: Speed up this query
     src = db.aliased(Project)
     dep = db.aliased(Project)
-    deps_tbl = (
-        db.session.query(src.id, dep.id.label('dep_id')).distinct()
-                  .join(Version, src.versions)
-                  .join(Wheel, Version.wheels)
-                  .join(WheelData, Wheel.data)
+    q = db.session.query(dep, db.func.count(src.id.distinct()).label('qty'))\
+                  .join(Version, src.versions)\
+                  .join(Wheel, Version.wheels)\
+                  .join(WheelData, Wheel.data)\
                   .join(
                         dependency_tbl,
-                        WheelData.id == dependency_tbl.c.wheel_data_id
-                  )
-                  .join(dep, dependency_tbl.c.project_id == dep.id)
-    ).subquery()
-    q = db.session.query(Project, db.func.count().label('qty'))\
-                  .join(deps_tbl, Project.id == deps_tbl.c.dep_id)\
-                  .group_by(Project)\
+                        WheelData.id == dependency_tbl.c.wheel_data_id,
+                  )\
+                  .join(dep, dependency_tbl.c.project_id == dep.id)\
+                  .group_by(dep)\
                   .order_by(db.desc('qty'))\
                   .limit(qty)
     return render_template('rdepends_leaders.html', leaders=q)
