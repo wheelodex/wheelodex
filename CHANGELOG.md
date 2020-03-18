@@ -3,6 +3,8 @@ In Development
 - Internal changes:
     - Replace the uses of `pkg_resources` with `importlib-metadata` and
       `importlib-resources`
+- Deployment changes:
+    - Increase wheel processing size limit to 5 MiB
 
 v2020.2.14
 ----------
