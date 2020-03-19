@@ -7,7 +7,7 @@ python:
     - '3.7'
     - '3.8'
 install:
-    - pip install codecov tox
+    - pip install -U codecov tox virtualenv
 script:
     - tox -e py
 after_success:
