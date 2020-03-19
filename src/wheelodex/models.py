@@ -289,9 +289,6 @@ class DependencyRelation(Base):
     #: here to make some queries faster:
     source_project_id = S.Column(
         S.Integer,
-        ### TODO: Both setting `ondelete='CASCADE`' and leaving it unspecified
-        ### lead to errors when dropping all tables.  Figure out how to fix
-        ### this.
         S.ForeignKey('projects.id', ondelete='CASCADE'),
         nullable=False,
     )
