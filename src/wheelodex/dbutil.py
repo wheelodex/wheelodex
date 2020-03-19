@@ -225,15 +225,15 @@ def purge_old_versions():
             Version.wheels.any(Wheel.data.has()),
         ).with_parent(p).order_by(Version.ordering.desc()):
             if latest is None:
-                log.info('Project %s: keeping latest version: %s',
+                log.debug('Project %s: keeping latest version: %s',
                          p.display_name, v.display_name)
                 latest = v
             if vwheels and latest_wheel is None:
-                log.info('Project %s: keeping latest version with wheels: %s',
+                log.debug('Project %s: keeping latest version with wheels: %s',
                          p.display_name, v.display_name)
                 latest_wheel = v
             if vdata and latest_data is None:
-                log.info('Project %s: keeping latest version with data: %s',
+                log.debug('Project %s: keeping latest version with data: %s',
                          p.display_name, v.display_name)
                 latest_data = v
             if v not in (latest, latest_wheel, latest_data):
