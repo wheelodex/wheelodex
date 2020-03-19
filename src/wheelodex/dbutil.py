@@ -14,7 +14,6 @@ from   typing          import Optional, Union
 from   flask           import current_app
 from   packaging.utils import canonicalize_name as normalize, \
                                 canonicalize_version as normversion
-from   sqlalchemy.orm  import aliased
 from   .models         import OrphanWheel, Project, PyPISerial, Version, \
                                 Wheel, WheelData, db, dependency_tbl
 from   .util           import parse_timestamp, version_sort_key, wheel_sort_key
@@ -279,10 +278,9 @@ def rdepends_query(project: Project):
     Returns a query object that returns all `Project`\ s that depend on the
     given `Project`.  No ordering is applied to the query.
     """
-    src = aliased(Project)
     ### TODO: Use preferred wheel?
     ### TODO: Rewrite using EXISTS?
     return Project.query.join(Version).join(Wheel).join(WheelData)\
-                        .join(dependency_tbl).join(src)\
-                        .filter(src.id == project.id)\
+                        .join(dependency_tbl)\
+                        .filter(dependency_tbl.c.project_id == project.id)\
                         .group_by(Project.id)
