@@ -279,9 +279,7 @@ def rdepends_query(project: Project):
     given `Project`.  No ordering is applied to the query.
     """
     ### TODO: Use preferred wheel?
-    ### TODO: Rewrite using EXISTS?
-    return Project.query.join(
-        DependencyRelation,
-        Project.id == DependencyRelation.source_project_id,
-    ).filter(DependencyRelation.project_id == project.id)\
-     .group_by(Project.id)
+    return Project.query.filter(
+        db.exists().where(Project.id == DependencyRelation.source_project_id)
+                   .where(DependencyRelation.project_id == project.id)
+    )
