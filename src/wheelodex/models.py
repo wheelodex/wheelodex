@@ -262,23 +262,39 @@ class ProcessingError(Base):
     wheel_inspect_version = S.Column(S.Unicode(32), nullable=True)
 
 
-#: A mapping between `WheelData` values and the `Project`\ s listed in their
-#: :mailheader:`Requires-Dist` fields
-dependency_tbl = S.Table('dependency_tbl', Base.metadata,
-    S.Column(
-        'wheel_data_id',
+class DependencyRelation(Base):
+    """
+    An association object that maps `WheelData` values to the `Project`\\ s
+    listed in their :mailheader:`Requires-Dist` fields
+    """
+
+    __tablename__ = 'dependency_tbl'
+
+    wheel_data_id = S.Column(
         S.Integer,
         S.ForeignKey('wheel_data.id', ondelete='CASCADE'),
         nullable=False,
-    ),
-    S.Column(
-        'project_id',
+        primary_key=True,
+    )
+
+    project_id = S.Column(
         S.Integer,
         S.ForeignKey('projects.id', ondelete='RESTRICT'),
         nullable=False,
-    ),
-    S.UniqueConstraint('wheel_data_id', 'project_id'),
-)
+        primary_key=True,
+    )
+    project = relationship('Project', foreign_keys=[project_id])
+
+    #: A redundant reference to the project to which the wheel belongs, stored
+    #: here to make some queries faster:
+    source_project_id = S.Column(
+        S.Integer,
+        ### TODO: Both setting `ondelete='CASCADE`' and leaving it unspecified
+        ### lead to errors when dropping all tables.  Figure out how to fix
+        ### this.
+        S.ForeignKey('projects.id', ondelete='CASCADE'),
+        nullable=False,
+    )
 
 
 class WheelData(Base):
@@ -306,9 +322,12 @@ class WheelData(Base):
     wheel_inspect_version = S.Column(S.Unicode(32), nullable=False)
     ### TODO: What are the right `cascade` and `passive_deletes` settings for
     ### this relationship?
-    dependencies = relationship('Project', secondary=dependency_tbl,
-                                backref='rdepends')
+    dependency_rels = relationship('DependencyRelation')
     valid     = S.Column(S.Boolean, nullable=False)
+
+    @property
+    def dependencies(self):
+        return [rel.project for rel in self.dependency_rels]
 
     @classmethod
     def from_raw_data(cls, raw_data: dict):
@@ -321,6 +340,7 @@ class WheelData(Base):
             # their RECORDs
             f["path"] for f in raw_data["dist_info"].get("record", [])
         }
+        project = Project.from_name(raw_data["project"])
         return cls(
             raw_data  = raw_data,
             processed = datetime.now(timezone.utc),
@@ -332,8 +352,11 @@ class WheelData(Base):
                 for grobj in [EntryPointGroup.from_name(group)]
                 for e in eps
             ],
-            dependencies = [
-                Project.from_name(p)
+            dependency_rels = [
+                DependencyRelation(
+                    project=Project.from_name(p),
+                    source_project_id=project.id,
+                )
                 for p in raw_data["derived"]["dependencies"]
             ],
             valid = raw_data["valid"],

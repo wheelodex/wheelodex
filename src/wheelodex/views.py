@@ -7,9 +7,9 @@ from   flask           import Blueprint, abort, current_app, jsonify, \
                                 redirect, render_template, request, url_for
 from   packaging.utils import canonicalize_name as normalize
 from   .dbutil         import rdepends_query
-from   .models         import EntryPoint, EntryPointGroup, File, Module, \
-                                Project, Version, Wheel, WheelData, db, \
-                                dependency_tbl
+from   .models         import DependencyRelation, EntryPoint, EntryPointGroup, \
+                                File, Module, Project, Version, Wheel, \
+                                WheelData, db
 from   .util           import glob2like, json_response, like_escape
 
 web = Blueprint('web', __name__)
@@ -76,21 +76,14 @@ def recent_wheels():
 ### TODO: Add caching
 def rdepends_leaders():
     qty = current_app.config["WHEELODEX_RDEPENDS_LEADERS_QTY"]
-    ### TODO: Speed up this query
-    src = db.aliased(Project)
-    dep = db.aliased(Project)
-    q = db.session.query(dep, db.func.count(src.id.distinct()).label('qty'))\
-                  .join(Version, src.versions)\
-                  .join(Wheel, Version.wheels)\
-                  .join(WheelData, Wheel.data)\
-                  .join(
-                        dependency_tbl,
-                        WheelData.id == dependency_tbl.c.wheel_data_id,
-                  )\
-                  .join(dep, dependency_tbl.c.project_id == dep.id)\
-                  .group_by(dep)\
-                  .order_by(db.desc('qty'))\
-                  .limit(qty)
+    q = db.session.query(
+        Project,
+        db.func.count(DependencyRelation.source_project_id.distinct())
+               .label('qty')
+    ).join(DependencyRelation, Project.id == DependencyRelation.project_id)\
+     .group_by(Project)\
+     .order_by(db.desc('qty'))\
+     .limit(qty)
     return render_template('rdepends_leaders.html', leaders=q)
 
 @web.route('/projects/')

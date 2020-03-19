@@ -3,6 +3,10 @@ In Development
 - Added a page listing the most depended-on projects
 - Added a description for the `flake8_import_order.styles` entry point group
 - Lower the logging level of most messages from `purge-old-versions`
+- Internal changes:
+    - Added a `source_project_id` column to `dependency_tbl`, changing it to an
+      association object, in order to speed up the query behind the "most
+      depended-on projects" page
 
 v2020.3.18
 ----------

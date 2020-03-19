@@ -14,8 +14,8 @@ from   typing          import Optional, Union
 from   flask           import current_app
 from   packaging.utils import canonicalize_name as normalize, \
                                 canonicalize_version as normversion
-from   .models         import OrphanWheel, Project, PyPISerial, Version, \
-                                Wheel, WheelData, db, dependency_tbl
+from   .models         import DependencyRelation, OrphanWheel, Project, \
+                                PyPISerial, Version, Wheel, db
 from   .util           import parse_timestamp, version_sort_key, wheel_sort_key
 
 log = logging.getLogger(__name__)
@@ -280,7 +280,8 @@ def rdepends_query(project: Project):
     """
     ### TODO: Use preferred wheel?
     ### TODO: Rewrite using EXISTS?
-    return Project.query.join(Version).join(Wheel).join(WheelData)\
-                        .join(dependency_tbl)\
-                        .filter(dependency_tbl.c.project_id == project.id)\
-                        .group_by(Project.id)
+    return Project.query.join(
+        DependencyRelation,
+        Project.id == DependencyRelation.source_project_id,
+    ).filter(DependencyRelation.project_id == project.id)\
+     .group_by(Project.id)
