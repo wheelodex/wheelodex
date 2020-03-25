@@ -1,5 +1,6 @@
 """ Custom Jinja filters """
 
+import heapq
 import re
 from   cmarkgfm        import markdown_to_html
 from   flask           import url_for
@@ -143,3 +144,7 @@ def markdown_inline(src):
     removed
     """
     return Markup(re.sub(r'^<p>|</p>$', '', markdown_to_html(src)))
+
+@web.app_template_filter()
+def nsmallest(iterable, n):
+    return heapq.nsmallest(n, iterable)

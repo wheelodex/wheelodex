@@ -3,6 +3,8 @@ In Development
 - Added a page listing the most depended-on projects
 - Added a description for the `flake8_import_order.styles` entry point group
 - Lower the logging level of most messages from `purge-old-versions`
+- File search results are now displayed as 50 wheels per page, each with up to
+  5 files listed under them
 - Internal changes:
     - Added a `source_project_id` column to `dependency_tbl`, changing it to an
       association object, in order to speed up the query behind the "most

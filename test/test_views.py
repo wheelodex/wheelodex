@@ -84,6 +84,7 @@ def test_search_projects_200(client):
     assert rv.status_code == 200
     assert 'wheel-inspect' in rv.get_data(True)
 
+@pytest.mark.skip(reason='SQLite does not support array_agg')
 def test_search_files_200(client):
     rv = client.get('/search/files/', query_string={"q": "wheel_*"})
     assert rv.status_code == 200

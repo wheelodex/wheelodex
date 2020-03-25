@@ -17,11 +17,21 @@
     {% if results.total == 0 %}
         No results
     {% else %}
-        <ul>
-            {% for p, whl, file in results.items %}
-                <li><a href="{{url_for('.wheel_data', project=p.name, wheel=whl.filename)}}">{{whl.filename|e}}</a> &#x2014; <code>{{file.path|e}}</code></li>
+        <dl>
+            {% for whl, files in results.items %}
+                <dt><a href="{{url_for('.wheel_data', project=whl.project.name, wheel=whl.filename)}}">{{whl.filename|e}}</a></dt>
+                <dd>
+                    <ul>
+                        {% for f in files|nsmallest(files_per_wheel) %}
+                            <li><code>{{f|e}}</code></li>
+                        {% endfor %}
+                        {% if files|length > files_per_wheel %}
+                            <li>&#x2026;</li>
+                        {% endif %}
+                    </ul>
+                </dd>
             {% endfor %}
-        </ul>
+        </dl>
         {{render_pagination(results, '.search_files', q=search_term)}}
     {% endif %}
 {% endif %}

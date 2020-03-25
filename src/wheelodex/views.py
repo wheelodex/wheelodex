@@ -6,6 +6,7 @@ import re
 from   flask           import Blueprint, abort, current_app, jsonify, \
                                 redirect, render_template, request, url_for
 from   packaging.utils import canonicalize_name as normalize
+from   sqlalchemy.sql.functions import array_agg
 from   .dbutil         import rdepends_query
 from   .models         import DependencyRelation, EntryPoint, EntryPointGroup, \
                                 File, Module, Project, Version, Wheel, \
@@ -255,12 +256,15 @@ def search_files():
     search_term = request.args.get('q', '')
     if search_term:
         per_page = current_app.config["WHEELODEX_SEARCH_RESULTS_PER_PAGE"]
+        files_per_wheel \
+            = current_app.config["WHEELODEX_FILE_SEARCH_RESULTS_PER_WHEEL"]
         ### TODO: Limit to the latest data-having version of each project?
-        q = db.session.query(Project, Wheel, File)\
-                      .join(Version, Project.versions)\
-                      .join(Wheel, Version.wheels)\
+        q = db.session.query(Wheel, array_agg(File.path))\
                       .join(WheelData, Wheel.data)\
-                      .join(File, WheelData.files)
+                      .join(File, WheelData.files)\
+                      .group_by(Wheel)\
+                      .order_by(Wheel.filename)
+        ### TODO: Order by normalized project name before wheel filename
         if '*' in search_term or '?' in search_term:
             q = q.filter(File.path.ilike(glob2like(search_term), escape='\\'))
         else:
@@ -268,14 +272,14 @@ def search_files():
                 (db.func.lower(File.path) == db.func.lower(search_term))
                 | (File.path.ilike('%/'+like_escape(search_term), escape='\\'))
             )
-        ### TODO: Order results by something?
         results = q.paginate(per_page=per_page)
     else:
         results = None
     return render_template(
         'search_files.html',
-        search_term = search_term,
-        results     = results,
+        search_term     = search_term,
+        results         = results,
+        files_per_wheel = files_per_wheel,
     )
 
 @web.route('/search/modules/')
