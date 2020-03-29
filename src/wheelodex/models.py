@@ -365,6 +365,9 @@ class WheelData(Base):
         )
 
 
+S.Index('wheel_data_processed_idx', WheelData.processed.desc())
+
+
 class EntryPointGroup(Base):
     """ An entry point group """
 

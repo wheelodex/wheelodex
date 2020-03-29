@@ -13,6 +13,8 @@
   wheels to be uploaded for the release before bothering to create the
   `Version` object?
 - Add tables & pages for reverse Obsoletes-Dist and Provides-Dist dependencies
+- Should a project's display name be updated whenever it gets a new release or
+  wheel?
 
 - There are several database queries (marked with "TODO: Use preferred wheel")
   that need to be amended to only return results for one wheel (the preferred

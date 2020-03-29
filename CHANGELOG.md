@@ -1,3 +1,9 @@
+In Development
+--------------
+- Internal changes:
+    - Define an index on `WheelData.processed` in order to speed up the
+      "Recently-Analyzed Wheels" page
+
 v2020.3.29
 ----------
 - Added a page listing the most depended-on projects
