@@ -9,6 +9,9 @@ In Development
     - Added a `source_project_id` column to `dependency_tbl`, changing it to an
       association object, in order to speed up the query behind the "most
       depended-on projects" page
+- Deployment changes:
+    - Updated `ssl_protocols` setting in Nginx
+    - Log slow database queries
 
 v2020.3.18
 ----------

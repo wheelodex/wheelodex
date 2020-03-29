@@ -103,3 +103,23 @@ Web Interface
     - license files?
     - metadata versions?
     - "Platform" values
+
+
+Optimization
+------------
+- Try to speed up file search queries with:
+
+        CREATE EXTENSION pg_trgm;
+            -- ^^ Must be run inside the database by a superuser
+        CREATE INDEX files_path_idx ON files USING GIN (path gin_trgm_ops);
+
+    and likewise for other columns queried with `LIKE`/`ILIKE`?
+
+    The SQLAlchemy equivalent of the latter statement appears to be:
+
+        Index(
+            'files_path_idx',
+            File.path,
+            postgresql_using='gin',
+            postgresql_opts={'path': 'gin_trgm_ops'},
+        )

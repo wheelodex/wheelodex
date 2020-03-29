@@ -26,3 +26,15 @@
     template: template0
     state: present
   become_user: postgres
+
+- name: Determine PostgreSQL version
+  postgres_version:
+
+- name: Log slow queries
+  lineinfile:
+    dest: /etc/postgresql/{{postgres_version}}/main/postgresql.conf
+    regexp: '^[\s#]*log_min_duration_statement\s*='
+    line: "log_min_duration_statement = 1000"
+    backup: true
+  notify:
+    - Restart PostgreSQL
