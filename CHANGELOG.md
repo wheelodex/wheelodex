@@ -1,5 +1,5 @@
-In Development
---------------
+v2020.3.29
+----------
 - Added a page listing the most depended-on projects
 - Added a description for the `flake8_import_order.styles` entry point group
 - Lower the logging level of most messages from `purge-old-versions`
