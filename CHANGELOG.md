@@ -1,5 +1,6 @@
 In Development
 --------------
+- Strip leading & trailing whitespace from search terms before searching
 - Internal changes:
     - Define an index on `WheelData.processed` in order to speed up the
       "Recently-Analyzed Wheels" page

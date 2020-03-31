@@ -227,7 +227,7 @@ def search_projects():
       search term and perform file glob matching against all known normalized
       project names
     """
-    search_term = request.args.get('q', '')
+    search_term = request.args.get('q', '').strip()
     if search_term:
         per_page = current_app.config["WHEELODEX_SEARCH_RESULTS_PER_PAGE"]
         normterm = re.sub(r'[-_.]+', '-', search_term.lower())
@@ -253,7 +253,7 @@ def search_projects():
 @web.route('/search/files/')
 def search_files():
     """ Search for wheels containing files with a given name or pattern """
-    search_term = request.args.get('q', '')
+    search_term = request.args.get('q', '').strip()
     if search_term:
         per_page = current_app.config["WHEELODEX_SEARCH_RESULTS_PER_PAGE"]
         files_per_wheel \
@@ -287,7 +287,7 @@ def search_modules():
     """
     Search for wheels containing Python modules with a given name or pattern
     """
-    search_term = request.args.get('q', '')
+    search_term = request.args.get('q', '').strip()
     if search_term:
         per_page = current_app.config["WHEELODEX_SEARCH_RESULTS_PER_PAGE"]
         ### TODO: Limit to the latest data-having version of each project?
@@ -313,7 +313,7 @@ def search_modules():
 @web.route('/search/commands/')
 def search_commands():
     """ Search for wheels defining a given ``console_scripts`` command """
-    search_term = request.args.get('q', '')
+    search_term = request.args.get('q', '').strip()
     if search_term:
         per_page = current_app.config["WHEELODEX_SEARCH_RESULTS_PER_PAGE"]
         group = EntryPointGroup.query.filter(
