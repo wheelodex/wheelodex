@@ -45,6 +45,8 @@ class Project(Base):
     #: would involve a complicated query that ends up being noticeably too
     #: slow.)
     summary      = S.Column(S.Unicode(2048), nullable=True)
+    #: Whether this project has any wheels known to the database
+    has_wheels   = S.Column(S.Boolean, default=False, nullable=False)
 
     def __repr__(self):
         return reprify(self, 'name display_name'.split())

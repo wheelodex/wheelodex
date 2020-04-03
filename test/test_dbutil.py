@@ -96,9 +96,11 @@ QUUX_1_5_WHEEL = {
 def test_add_wheel():
     assert Wheel.query.all() == []
     p = add_project('FooBar')
+    assert not p.has_wheels
     v1 = add_version(p, '1.0')
     whl1 = add_wheel(version=v1, **FOOBAR_1_WHEEL)
     assert Wheel.query.all() == [whl1]
+    assert p.has_wheels
     v2 = add_version(p, '2.0')
     whl2 = add_wheel(version=v2, **FOOBAR_2_WHEEL)
     assert sort_wheels(Wheel.query.all()) == [whl1, whl2]
@@ -142,6 +144,7 @@ def test_remove_wheel():
     assert Wheel.query.all() == [whl1]
     remove_wheel('FooBar-1.0-py3-none-any.whl')
     assert Wheel.query.all() == []
+    assert not p.has_wheels
 
 def test_add_project():
     assert Project.query.all() == []
@@ -189,6 +192,7 @@ def test_remove_project():
     assert get_version('foobar', '2.0') is None
     assert Wheel.query.all() == [whl3]
     assert p.latest_version is None
+    assert not p.has_wheels
 
 def test_add_version_str():
     assert Project.query.all() == []
@@ -290,6 +294,7 @@ def test_remove_version():
     assert Version.query.all() == [v1]
     assert p.latest_version == v1
     assert Wheel.query.all() == [whl1]
+    assert p.has_wheels
 
 def test_purge_old_versions_one_version():
     v1 = add_version('foobar', '1.0')

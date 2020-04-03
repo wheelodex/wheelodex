@@ -43,8 +43,7 @@ def index():
     """ The main page """
     return render_template(
         'index.html',
-        proj_qty = db.session.query(db.func.count(Project.id.distinct()))
-                             .join(Version).join(Wheel).scalar(),
+        proj_qty = Project.query.filter(Project.has_wheels).count(),
         whl_qty  = Wheel.query.count(),
         #data_qty = WheelData.query.count(),
     )
@@ -91,7 +90,7 @@ def rdepends_leaders():
 def project_list():
     """ A list of all projects with wheels """
     per_page = current_app.config["WHEELODEX_PROJECTS_PER_PAGE"]
-    projects = Project.query.filter(Project.versions.any(Version.wheels.any()))\
+    projects = Project.query.filter(Project.has_wheels)\
                             .order_by(Project.name.asc())\
                             .paginate(per_page=per_page)
     return render_template('project_list.html', projects=projects)
@@ -232,7 +231,7 @@ def search_projects():
         per_page = current_app.config["WHEELODEX_SEARCH_RESULTS_PER_PAGE"]
         normterm = re.sub(r'[-_.]+', '-', search_term.lower())
         # Only search projects that have wheels:
-        q = Project.query.join(Version).join(Wheel).group_by(Project)
+        q = Project.query.filter(Project.has_wheels)
         if '*' in normterm or '?' in normterm:
             q = q.filter(Project.name.like(glob2like(normterm), escape='\\'))
         elif q.filter(Project.name == normterm).one_or_none() is not None:

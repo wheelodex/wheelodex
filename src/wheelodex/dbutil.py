@@ -76,6 +76,7 @@ def add_wheel(version: 'Version', filename, url, size, md5, sha256, uploaded):
             sorted(version.wheels, key=lambda x: wheel_sort_key(x.filename))
         ):
             w.ordering = i
+        version.project.has_wheels = True
     return whl
 
 def add_wheel_from_json(about: dict):
@@ -126,6 +127,8 @@ def remove_wheel(filename: str):
     """
     Wheel.query.filter(Wheel.filename == filename).delete()
     OrphanWheel.query.filter(OrphanWheel.filename == filename).delete()
+    p = get_project(filename.split('-')[0])
+    update_has_wheels(p)
 
 def add_project(name: str):
     """
@@ -154,6 +157,7 @@ def remove_project(project: str):
     p = get_project(project)
     if p is not None:
         Version.query.filter(Version.project == p).delete()
+    p.has_wheels = False
 
 def add_version(project: Union[str, 'Project'], version: str):
     r"""
@@ -205,6 +209,7 @@ def remove_version(project: str, version: str):
         Version.query.filter(Version.project == p)\
                      .filter(Version.name == normversion(version))\
                      .delete()
+    update_has_wheels(p)
 
 def purge_old_versions():
     """
@@ -283,3 +288,10 @@ def rdepends_query(project: Project):
         db.exists().where(Project.id == DependencyRelation.source_project_id)
                    .where(DependencyRelation.project_id == project.id)
     )
+
+def update_has_wheels(project: Project):
+    """ Update the value of the given `Project`'s ``has_wheels`` attribute """
+    project.has_wheels = db.session.query(
+        db.exists().where(Version.project_id == project.id)
+                   .where(Wheel.version_id == Version.id)
+    ).scalar()

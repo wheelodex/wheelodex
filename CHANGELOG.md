@@ -4,6 +4,8 @@ In Development
 - Internal changes:
     - Define an index on `WheelData.processed` in order to speed up the
       "Recently-Analyzed Wheels" page
+    - Added a `has_wheels` column to `Project` in order to speed up some
+      queries
 
 v2020.3.29
 ----------
