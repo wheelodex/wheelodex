@@ -54,5 +54,5 @@ Setup Steps that this Playbook does not Cover
 - Setting the host's locale system-wide to something with UTF-8 encoding (This
   should be redundant in this day & age, and doing it properly involves a
   reboot, so we'd want to keep that out of the playbook)
-- Ensuring that setuptools is installed system-wide for whatever version of
-  Python Ansible will run its modules under
+- Ensuring that Python 3 is installed at `/usr/bin/python3`
+- Ensuring that setuptools is installed system-wide for Python 3

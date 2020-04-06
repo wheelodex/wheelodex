@@ -6,6 +6,7 @@ In Development
       "Recently-Analyzed Wheels" page
     - Added a `has_wheels` column to `Project` in order to speed up some
       queries
+    - Run Ansible deployment tasks under Python 3
 
 v2020.3.29
 ----------

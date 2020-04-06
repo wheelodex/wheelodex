@@ -3,6 +3,7 @@ ansible_host: 174.138.60.140
 ansible_user: admin
 # DO NOT set `ansible_become_user: root`.  Ansible seems to set that
 # implicitly, and setting it explicitly messes with tasks with `become_user:`.
+ansible_python_interpreter: /usr/bin/python3
 
 config_options:
     WHEELODEX_MAX_WHEEL_SIZE: 5242880  # 5 MiB

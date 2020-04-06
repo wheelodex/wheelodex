@@ -6,7 +6,6 @@
   apt:
     name:
         - build-essential
-        - python3
         - python3-dev
         - unattended-upgrades
     state: present

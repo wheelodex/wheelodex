@@ -3,7 +3,7 @@
   apt:
     name:
         - postgresql
-        - python-psycopg2  # Needed by Ansible's postgresql_* modules
+        - python3-psycopg2  # Needed by Ansible's postgresql_* modules
     state: present
     update_cache: false
 

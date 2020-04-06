@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 from   distutils.version import LooseVersion
 import os
 import traceback
