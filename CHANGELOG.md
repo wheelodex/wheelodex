@@ -1,6 +1,7 @@
 In Development
 --------------
 - Strip leading & trailing whitespace from search terms before searching
+- Use version 1.5.0 of `wheel-inspect`
 - Internal changes:
     - Define an index on `WheelData.processed` in order to speed up the
       "Recently-Analyzed Wheels" page

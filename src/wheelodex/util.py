@@ -8,7 +8,7 @@ from   packaging.version import parse
 import pyrfc3339
 import requests
 import requests_download
-from   wheel_inspect     import parse_wheel_filename
+from   wheel_filename    import parse_wheel_filename
 from   .                 import __url__, __version__
 
 #: The User-Agent header used for requests to PyPI's JSON API and when
