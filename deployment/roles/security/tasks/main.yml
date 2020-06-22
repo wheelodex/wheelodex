@@ -29,9 +29,9 @@
 - name: Allow incoming SSH and HTTP(S) connections
   ufw: rule=allow to_ip=any to_port={{item}} proto=any direction=in
   with_items:
-    - 22
-    - 80
-    - 443
+    - "22"
+    - "80"
+    - "443"
 
 - name: Enable ufw
   ufw: state=enabled

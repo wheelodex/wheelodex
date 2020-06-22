@@ -32,7 +32,7 @@
     name: unattended-upgrades
     question: unattended-upgrades/enable_auto_updates
     vtype: boolean
-    value: true
+    value: 'true'
   register: unattup
 
 - name: Enable new unattended-upgrades settings
