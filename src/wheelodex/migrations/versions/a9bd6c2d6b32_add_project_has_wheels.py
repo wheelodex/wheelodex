@@ -48,13 +48,12 @@ wheel = sa.Table(
 def upgrade():
     op.add_column('projects', sa.Column('has_wheels', sa.Boolean(), nullable=True))
     conn = op.get_bind()
+    conn.execute(project.update().values(has_wheels=False))
     conn.execute(
-        project.update().values(has_wheels=sa.exists(
-            sa.select([wheel.c.id])
-              .select_from(version.join(wheel))
-              .where(version.c.project_id == project.c.id)
-        )
-    ))
+        project.update().values(has_wheels=True)
+               .where(project.c.id == version.c.project_id)
+               .where(version.c.id == wheel.c.version_id)
+    )
     op.alter_column('projects', 'has_wheels', nullable=False)
 
 def downgrade():
