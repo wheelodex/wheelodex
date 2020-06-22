@@ -1,5 +1,5 @@
-In Development
---------------
+v2020.6.22
+----------
 - Strip leading & trailing whitespace from search terms before searching
 - Use version 1.5.0 of `wheel-inspect`
 - Internal changes:
