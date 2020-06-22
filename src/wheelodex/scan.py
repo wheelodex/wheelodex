@@ -120,6 +120,8 @@ def scan_changelog(since):
         # - "change {role_name} {username} to {role_name2}" [?]
         # - "nuke user"
         # - "docdestroy"
+        # - "yank release" (added in 69ce3dd on 2020-04-22)
+        # - "unyank release" (added in 69ce3dd on 2020-04-22)
 
         if actwords[0] == 'add' and len(actwords) == 4 and \
                 actwords[2] == 'file' and actwords[3].endswith('.whl'):
