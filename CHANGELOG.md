@@ -1,3 +1,8 @@
+In Development
+--------------
+- Use version 0.7.0 of `pypi-simple`
+- Drop support for Python 3.5
+
 v2020.6.22
 ----------
 - Strip leading & trailing whitespace from search terms before searching
