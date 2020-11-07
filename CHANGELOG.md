@@ -3,6 +3,7 @@ In Development
 - Use version 0.7.0 of `pypi-simple`
 - Drop support for Python 3.5
 - Support Python 3.9
+- Use version 1.7.0 of `wheel-inspect`
 
 v2020.6.22
 ----------
