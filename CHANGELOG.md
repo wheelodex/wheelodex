@@ -1,5 +1,5 @@
-In Development
---------------
+v2020.11.7
+----------
 - Use version 0.7.0 of `pypi-simple`
 - Drop support for Python 3.5
 - Support Python 3.9
