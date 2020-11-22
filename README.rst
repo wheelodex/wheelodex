@@ -3,8 +3,9 @@
     :alt: Project Status: Active — The project has reached a stable, usable
           state and is being actively developed.
 
-.. image:: https://travis-ci.com/jwodder/wheelodex.svg?branch=master
-    :target: https://travis-ci.com/jwodder/wheelodex
+.. image:: https://github.com/jwodder/wheelodex/workflows/Test/badge.svg?branch=master
+    :target: https://github.com/jwodder/wheelodex/actions?workflow=Test
+    :alt: CI Status
 
 .. image:: https://codecov.io/gh/jwodder/wheelodex/branch/master/graph/badge.svg
     :target: https://codecov.io/gh/jwodder/wheelodex
