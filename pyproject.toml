@@ -1,6 +1,6 @@
 [build-system]
 requires = [
-    "setuptools >= 43.0.0",
+    "setuptools >= 46.4.0",
     "vcversioner",
     "wheel ~= 0.32"
 ]

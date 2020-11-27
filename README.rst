@@ -14,9 +14,6 @@
     :target: https://opensource.org/licenses/MIT
     :alt: MIT License
 
-.. image:: https://img.shields.io/badge/Say%20Thanks-!-1EAEDB.svg
-    :target: https://saythanks.io/to/jwodder
-
 `Site <https://www.wheelodex.org>`_
 | `GitHub <https://github.com/jwodder/wheelodex>`_
 | `Issues <https://github.com/jwodder/wheelodex/issues>`_
