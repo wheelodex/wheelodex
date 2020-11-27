@@ -49,11 +49,11 @@ def flatten_metadata(metadata):
                     )
                 )
                 if req["extras"]:
-                    s += '[{}]'.format(','.join(req["extras"]))
+                    s += f'[{",".join(req["extras"])}]'
                 if req["url"] is not None:
                     s += ' @ ' + extlink(req["url"])
                 if req["specifier"]:
-                    s += ' ({})'.format(req["specifier"])
+                    s += f' ({req["specifier"]})'
                 if req["marker"] is not None:
                     if req["url"] is not None and req["specifier"] is None:
                         s += ' '

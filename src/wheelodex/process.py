@@ -67,10 +67,12 @@ def process_queue(max_wheel_size=None):
             if log_dir is not None:
                 with open(join(log_dir, 'process_queue.log'), 'a') as fp:
                     print(
-                        'process_queue|start={}|end={}|wheels={}|bytes={}'
-                        '|errors={}'
-                        .format(start_time, end_time, wheels_processed,
-                                bytes_processed, errors),
+                        'process_queue'
+                        f'|start={start_time}'
+                        f'|end={end_time}'
+                        f'|wheels={wheels_processed}'
+                        f'|bytes={bytes_processed}'
+                        f'|errors={errors}',
                         file=fp,
                     )
 
@@ -96,8 +98,9 @@ def process_wheel(filename, url, size, md5, sha256, tmpdir):
     if about["file"]["size"] != size:
         log.error('Wheel %s: size mismatch: PyPI reports %d, got %d',
                   size, about["file"]["size"])
-        raise ValueError('Size mismatch: PyPI reports {}, got {}'
-                         .format(size, about["file"]["size"]))
+        raise ValueError(
+            f'Size mismatch: PyPI reports {size}, got {about["file"]["size"]}'
+        )
     for alg, expected in [("md5", md5), ("sha256", sha256)]:
         if expected is not None and expected != about["file"]["digests"][alg]:
             log.error(
@@ -107,11 +110,8 @@ def process_wheel(filename, url, size, md5, sha256, tmpdir):
                 about["file"]["digests"][alg],
             )
             raise ValueError(
-                '{} hash mismatch: PyPI reports {}, got {}'.format(
-                    alg,
-                    expected,
-                    about["file"]["digests"][alg],
-                )
+                f'{alg} hash mismatch: PyPI reports {expected},'
+                f' got {about["file"]["digests"][alg]}'
             )
     log.info('Finished inspecting %s', filename)
     return about

@@ -4,6 +4,7 @@ Requirements
 On the local/control machine:
 
 - Ansible v2.7+
+- Python 3.6+
 
 On the remote/managed machine:
 

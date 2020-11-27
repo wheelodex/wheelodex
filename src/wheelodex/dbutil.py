@@ -251,8 +251,7 @@ def purge_old_versions():
     if log_dir is not None:
         with open(join(log_dir, 'purge_old_versions.log'), 'a') as fp:
             print(
-                'purge_old_versions|start={}|end={}|purged={}'
-                .format(start_time, end_time, purged),
+                f'purge_old_versions|start={start_time}|end={end_time}|purged={purged}',
                 file=fp,
             )
     log.info('END purge_old_versions')

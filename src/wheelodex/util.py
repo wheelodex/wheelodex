@@ -100,7 +100,7 @@ class VersionNoDot:
             s = '_'.join(map(str, self.vs))
         else:
             s = ''.join(map(str, self.vs))
-        return 'VersionNoDot({!r})'.format(s)
+        return f'VersionNoDot({s!r})'
 
 
 def wheel_sort_key(filename):

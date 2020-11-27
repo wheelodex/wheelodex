@@ -74,8 +74,13 @@ def scan_pypi():
             ### TODO: Also log projects and versions added?
             ### TODO: Distinguish between actually new wheels and wheels that
             ### were already in the system?
-            print('scan_pypi|start={}|end={}|wheels_added={}'
-                  .format(start_time, end_time, total_queued), file=fp)
+            print(
+                'scan_pypi'
+                f'|start={start_time}'
+                f'|end={end_time}'
+                f'|wheels_added={total_queued}',
+                file=fp,
+            )
     log.info('END scan_pypi')
 
 def scan_changelog(since):

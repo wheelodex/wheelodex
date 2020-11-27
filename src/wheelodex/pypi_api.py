@@ -82,7 +82,7 @@ class PyPIAPI:
         it.  If the API returns a 404 (which happens when the project has no
         releases), `None` is returned.
         """
-        r = self.s.get('{}/{}/json'.format(ENDPOINT, proj))
+        r = self.s.get(f'{ENDPOINT}/{proj}/json')
         if r.status_code == 404:
             # Project has no releases
             return None
