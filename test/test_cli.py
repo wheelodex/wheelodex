@@ -14,7 +14,7 @@ def tmpdb_inited():
         yield
 
 @pytest.fixture(autouse=True)
-def tmpdb(tmpdb_inited):
+def tmpdb(tmpdb_inited):  # noqa: U100
     try:
         yield
     finally:

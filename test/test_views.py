@@ -20,7 +20,7 @@ def sampledb():
         yield
 
 @pytest.fixture()
-def client(sampledb):
+def client(sampledb):  # noqa: U100
     return current_app.test_client()
 
 def test_index_200(client):
