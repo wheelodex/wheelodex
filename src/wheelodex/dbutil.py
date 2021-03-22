@@ -128,7 +128,8 @@ def remove_wheel(filename: str):
     Wheel.query.filter(Wheel.filename == filename).delete()
     OrphanWheel.query.filter(OrphanWheel.filename == filename).delete()
     p = get_project(filename.split('-')[0])
-    update_has_wheels(p)
+    if p is not None:
+        update_has_wheels(p)
 
 def add_project(name: str):
     """

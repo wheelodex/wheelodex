@@ -1,3 +1,7 @@
+In Development
+--------------
+- Fix a bug in `remove_wheel()`
+
 v2020.11.7
 ----------
 - Use version 0.7.0 of `pypi-simple`
