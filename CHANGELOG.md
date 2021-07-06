@@ -1,3 +1,7 @@
+In Development
+--------------
+- Update links in entry point descriptions
+
 v2021.3.22
 ----------
 - Fix a bug in `remove_wheel()`
