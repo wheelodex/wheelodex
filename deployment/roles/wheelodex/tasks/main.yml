@@ -1,23 +1,26 @@
 ---
 - name: Create dedicated Wheelodex user
   user:
-    name: "{{user}}"
-    home: "/home/{{user}}"
+    name: "{{ user }}"
+    home: "/home/{{ user }}"
     create_home: true
     shell: /bin/bash
 
 - name: Check if pip is installed for user
   stat:
-    path: "/home/{{user}}/.local/bin/pip3"
+    path: "/home/{{ user }}/.local/bin/pip3"
   register: pipstat
 
 - block:
-    - get_url:
+    - name: Download get-pip.py
+      get_url:
         url: https://bootstrap.pypa.io/get-pip.py
         dest: /tmp/get-pip.py
         force: true
-    - command: python3 /tmp/get-pip.py --user --upgrade
-      become_user: "{{user}}"
+
+    - name: Install pip
+      command: python3 /tmp/get-pip.py --user --upgrade
+      become_user: "{{ user }}"
   when: not pipstat.stat.exists or upgrade_pip
 
 - name: Install virtualenv for user
@@ -25,22 +28,22 @@
     name: virtualenv
     extra_args: --user
     executable: ~/.local/bin/pip3
-    state: "{{upgrade_pip|ternary('latest', 'present')}}"
-  become_user: "{{user}}"
+    state: "{{ upgrade_pip|ternary('latest', 'present') }}"
+  become_user: "{{ user }}"
 
 - name: Create WSGI file
   copy:
     src: wsgi.py
-    dest: "{{wsgi_file}}"
-    owner: "{{user}}"
+    dest: "{{ wsgi_file }}"
+    owner: "{{ user }}"
   notify:
     - Restart uWSGI
 
 - name: Create config file
   template:
     src: config.py
-    dest: "{{config_file}}"
-    owner: "{{user}}"
+    dest: "{{ config_file }}"
+    owner: "{{ user }}"
   notify:
     - Restart uWSGI
 
@@ -49,13 +52,13 @@
     src: wheelodex.sh
     dest: /usr/local/bin/wheelodex
     mode: 0755
-    owner: "{{user}}"
+    owner: "{{ user }}"
 
 - name: Create log directory
   file:
-    path: "{{wheelodex_log_path}}"
+    path: "{{ wheelodex_log_path }}"
     state: directory
-    owner: "{{user}}"
+    owner: "{{ user }}"
     mode: 0755
 
 - name: Configure log rotation
@@ -78,8 +81,8 @@
 
 - name: Configure systemd jobs
   template:
-    src: "{{item}}"
-    dest: "/etc/systemd/system/{{item}}"
+    src: "{{ item }}"
+    dest: "/etc/systemd/system/{{ item }}"
   with_items:
     - mail-systemd-failure@.service
     - process-wheels.service
@@ -88,10 +91,18 @@
     - register-wheels.timer
   register: systemd_cfg
 
-- systemd: daemon_reload=true
+- name: Reload systemd
+  systemd: daemon_reload=true
   when: systemd_cfg is changed
 
-- systemd: name=process-wheels.timer  enabled=true
-- systemd: name=register-wheels.timer enabled=true
-- systemd: name=process-wheels.timer  state=started
-- systemd: name=register-wheels.timer state=started
+- name: Enable process-wheels timer
+  systemd: name=process-wheels.timer  enabled=true
+
+- name: Enable register-wheels timer
+  systemd: name=register-wheels.timer enabled=true
+
+- name: Start process-wheels timer
+  systemd: name=process-wheels.timer  state=started
+
+- name: Start register-wheels timer
+  systemd: name=register-wheels.timer state=started

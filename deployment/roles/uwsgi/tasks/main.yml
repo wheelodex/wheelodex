@@ -2,8 +2,8 @@
 - name: Install uWSGI
   apt:
     name:
-        - uwsgi
-        - uwsgi-plugin-python3
+      - uwsgi
+      - uwsgi-plugin-python3
     state: present
     update_cache: false
 

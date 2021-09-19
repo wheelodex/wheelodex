@@ -6,7 +6,7 @@
     - security
     - postgres
     - uwsgi
-    - nginx-base
+    - nginx_base
     - ssl
     - nginx
     # The `wheelodex` role needs to run after `nginx` so it can call

@@ -2,15 +2,15 @@
 - name: Install fail2ban and ufw
   apt:
     name:
-        - fail2ban
-        - ufw
+      - fail2ban
+      - ufw
     state: present
     update_cache: false
 
 - name: Configure fail2ban
   copy:
-    src: "fail2ban/{{item}}"
-    dest: "/etc/fail2ban/{{item}}"
+    src: "fail2ban/{{ item }}"
+    dest: "/etc/fail2ban/{{ item }}"
     backup: true
   with_items:
     - fail2ban.d/dbpurgeage.local
@@ -20,14 +20,14 @@
   notify:
     - Restart fail2ban
 
-#- name: Reset any changes made to ufw
-#  ufw: state=reset
+# - name: Reset any changes made to ufw
+#   ufw: state=reset
 
 - name: Deny all incoming connections
   ufw: policy=deny proto=any direction=incoming
 
 - name: Allow incoming SSH and HTTP(S) connections
-  ufw: rule=allow to_ip=any to_port={{item}} proto=any direction=in
+  ufw: rule=allow to_ip=any to_port={{ item }} proto=any direction=in
   with_items:
     - "22"
     - "80"

@@ -26,8 +26,8 @@
 
 - name: Create scripts for starting & stopping maintenance mode
   copy:
-    src: "{{item}}.sh"
-    dest: "/usr/local/bin/{{item}}"
+    src: "{{ item }}.sh"
+    dest: "/usr/local/bin/{{ item }}"
     mode: 0755
   with_items:
     - start-maintenance

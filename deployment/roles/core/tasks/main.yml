@@ -5,24 +5,31 @@
 - name: Install core packages
   apt:
     name:
-        - build-essential
-        - python3-dev
-        - unattended-upgrades
+      - build-essential
+      - python3-dev
+      - unattended-upgrades
     state: present
     update_cache: false
 
 - name: Create swap space
-  command: fallocate -l {{ansible_memtotal_mb * 2}}M /swapfile
+  command: fallocate -l {{ ansible_memtotal_mb * 2 }}M /swapfile
   args:
     creates: /swapfile
-  register: createdSwap
+  register: created_swap
 
 - block:
-    - file: path=/swapfile mode=0600
-    - command: mkswap /swapfile
-    - lineinfile: dest=/etc/fstab line="/swapfile none swap sw 0 0"
-    - command: swapon /swapfile
-  when: createdSwap is changed
+    - name: Create swapfile
+      file: path=/swapfile mode=0600
+
+    - name: Make swapfile swappy
+      command: mkswap /swapfile
+
+    - name: Add swapfile to fstab
+      lineinfile: dest=/etc/fstab line="/swapfile none swap sw 0 0"
+
+    - name: Enable swapfile
+      command: swapon /swapfile
+  when: created_swap is changed
 
 - name: Set timezone to UTC
   timezone: name=Etc/UTC

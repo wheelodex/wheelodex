@@ -1,4 +1,4 @@
 ---
 certname: wheelodex
 uwsgi_socket: /tmp/wheelodex.sock
-#server_names:  # required; no default
+# server_names:  # required; no default

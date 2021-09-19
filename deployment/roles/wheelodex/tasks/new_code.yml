@@ -5,67 +5,69 @@
 - name: Create temporary directory
   tempfile:
     state: directory
-  become_user: "{{user}}"
+  become_user: "{{ user }}"
   register: tmpdir
 
 - name: Copy wheel
   copy:
-    src: "{{wheel_src}}"
-    dest: "{{tmpdir.path}}/"
-  become_user: "{{user}}"
+    src: "{{ wheel_src }}"
+    dest: "{{ tmpdir.path }}/"
+  become_user: "{{ user }}"
 
 - name: Purge virtualenv
   file:
-    path: "{{venv_path}}"
+    path: "{{ venv_path }}"
     state: absent
   when: "purge_venv|bool"
 
 - name: Create virtualenv and install wheel
   pip:
-    name: "{{tmpdir.path}}/{{wheel_src|basename}}{{extras}}"
-    virtualenv: "{{venv_path}}"
+    name: "{{ tmpdir.path }}/{{ wheel_src|basename }}{{ extras }}"
+    virtualenv: "{{ venv_path }}"
     virtualenv_command: ~/.local/bin/virtualenv
     virtualenv_python: python3
-  become_user: "{{user}}"
+  become_user: "{{ user }}"
   changed_when: true
   notify:
     - Restart uWSGI
 
 - name: Delete temporary directory
   file:
-    path: "{{tmpdir.path}}"
+    path: "{{ tmpdir.path }}"
     state: absent
-  become_user: "{{user}}"
+  become_user: "{{ user }}"
 
 - name: Create database dump directory
   file:
-    path: "{{dbdump_path}}"
+    path: "{{ dbdump_path }}"
     state: directory
 
 - name: Back up database
   shell: >
-    pg_dump --clean --if-exists --no-password \
-            -h localhost -U {{dbuser|quote}} {{dbname|quote}} |
-    gzip > {{dbdump_path|quote}}/wheelodex-{{"%Y-%m-%dT%H:%M:%S"|strftime}}.sql.gz
+    set -o pipefail; pg_dump --clean --if-exists --no-password \
+            -h localhost -U {{ dbuser|quote }} {{ dbname|quote }} |
+    gzip > {{ dbdump_path|quote }}/wheelodex-{{ "%Y-%m-%dT%H:%M:%S"|strftime }}.sql.gz
+  args:
+    executable: /bin/bash
   environment:
-    PGPASSWORD: "{{dbpass}}"
+    PGPASSWORD: "{{ dbpass }}"
 
 - name: Delete old database backups
   purge_oldest_files:
-    path: "{{dbdump_path}}"
+    path: "{{ dbdump_path }}"
     keep: 10
 
 - name: Ensure database is initialized
   command: /usr/local/bin/wheelodex initdb
-  become_user: "{{user}}"
+  become_user: "{{ user }}"
 
 - name: Run database migrations
   command: /usr/local/bin/wheelodex db upgrade
-  become_user: "{{user}}"
+  become_user: "{{ user }}"
 
 - name: Load entry point descriptions
   command: /usr/local/bin/wheelodex load-entry-points
-  become_user: "{{user}}"
+  become_user: "{{ user }}"
 
 - name: Restart uWSGI
   meta: flush_handlers
