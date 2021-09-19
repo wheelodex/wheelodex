@@ -3,12 +3,14 @@ Requirements
 
 On the local/control machine:
 
-- Ansible v2.7+
+- Ansible v2.9+
+    - `community.general` collection (`ansible-galaxy collection install
+      community.general`)
 - Python 3.6+
 
 On the remote/managed machine:
 
-- Ubuntu Bionic (or possibly higher)
+- Ubuntu Focal (or possibly higher)
 
 
 Variables

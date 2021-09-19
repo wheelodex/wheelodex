@@ -1,5 +1,5 @@
-In Development
---------------
+v2021.9.19
+----------
 - Update links in entry point descriptions
 
 v2021.3.22
