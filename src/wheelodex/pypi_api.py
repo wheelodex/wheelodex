@@ -69,7 +69,8 @@ class PyPIAPI:
         """ Returns a list of the names of all packages on PyPI """
         # The Warehouse devs prefer it if the Simple API is used for this
         # instead of the XML-RPC API.
-        return PyPISimple().get_index_page().projects
+        with PyPISimple() as ps:
+            return ps.get_index_page().projects
 
     @retry(
         retry_on_exception          = on_http_exception,
