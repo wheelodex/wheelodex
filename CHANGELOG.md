@@ -1,3 +1,8 @@
+In Development
+--------------
+- Deployment: Configure systemd's journaling to only retain the last 180 days
+  of logs
+
 v2021.9.19
 ----------
 - Update links in entry point descriptions

@@ -50,3 +50,18 @@
   copy:
     src: apt.conf
     dest: /etc/apt/apt.conf.d/99local
+
+- name: Create journald.conf.d
+  file:
+    path: /etc/systemd/journald.conf.d
+    state: directory
+    owner: root
+    group: root
+
+- name: Configure journald
+  copy:
+    src: journald.conf
+    dest: /etc/systemd/journald.conf.d/99local.conf
+    backup: true
+  notify:
+    - Restart journald
