@@ -2,6 +2,7 @@ In Development
 --------------
 - Deployment: Configure systemd's journaling to only retain the last 180 days
   of logs
+- Support Python 3.10
 
 v2021.9.19
 ----------
