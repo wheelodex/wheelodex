@@ -1,10 +1,10 @@
 """ Functions for downloading & analyzing wheels """
 
+from   datetime          import datetime, timezone
 import logging
 import os
 from   os.path           import join
 from   tempfile          import TemporaryDirectory
-from   time              import time
 import traceback
 from   flask             import current_app
 from   requests_download import download
@@ -28,7 +28,7 @@ def process_queue(max_wheel_size=None):
     :param int max_wheel_size: If set, only wheels this size or smaller are
         analyzed
     """
-    start_time = time()
+    start_time = datetime.now(timezone.utc)
     wheels_processed = 0
     bytes_processed = 0
     errors = 0
@@ -62,7 +62,7 @@ def process_queue(max_wheel_size=None):
                 wheels_processed += 1
                 bytes_processed += whl.size
         finally:
-            end_time = time()
+            end_time = datetime.now(timezone.utc)
             log_dir = current_app.config.get("WHEELODEX_STATS_LOG_DIR")
             if log_dir is not None:
                 with open(join(log_dir, 'process_queue.log'), 'a') as fp:

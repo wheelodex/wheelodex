@@ -1,8 +1,8 @@
 """ Functions for scanning PyPI for wheels to register """
 
+from   datetime  import datetime, timezone
 import logging
 from   os.path   import join
-from   time      import time
 from   flask     import current_app
 from   .dbutil   import add_orphan_wheel, add_project, add_version, add_wheel, \
                             remove_project, remove_version, remove_wheel, \
@@ -31,7 +31,7 @@ def scan_pypi():
         after a call to `scan_changelog()`.
     """
     log.info('BEGIN scan_pypi')
-    start_time = time()
+    start_time = datetime.now(timezone.utc)
     total_queued = 0
     pypi = PyPIAPI()
     serial = pypi.changelog_last_serial()
@@ -67,7 +67,7 @@ def scan_pypi():
                     uploaded = asset["upload_time_iso_8601"],
                 )
         log.info('%s: %d wheels added', pkg, qty_queued)
-    end_time = time()
+    end_time = datetime.now(timezone.utc)
     log_dir = current_app.config.get("WHEELODEX_STATS_LOG_DIR")
     if log_dir is not None:
         with open(join(log_dir, 'scan_pypi.log'), 'a') as fp:
@@ -94,7 +94,7 @@ def scan_changelog(since):
     connection to be in effect.
     """
     log.info('BEGIN scan_changelog(%d)', since)
-    start_time = time()
+    start_time = datetime.now(timezone.utc)
     pypi = PyPIAPI()
     ### TODO: Distinguish between objects that are actually being added/removed
     ### and those that were already present/absent from the system?
@@ -190,7 +190,7 @@ def scan_changelog(since):
 
         set_serial(serial)
 
-    end_time = time()
+    end_time = datetime.now(timezone.utc)
     log_dir = current_app.config.get("WHEELODEX_STATS_LOG_DIR")
     if log_dir is not None:
         with open(join(log_dir, 'scan_changelog.log'), 'a') as fp:

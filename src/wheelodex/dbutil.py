@@ -9,7 +9,6 @@ from   contextlib      import contextmanager
 from   datetime        import datetime, timezone
 import logging
 from   os.path         import join
-from   time            import time
 from   typing          import Optional, Union
 from   flask           import current_app
 from   packaging.utils import canonicalize_name as normalize, \
@@ -219,7 +218,7 @@ def purge_old_versions():
     all other versions.
     """
     log.info('BEGIN purge_old_versions')
-    start_time = time()
+    start_time = datetime.now(timezone.utc)
     purged = 0
     for p in Project.query.join(Version)\
                           .group_by(Project)\
@@ -247,7 +246,7 @@ def purge_old_versions():
                          p.display_name, v.display_name)
                 db.session.delete(v)
                 purged += 1
-    end_time = time()
+    end_time = datetime.now(timezone.utc)
     log_dir = current_app.config.get("WHEELODEX_STATS_LOG_DIR")
     if log_dir is not None:
         with open(join(log_dir, 'purge_old_versions.log'), 'a') as fp:

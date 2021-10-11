@@ -3,7 +3,6 @@ from   datetime            import datetime, timedelta, timezone
 import json
 import logging
 from   os.path             import join
-from   time                import time
 import click
 from   flask               import current_app
 from   flask.cli           import FlaskGroup
@@ -173,7 +172,7 @@ def process_orphan_wheels():
     database.
     """
     log.info('BEGIN process_orphan_wheels')
-    start_time = time()
+    start_time = datetime.now(timezone.utc)
     unorphaned = 0
     remaining = 0
     pypi = PyPIAPI()
@@ -206,7 +205,7 @@ def process_orphan_wheels():
                 < datetime.now(timezone.utc) - timedelta(seconds=max_age)
         ).delete()
         log.info('%d orphan wheels expired', expired)
-    end_time = time()
+    end_time = datetime.now(timezone.utc)
     log_dir = current_app.config.get("WHEELODEX_STATS_LOG_DIR")
     if log_dir is not None:
         with open(join(log_dir, 'process_orphan_wheels.log'), 'a') as fp:
