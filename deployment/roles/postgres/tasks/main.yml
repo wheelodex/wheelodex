@@ -3,6 +3,7 @@
   apt:
     name:
       - postgresql
+      - python3-packaging  # Needed by postgres_version
       - python3-psycopg2  # Needed by Ansible's postgresql_* modules
     state: present
     update_cache: false
