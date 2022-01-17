@@ -1,19 +1,19 @@
-from   collections       import defaultdict
-from   functools         import total_ordering
+from collections import defaultdict
+from functools import total_ordering
 import platform
 import re
-from   flask             import Response
-from   flask.json        import dumps
-from   packaging.version import parse
+from flask import Response
+from flask.json import dumps
+from packaging.version import parse
 import pyrfc3339
 import requests
 import requests_download
-from   wheel_filename    import parse_wheel_filename
-from   .                 import __url__, __version__
+from wheel_filename import parse_wheel_filename
+from . import __url__, __version__
 
 #: The User-Agent header used for requests to PyPI's JSON API and when
 #: downloading wheels
-USER_AGENT = 'wheelodex/{} ({}) requests/{} requests_download/{} {}/{}'.format(
+USER_AGENT = "wheelodex/{} ({}) requests/{} requests_download/{} {}/{}".format(
     __version__,
     __url__,
     requests.__version__,
@@ -21,6 +21,7 @@ USER_AGENT = 'wheelodex/{} ({}) requests/{} requests_download/{} {}/{}'.format(
     platform.python_implementation(),
     platform.python_version(),
 )
+
 
 def latest_version(versions):
     """
@@ -30,6 +31,7 @@ def latest_version(versions):
     """
     return max(versions, key=version_sort_key, default=None)
 
+
 def version_sort_key(v):
     """
     Returns a sort key for the given version string that sorts in PEP 440
@@ -38,34 +40,43 @@ def version_sort_key(v):
     v = parse(v)
     return (not v.is_prerelease, v)
 
+
 def reprify(obj, fields):
     """
     Returns a string suitable as a ``__repr__`` for ``obj`` that includes the
     fields in the list ``fields``
     """
-    return '{0.__module__}.{0.__name__}({1})'.format(
+    return "{0.__module__}.{0.__name__}({1})".format(
         type(obj),
-        ', '.join('{}={!r}'.format(f, getattr(obj, f)) for f in fields),
+        ", ".join("{}={!r}".format(f, getattr(obj, f)) for f in fields),
     )
 
-PYTHON_PREFERENCES = defaultdict(lambda: -1, {
-    'py': 4,
-    'cp': 3,
-    'pp': 2,
-    'jy': 1,
-    'ip': 0,
-})
 
-ARCH_PREFERENCES = defaultdict(lambda: -1, {
-    'universal': 7,
-    'fat':       6,
-    'intel':     5,
-    'x86_64':    4,
-    'i686':      3,
-    'i386':      2,
-    'armv7l':    1,
-    'armv6l':    0,
-})
+PYTHON_PREFERENCES = defaultdict(
+    lambda: -1,
+    {
+        "py": 4,
+        "cp": 3,
+        "pp": 2,
+        "jy": 1,
+        "ip": 0,
+    },
+)
+
+ARCH_PREFERENCES = defaultdict(
+    lambda: -1,
+    {
+        "universal": 7,
+        "fat": 6,
+        "intel": 5,
+        "x86_64": 4,
+        "i686": 3,
+        "i386": 2,
+        "armv7l": 1,
+        "armv6l": 0,
+    },
+)
+
 
 @total_ordering
 class VersionNoDot:
@@ -77,7 +88,7 @@ class VersionNoDot:
     """
 
     def __init__(self, vstr):
-        components = vstr.split('_')
+        components = vstr.split("_")
         if len(components) > 1:
             self.vs = tuple(int(c) for c in components)
         else:
@@ -91,16 +102,16 @@ class VersionNoDot:
 
     def __le__(self, other):
         if type(self) is type(other):
-            return self.vs[:len(other.vs)] == other.vs or self.vs < other.vs
+            return self.vs[: len(other.vs)] == other.vs or self.vs < other.vs
         else:
             return NotImplemented
 
     def __repr__(self):
         if any(c >= 10 for c in self.vs):
-            s = '_'.join(map(str, self.vs))
+            s = "_".join(map(str, self.vs))
         else:
-            s = ''.join(map(str, self.vs))
-        return f'VersionNoDot({s!r})'
+            s = "".join(map(str, self.vs))
+        return f"VersionNoDot({s!r})"
 
 
 def wheel_sort_key(filename):
@@ -146,22 +157,24 @@ def wheel_sort_key(filename):
         return (0, filename)
 
     if whlname.build is not None:
-        n = re.fullmatch(r'(?P<buildno>\d+)(?P<buildstr>[^-]*)', whlname.build)
+        n = re.fullmatch(r"(?P<buildno>\d+)(?P<buildstr>[^-]*)", whlname.build)
         if not n:
             return (0, filename)
-        build_rank = (int(n.group('buildno')), n.group('buildstr'))
+        build_rank = (int(n.group("buildno")), n.group("buildstr"))
     else:
-        build_rank = (-1, '')
+        build_rank = (-1, "")
 
     pyver_rank = []
     for py in whlname.python_tags:
-        n = re.fullmatch(r'(\w+?)(\d[\d_]*)', py)
+        n = re.fullmatch(r"(\w+?)(\d[\d_]*)", py)
         if not n:
             return (0, filename)
-        pyver_rank.append((
-            PYTHON_PREFERENCES[n.group(1)],
-            VersionNoDot(n.group(2)),
-        ))
+        pyver_rank.append(
+            (
+                PYTHON_PREFERENCES[n.group(1)],
+                VersionNoDot(n.group(2)),
+            )
+        )
     pyver_rank.sort(reverse=True)
 
     ### TODO: distlib expects wheels to have only one ABI tag in their filename
@@ -169,34 +182,36 @@ def wheel_sort_key(filename):
     ### correct approach, adjust this code to handle multiple tags.
     abi = whlname.abi_tags[0]
     ### TODO: Should abi3 be given some rank?
-    if abi == 'none':
+    if abi == "none":
         abi_rank = (1,)
     else:
-        n = re.fullmatch(r'(\wp)(\d+)(\w*)', abi)
+        n = re.fullmatch(r"(\wp)(\d+)(\w*)", abi)
         if n:
             py_imp, py_ver, flags = n.groups()
-            abi_rank = (0,PYTHON_PREFERENCES[py_imp],VersionNoDot(py_ver),flags)
+            abi_rank = (0, PYTHON_PREFERENCES[py_imp], VersionNoDot(py_ver), flags)
         else:
-            abi_rank = (0, -1, -1, '')
+            abi_rank = (0, -1, -1, "")
 
     platform_rank = []
     for plat in whlname.platform_tags:
-        for rank, rgx in enumerate([
-            r'macosx_10_(?P<version>\d+)_(?P<arch>\w+)',
-            'macosx',
-            'win32',
-            'win64',
-            'win_amd64',
-            r'linux_(?P<arch>\w+)',
-            r'manylinux(?P<version>\d+)_(?P<arch>\w+)',
-            'any',
-        ]):
+        for rank, rgx in enumerate(
+            [
+                r"macosx_10_(?P<version>\d+)_(?P<arch>\w+)",
+                "macosx",
+                "win32",
+                "win64",
+                "win_amd64",
+                r"linux_(?P<arch>\w+)",
+                r"manylinux(?P<version>\d+)_(?P<arch>\w+)",
+                "any",
+            ]
+        ):
             n = re.fullmatch(rgx, plat)
             if n:
                 d = n.groupdict()
-                version = d.get('version')
+                version = d.get("version")
                 version = int(version) if version is not None else -1
-                arch = ARCH_PREFERENCES[d.get('arch')]
+                arch = ARCH_PREFERENCES[d.get("arch")]
                 platform_rank.append((rank, version, arch))
                 break
         else:
@@ -204,56 +219,62 @@ def wheel_sort_key(filename):
             pass
     platform_rank.sort(reverse=True)
 
-    tiebreaker = '{}-{}-{}'.format(
-        '.'.join(whlname.python_tags),
-        '.'.join(whlname.abi_tags),
-        '.'.join(whlname.platform_tags),
+    tiebreaker = "{}-{}-{}".format(
+        ".".join(whlname.python_tags),
+        ".".join(whlname.abi_tags),
+        ".".join(whlname.platform_tags),
     )
 
     return (1, pyver_rank, platform_rank, abi_rank, tiebreaker, build_rank)
 
+
 def json_response(obj, status_code=200):
-    """ Like `flask.jsonify()`, but supports setting a custom status code """
+    """Like `flask.jsonify()`, but supports setting a custom status code"""
     return Response(
-        response = dumps(obj),
-        status   = status_code,
-        mimetype = 'application/json',
+        response=dumps(obj),
+        status=status_code,
+        mimetype="application/json",
     )
+
 
 def like_escape(s):
     """
     Escape characters in ``s`` that have special meaning to SQL's ``LIKE``
     """
-    return s.replace('\\', r'\\').replace('%', r'\%').replace('_', r'\_')
+    return s.replace("\\", r"\\").replace("%", r"\%").replace("_", r"\_")
+
 
 def glob2like(s):
-    """ Convert a file glob pattern to an equivalent SQL ``LIKE`` pattern """
+    """Convert a file glob pattern to an equivalent SQL ``LIKE`` pattern"""
+
     def subber(m):
         x = m.group(1)
-        if x == '*':
-            return '%'
-        elif x == '?':
-            return '_'
-        elif x in (r'\*', r'\?'):
+        if x == "*":
+            return "%"
+        elif x == "?":
+            return "_"
+        elif x in (r"\*", r"\?"):
             return x[-1]
-        elif x in (r'\%', r'\_'):
-            return r'\\' + x
-        elif x == r'\\':
+        elif x in (r"\%", r"\_"):
+            return r"\\" + x
+        elif x == r"\\":
             return x
         else:
-            return '\\' + x
-    return re.sub(r'(\x5C.|[?*%_])', subber, s)
+            return "\\" + x
+
+    return re.sub(r"(\x5C.|[?*%_])", subber, s)
+
 
 def parse_timestamp(s):
-    """ Parse an ISO 8601 timestamp, assuming anything naïve is in UTC """
-    if re.fullmatch(r'\d{4}-\d\d-\d\d[T ]\d\d:\d\d:\d\d(\.\d+)?', s):
-        s += 'Z'
+    """Parse an ISO 8601 timestamp, assuming anything naïve is in UTC"""
+    if re.fullmatch(r"\d{4}-\d\d-\d\d[T ]\d\d:\d\d:\d\d(\.\d+)?", s):
+        s += "Z"
     return pyrfc3339.parse(s)
 
     # Python 3.7+:
-    #if s.endswith('Z'):
+    # if s.endswith('Z'):
     #    s = s[:-1] + '+00:00'
-    #dt = datetime.fromisoformat(s)
-    #if dt.tzinfo is None:
+    # dt = datetime.fromisoformat(s)
+    # if dt.tzinfo is None:
     #    dt = dt.replace(tzinfo=timezone.utc)
-    #return dt
+    # return dt

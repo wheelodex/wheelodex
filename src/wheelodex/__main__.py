@@ -1,54 +1,66 @@
-from   configparser        import ConfigParser
-from   datetime            import datetime, timedelta, timezone
+from configparser import ConfigParser
+from datetime import datetime, timedelta, timezone
 import json
 import logging
-from   os.path             import join
+from os.path import join
 import click
-from   flask               import current_app
-from   flask.cli           import FlaskGroup
-from   flask_migrate       import stamp
-from   importlib_resources import as_file, files
-from   sqlalchemy          import inspect
-from   .                   import __version__
-from   .app                import create_app
-from   .dbutil             import add_wheel, add_wheel_from_json, dbcontext, \
-                                      get_serial, purge_old_versions, set_serial
-from   .models             import EntryPointGroup, OrphanWheel, Wheel, db
-from   .process            import process_queue
-from   .pypi_api           import PyPIAPI
-from   .scan               import scan_changelog, scan_pypi
+from flask import current_app
+from flask.cli import FlaskGroup
+from flask_migrate import stamp
+from importlib_resources import as_file, files
+from sqlalchemy import inspect
+from . import __version__
+from .app import create_app
+from .dbutil import (
+    add_wheel,
+    add_wheel_from_json,
+    dbcontext,
+    get_serial,
+    purge_old_versions,
+    set_serial,
+)
+from .models import EntryPointGroup, OrphanWheel, Wheel, db
+from .process import process_queue
+from .pypi_api import PyPIAPI
+from .scan import scan_changelog, scan_pypi
 
 log = logging.getLogger(__name__)
 
-with as_file(files('wheelodex') / 'data' / 'entry_points.ini') as ep_path:
+with as_file(files("wheelodex") / "data" / "entry_points.ini") as ep_path:
     # Violating the context manager like this means that wheelodex can't be run
     # from within a zipfile.
     ep_path = str(ep_path)
+
 
 # FlaskGroup causes all commands to be run inside an application context,
 # thereby letting `db` do database operations.  This does require that
 # `ctx.obj` be left untouched, though.
 @click.group(cls=FlaskGroup, create_app=create_app)
 @click.option(
-    '-l', '--log-level',
-    type = click.Choice(['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG']),
-    default      = 'INFO',
-    show_default = True,
-    help         = 'Set command logging level',
+    "-l",
+    "--log-level",
+    type=click.Choice(["CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"]),
+    default="INFO",
+    show_default=True,
+    help="Set command logging level",
 )
 @click.version_option(
-    __version__, '-V', '--version', message='%(prog)s %(version)s',
+    __version__,
+    "-V",
+    "--version",
+    message="%(prog)s %(version)s",
 )
 def main(log_level):
-    """ Manage a Wheelodex instance """
+    """Manage a Wheelodex instance"""
     logging.basicConfig(
-        format  = '%(asctime)s %(levelname)s %(name)s %(message)s',
-        datefmt = '%Y-%m-%dT%H:%M:%S%z',
-        level   = getattr(logging, log_level),
+        format="%(asctime)s %(levelname)s %(name)s %(message)s",
+        datefmt="%Y-%m-%dT%H:%M:%S%z",
+        level=getattr(logging, log_level),
     )
 
+
 @main.command()
-@click.option('-f', '--force', is_flag=True, help='Force initialization')
+@click.option("-f", "--force", is_flag=True, help="Force initialization")
 def initdb(force):
     """
     Initialize the database.
@@ -60,32 +72,36 @@ def initdb(force):
     check.
     """
     if force or not inspect(db.engine).get_table_names():
-        click.echo('Initializing database ...')
+        click.echo("Initializing database ...")
         with dbcontext():
             db.create_all()
             set_serial(0)
         stamp()
     else:
-        click.echo('Database appears to already be initialized; doing nothing')
+        click.echo("Database appears to already be initialized; doing nothing")
 
-@main.command('scan-pypi')
+
+@main.command("scan-pypi")
 def scan_pypi_cmd():
-    """ Scan all PyPI projects for wheels """
+    """Scan all PyPI projects for wheels"""
     with dbcontext():
         scan_pypi()
 
-@main.command('scan-changelog')
+
+@main.command("scan-changelog")
 def scan_changelog_cmd():
-    """ Scan the PyPI changelog for new wheels """
+    """Scan the PyPI changelog for new wheels"""
     with dbcontext():
         serial = get_serial()
         if serial is None:
-            raise click.UsageError('No saved state to update')
+            raise click.UsageError("No saved state to update")
         scan_changelog(serial)
 
-@main.command('process-queue')
-@click.option('-S', '--max-wheel-size', type=int,
-              help='Maximum size of wheels to process')
+
+@main.command("process-queue")
+@click.option(
+    "-S", "--max-wheel-size", type=int, help="Maximum size of wheels to process"
+)
 def process_queue_cmd(max_wheel_size):
     """
     Analyze new wheels.
@@ -101,9 +117,10 @@ def process_queue_cmd(max_wheel_size):
     with dbcontext():
         process_queue(max_wheel_size=max_wheel_size)
 
+
 @main.command()
-@click.option('-A', '--all', 'dump_all', is_flag=True, help='Dump all wheels')
-@click.option('-o', '--outfile', default='-', help='File to dump to')
+@click.option("-A", "--all", "dump_all", is_flag=True, help="Dump all wheels")
+@click.option("-o", "--outfile", default="-", help="File to dump to")
 def dump(dump_all, outfile):
     """
     Dump wheel data as line-delimited JSON.
@@ -121,7 +138,7 @@ def dump(dump_all, outfile):
     """
     with dbcontext():
         outfile %= {"serial": get_serial()}
-        with click.open_file(outfile, 'w') as fp:
+        with click.open_file(outfile, "w") as fp:
             q = Wheel.query
             if not dump_all:
                 q = q.filter(Wheel.data.has())
@@ -136,10 +153,10 @@ def dump(dump_all, outfile):
                 else:
                     break
 
+
 @main.command()
-@click.option('-S', '--serial', type=int,
-              help='Also update PyPI serial to given value')
-@click.argument('infile', type=click.File())
+@click.option("-S", "--serial", type=int, help="Also update PyPI serial to given value")
+@click.argument("infile", type=click.File())
 def load(infile, serial):
     """
     Load wheel data from line-delimited JSON.
@@ -154,11 +171,13 @@ def load(infile, serial):
         for line in infile:
             add_wheel_from_json(json.loads(line))
 
-@main.command('purge-old-versions')
+
+@main.command("purge-old-versions")
 def purge_old_versions_cmd():
-    """ Delete old versions from the database """
+    """Delete old versions from the database"""
     with dbcontext():
         purge_old_versions()
+
 
 @main.command()
 def process_orphan_wheels():
@@ -171,7 +190,7 @@ def process_orphan_wheels():
     configured number of seconds are considered expired and deleted from the
     database.
     """
-    log.info('BEGIN process_orphan_wheels')
+    log.info("BEGIN process_orphan_wheels")
     start_time = datetime.now(timezone.utc)
     unorphaned = 0
     remaining = 0
@@ -185,43 +204,44 @@ def process_orphan_wheels():
                 orphan.filename,
             )
             if data is not None:
-                log.info('Wheel %s: data found', orphan.filename)
+                log.info("Wheel %s: data found", orphan.filename)
                 add_wheel(
-                    version  = orphan.version,
-                    filename = data["filename"],
-                    url      = data["url"],
-                    size     = data["size"],
-                    md5      = data["digests"].get("md5").lower(),
-                    sha256   = data["digests"].get("sha256").lower(),
-                    uploaded = str(data["upload_time"]),
+                    version=orphan.version,
+                    filename=data["filename"],
+                    url=data["url"],
+                    size=data["size"],
+                    md5=data["digests"].get("md5").lower(),
+                    sha256=data["digests"].get("sha256").lower(),
+                    uploaded=str(data["upload_time"]),
                 )
                 db.session.delete(orphan)
                 unorphaned += 1
             else:
-                log.info('Wheel %s: data not found', orphan.filename)
+                log.info("Wheel %s: data not found", orphan.filename)
                 remaining += 1
         expired = OrphanWheel.query.filter(
             OrphanWheel.uploaded
-                < datetime.now(timezone.utc) - timedelta(seconds=max_age)
+            < datetime.now(timezone.utc) - timedelta(seconds=max_age)
         ).delete()
-        log.info('%d orphan wheels expired', expired)
+        log.info("%d orphan wheels expired", expired)
     end_time = datetime.now(timezone.utc)
     log_dir = current_app.config.get("WHEELODEX_STATS_LOG_DIR")
     if log_dir is not None:
-        with open(join(log_dir, 'process_orphan_wheels.log'), 'a') as fp:
+        with open(join(log_dir, "process_orphan_wheels.log"), "a") as fp:
             print(
-                'process_orphan_wheels'
-                f'|start={start_time}'
-                f'|end={end_time}'
-                f'|unorphaned={unorphaned}'
-                f'|expired={expired}'
-                f'|remain={remaining - expired}',
+                "process_orphan_wheels"
+                f"|start={start_time}"
+                f"|end={end_time}"
+                f"|unorphaned={unorphaned}"
+                f"|expired={expired}"
+                f"|remain={remaining - expired}",
                 file=fp,
             )
-    log.info('END process_orphan_wheels')
+    log.info("END process_orphan_wheels")
+
 
 @main.command()
-@click.argument('infile', type=click.File(), default=ep_path)
+@click.argument("infile", type=click.File(), default=ep_path)
 def load_entry_points(infile):
     """
     Load entry point group descriptions from a file.
@@ -243,10 +263,11 @@ def load_entry_points(infile):
     with dbcontext():
         for name in epgs.sections():
             group = EntryPointGroup.from_name(name)
-            if epgs.has_option(name, 'summary'):
-                group.summary = epgs.get(name, 'summary')
-            if epgs.has_option(name, 'description'):
-                group.description = epgs.get(name, 'description')
+            if epgs.has_option(name, "summary"):
+                group.summary = epgs.get(name, "summary")
+            if epgs.has_option(name, "description"):
+                group.description = epgs.get(name, "description")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main(prog_name=__package__)

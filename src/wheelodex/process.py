@@ -1,19 +1,20 @@
 """ Functions for downloading & analyzing wheels """
 
-from   datetime          import datetime, timezone
+from datetime import datetime, timezone
 import logging
 import os
-from   os.path           import join
-from   tempfile          import TemporaryDirectory
+from os.path import join
+from tempfile import TemporaryDirectory
 import traceback
-from   flask             import current_app
-from   requests_download import download
-from   wheel_inspect     import inspect_wheel
-from   .dbutil           import iterqueue
-from   .models           import db
-from   .util             import USER_AGENT
+from flask import current_app
+from requests_download import download
+from wheel_inspect import inspect_wheel
+from .dbutil import iterqueue
+from .models import db
+from .util import USER_AGENT
 
 log = logging.getLogger(__name__)
+
 
 def process_queue(max_wheel_size=None):
     """
@@ -39,12 +40,12 @@ def process_queue(max_wheel_size=None):
             for whl in iterqueue(max_wheel_size=max_wheel_size):
                 try:
                     about = process_wheel(
-                        filename = whl.filename,
-                        url      = whl.url,
-                        size     = whl.size,
-                        md5      = whl.md5,
-                        sha256   = whl.sha256,
-                        tmpdir   = tmpdir,
+                        filename=whl.filename,
+                        url=whl.url,
+                        size=whl.size,
+                        md5=whl.md5,
+                        sha256=whl.sha256,
+                        tmpdir=tmpdir,
                     )
                     whl.set_data(about)
                     # Some errors in inserting data aren't raised until we
@@ -55,7 +56,7 @@ def process_queue(max_wheel_size=None):
                     # rollback() needs to be called before log.exception() or
                     # else SQLAlchemy gets all complainy.
                     db.session.rollback()
-                    log.exception('Error processing %s', whl.filename)
+                    log.exception("Error processing %s", whl.filename)
                     whl.add_error(traceback.format_exc())
                     db.session.commit()
                     errors += 1
@@ -65,16 +66,17 @@ def process_queue(max_wheel_size=None):
             end_time = datetime.now(timezone.utc)
             log_dir = current_app.config.get("WHEELODEX_STATS_LOG_DIR")
             if log_dir is not None:
-                with open(join(log_dir, 'process_queue.log'), 'a') as fp:
+                with open(join(log_dir, "process_queue.log"), "a") as fp:
                     print(
-                        'process_queue'
-                        f'|start={start_time}'
-                        f'|end={end_time}'
-                        f'|wheels={wheels_processed}'
-                        f'|bytes={bytes_processed}'
-                        f'|errors={errors}',
+                        "process_queue"
+                        f"|start={start_time}"
+                        f"|end={end_time}"
+                        f"|wheels={wheels_processed}"
+                        f"|bytes={bytes_processed}"
+                        f"|errors={errors}",
                         file=fp,
                     )
+
 
 def process_wheel(filename, url, size, md5, sha256, tmpdir):
     """
@@ -86,32 +88,35 @@ def process_wheel(filename, url, size, md5, sha256, tmpdir):
     :return: the results of the call to `inspect_wheel()`
     """
     fpath = join(tmpdir, filename)
-    log.info('Downloading %s from %s ...', filename, url)
+    log.info("Downloading %s from %s ...", filename, url)
     # Write "user-agent" in lowercase so it overrides requests_download's
     # header correctly:
     download(url, fpath, headers={"user-agent": USER_AGENT})
-    log.info('Inspecting %s ...', filename)
+    log.info("Inspecting %s ...", filename)
     try:
         about = inspect_wheel(fpath)
     finally:
         os.remove(fpath)
     if about["file"]["size"] != size:
-        log.error('Wheel %s: size mismatch: PyPI reports %d, got %d',
-                  size, about["file"]["size"])
+        log.error(
+            "Wheel %s: size mismatch: PyPI reports %d, got %d",
+            size,
+            about["file"]["size"],
+        )
         raise ValueError(
             f'Size mismatch: PyPI reports {size}, got {about["file"]["size"]}'
         )
     for alg, expected in [("md5", md5), ("sha256", sha256)]:
         if expected is not None and expected != about["file"]["digests"][alg]:
             log.error(
-                'Wheel %s: %s hash mismatch: PyPI reports %s, got %s',
+                "Wheel %s: %s hash mismatch: PyPI reports %s, got %s",
                 alg,
                 expected,
                 about["file"]["digests"][alg],
             )
             raise ValueError(
-                f'{alg} hash mismatch: PyPI reports {expected},'
+                f"{alg} hash mismatch: PyPI reports {expected},"
                 f' got {about["file"]["digests"][alg]}'
             )
-    log.info('Finished inspecting %s', filename)
+    log.info("Finished inspecting %s", filename)
     return about
