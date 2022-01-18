@@ -13,7 +13,7 @@ def sampledb():
         # See <https://docs.sqlalchemy.org/en/latest/dialects/sqlite.html#foreign-key-support>:
         db.session.execute("PRAGMA foreign_keys=ON")
         db.create_all()
-        with open(str(Path(__file__).with_name("data") / "sampledb01.json")) as fp:
+        with (Path(__file__).with_name("data") / "sampledb01.jsonl").open() as fp:
             for line in fp:
                 add_wheel_from_json(json.loads(line))
         db.session.commit()
