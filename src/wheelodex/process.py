@@ -1,6 +1,7 @@
 """ Functions for downloading & analyzing wheels """
 
 from datetime import datetime, timezone
+import json
 import logging
 import os
 from os.path import join
@@ -68,12 +69,16 @@ def process_queue(max_wheel_size=None):
             if log_dir is not None:
                 with open(join(log_dir, "process_queue.log"), "a") as fp:
                     print(
-                        "process_queue"
-                        f"|start={start_time}"
-                        f"|end={end_time}"
-                        f"|wheels={wheels_processed}"
-                        f"|bytes={bytes_processed}"
-                        f"|errors={errors}",
+                        json.dumps(
+                            {
+                                "op": "process_queue",
+                                "start": str(start_time),
+                                "end": str(end_time),
+                                "wheels": wheels_processed,
+                                "bytes": bytes_processed,
+                                "errors": errors,
+                            }
+                        ),
                         file=fp,
                     )
 

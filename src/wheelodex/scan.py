@@ -1,6 +1,7 @@
 """ Functions for scanning PyPI for wheels to register """
 
 from datetime import datetime, timezone
+import json
 import logging
 from os.path import join
 from flask import current_app
@@ -83,10 +84,14 @@ def scan_pypi():
             ### TODO: Distinguish between actually new wheels and wheels that
             ### were already in the system?
             print(
-                "scan_pypi"
-                f"|start={start_time}"
-                f"|end={end_time}"
-                f"|wheels_added={total_queued}",
+                json.dumps(
+                    {
+                        "op": "scan_pypi",
+                        "start": str(start_time),
+                        "end": str(end_time),
+                        "wheels_added": total_queued,
+                    }
+                ),
                 file=fp,
             )
     log.info("END scan_pypi")

@@ -234,12 +234,16 @@ def process_orphan_wheels():
     if log_dir is not None:
         with open(join(log_dir, "process_orphan_wheels.log"), "a") as fp:
             print(
-                "process_orphan_wheels"
-                f"|start={start_time}"
-                f"|end={end_time}"
-                f"|unorphaned={unorphaned}"
-                f"|expired={expired}"
-                f"|remain={remaining - expired}",
+                json.dumps(
+                    {
+                        "op": "process_orphan_wheels",
+                        "start": str(start_time),
+                        "end": str(end_time),
+                        "unorphaned": unorphaned,
+                        "expired": expired,
+                        "remain": remaining - expired,
+                    }
+                ),
                 file=fp,
             )
     log.info("END process_orphan_wheels")

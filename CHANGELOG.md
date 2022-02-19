@@ -3,8 +3,8 @@ In Development
 - Deployment: Configure systemd's journaling to only retain the last 180 days
   of logs
 - Support Python 3.10
-- Logs written to the `WHEELODEX_STATS_LOG_DIR` now display timestamps in
-  ISO 8601(-ish) format
+- Log entries written to the `WHEELODEX_STATS_LOG_DIR` are now in JSON Lines
+  format and display timestamps in ISO 8601(-ish) format
 - Update links in entry point descriptions
 - Update cmarkgfm to 0.7.0
 - Use `importlib.resources` on Python 3.9+

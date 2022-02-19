@@ -7,6 +7,7 @@ connection to be in effect.
 
 from contextlib import contextmanager
 from datetime import datetime, timezone
+import json
 import logging
 from os.path import join
 from typing import Optional, Union
@@ -298,7 +299,14 @@ def purge_old_versions():
     if log_dir is not None:
         with open(join(log_dir, "purge_old_versions.log"), "a") as fp:
             print(
-                f"purge_old_versions|start={start_time}|end={end_time}|purged={purged}",
+                json.dumps(
+                    {
+                        "op": "purge_old_versions",
+                        "start": str(start_time),
+                        "end": str(end_time),
+                        "purged": purged,
+                    }
+                ),
                 file=fp,
             )
     log.info("END purge_old_versions")
