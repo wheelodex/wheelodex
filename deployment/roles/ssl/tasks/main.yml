@@ -1,5 +1,5 @@
 ---
-- name: Assert server_names is defines and nonempty
+- name: Assert server_names is defined and nonempty
   assert: that='server_names is defined and (server_names|length > 0)'
 
 - name: Install Certbot
