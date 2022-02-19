@@ -3,11 +3,11 @@ from datetime import datetime, timedelta, timezone
 import json
 import logging
 from os.path import join
+import sys
 import click
 from flask import current_app
 from flask.cli import FlaskGroup
 from flask_migrate import stamp
-from importlib_resources import as_file, files
 from sqlalchemy import inspect
 from . import __version__
 from .app import create_app
@@ -23,6 +23,11 @@ from .models import EntryPointGroup, OrphanWheel, Wheel, db
 from .process import process_queue
 from .pypi_api import PyPIAPI
 from .scan import scan_changelog, scan_pypi
+
+if sys.version_info >= (3, 9):
+    from importlib.resources import as_file, files
+else:
+    from importlib_resources import as_file, files
 
 log = logging.getLogger(__name__)
 

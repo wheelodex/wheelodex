@@ -7,6 +7,7 @@ In Development
   ISO 8601(-ish) format
 - Update links in entry point descriptions
 - Update cmarkgfm to 0.7.0
+- Use `importlib.resources` on Python 3.9+
 
 v2021.9.19
 ----------
