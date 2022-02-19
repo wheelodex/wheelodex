@@ -1,7 +1,8 @@
 In Development
 --------------
-- Deployment: Configure systemd's journaling to only retain the last 180 days
-  of logs
+- Deployment:
+    - Configure systemd's journaling to only retain the last 180 days of logs
+    - Adjust wheel registration times by two hours
 - Support Python 3.10
 - Log entries written to the `WHEELODEX_STATS_LOG_DIR` are now in JSON Lines
   format and display timestamps in ISO 8601(-ish) format
