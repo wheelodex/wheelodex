@@ -9,6 +9,7 @@ In Development
 - Update cmarkgfm to 0.7.0
 - Use `importlib.resources` on Python 3.9+
 - Update to Flask 2.0 and Click 8.0
+- Update Flask-Migrate to 3.0
 
 v2021.9.19
 ----------
