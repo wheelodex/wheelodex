@@ -6,6 +6,7 @@ In Development
 - Logs written to the `WHEELODEX_STATS_LOG_DIR` now display timestamps in
   ISO 8601(-ish) format
 - Update links in entry point descriptions
+- Update cmarkgfm to 0.7.0
 
 v2021.9.19
 ----------
