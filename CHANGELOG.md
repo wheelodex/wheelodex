@@ -5,6 +5,7 @@ In Development
 - Support Python 3.10
 - Logs written to the `WHEELODEX_STATS_LOG_DIR` now display timestamps in
   ISO 8601(-ish) format
+- Update links in entry point descriptions
 
 v2021.9.19
 ----------
