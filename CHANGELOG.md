@@ -1,5 +1,5 @@
-In Development
---------------
+v2022.2.19
+----------
 - Deployment:
     - Configure systemd's journaling to only retain the last 180 days of logs
     - Adjust wheel registration times by two hours
