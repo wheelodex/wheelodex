@@ -4,7 +4,7 @@ import heapq
 import re
 from cmarkgfm import markdown_to_html
 from flask import url_for
-from jinja2 import Markup
+from markupsafe import Markup
 from packaging.utils import canonicalize_name as normalize
 from .views import web
 
