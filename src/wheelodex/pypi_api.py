@@ -4,7 +4,7 @@ import logging
 from xmlrpc.client import ProtocolError, ServerProxy
 from pypi_simple import PyPISimple
 import requests
-from retrying import retry
+from tenacity import retry, retry_if_exception, wait_exponential
 from .util import USER_AGENT
 
 log = logging.getLogger(__name__)
@@ -61,18 +61,16 @@ class PyPIAPI:
         self.s.headers["User-Agent"] = USER_AGENT
 
     @retry(
-        retry_on_exception=on_xml_exception("changelog_last_serial"),
-        wait_exponential_multiplier=1000,
-        wait_exponential_max=10000,
+        retry=retry_if_exception(on_xml_exception("changelog_last_serial")),
+        wait=wait_exponential(multiplier=1, max=10),
     )
     def changelog_last_serial(self):
         """Returns the serial ID of the last event on PyPI"""
         return self.client.changelog_last_serial()
 
     @retry(
-        retry_on_exception=on_http_exception,
-        wait_exponential_multiplier=1000,
-        wait_exponential_max=10000,
+        retry=retry_if_exception(on_http_exception),
+        wait=wait_exponential(multiplier=1, max=10),
     )
     def list_packages(self):
         """Returns a list of the names of all packages on PyPI"""
@@ -82,9 +80,8 @@ class PyPIAPI:
             return ps.get_index_page().projects
 
     @retry(
-        retry_on_exception=on_http_exception,
-        wait_exponential_multiplier=1000,
-        wait_exponential_max=10000,
+        retry=retry_if_exception(on_http_exception),
+        wait=wait_exponential(multiplier=1, max=10),
     )
     def project_data(self, proj):
         """
@@ -114,9 +111,8 @@ class PyPIAPI:
         return None
 
     @retry(
-        retry_on_exception=on_xml_exception("changelog_since_serial"),
-        wait_exponential_multiplier=1000,
-        wait_exponential_max=10000,
+        retry=retry_if_exception(on_xml_exception("changelog_since_serial")),
+        wait=wait_exponential(multiplier=1, max=10),
     )
     def changelog_since_serial(self, since):
         """

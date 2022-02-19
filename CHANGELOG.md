@@ -6,10 +6,12 @@ In Development
 - Log entries written to the `WHEELODEX_STATS_LOG_DIR` are now in JSON Lines
   format and display timestamps in ISO 8601(-ish) format
 - Update links in entry point descriptions
-- Update cmarkgfm to 0.7.0
 - Use `importlib.resources` on Python 3.9+
-- Update to Flask 2.0 and Click 8.0
-- Update Flask-Migrate to 3.0
+- Dependencies:
+    - Update cmarkgfm to 0.7.0
+    - Update to Flask 2.0 and Click 8.0
+    - Update Flask-Migrate to 3.0
+    - Switch from retrying to tenacity
 
 v2021.9.19
 ----------
