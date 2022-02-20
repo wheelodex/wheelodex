@@ -213,17 +213,19 @@ def scan_changelog(since):
     if log_dir is not None:
         with open(join(log_dir, "scan_changelog.log"), "a") as fp:
             print(
-                "scan_changelog|start={}|end={}|projects=+{},-{}"
-                "|versions=+{},-{}|wheels=+{},-{}|orphans={}".format(
-                    start_time,
-                    end_time,
-                    projects_added,
-                    projects_removed,
-                    versions_added,
-                    versions_removed,
-                    wheels_added,
-                    wheels_removed,
-                    orphans_added,
+                json.dumps(
+                    {
+                        "op": "scan_changelog",
+                        "start": str(start_time),
+                        "end": str(end_time),
+                        "projects_added": projects_added,
+                        "projects_removed": projects_removed,
+                        "versions_added": versions_added,
+                        "versions_removed": versions_removed,
+                        "wheels_added": wheels_added,
+                        "wheels_removed": wheels_removed,
+                        "orphans_added": orphans_added,
+                    }
                 ),
                 file=fp,
             )
