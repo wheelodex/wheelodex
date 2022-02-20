@@ -1,5 +1,5 @@
-In Development
---------------
+v2022.2.20
+----------
 - `scan-changelog` log entries are now in JSON Lines format
 
 v2022.2.19
