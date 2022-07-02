@@ -1,3 +1,8 @@
+In Development
+--------------
+- When interacting with PyPI's Simple or JSON APIs, retry requests on general
+  communication errors
+
 v2022.2.20
 ----------
 - `scan-changelog` log entries are now in JSON Lines format

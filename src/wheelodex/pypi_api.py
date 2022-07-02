@@ -35,8 +35,8 @@ def on_xml_exception(method):
 
 def on_http_exception(e):
     """
-    If an HTTP request fails due to a 5xx error, this function logs the event
-    and tells `retrying` to try again.
+    If an HTTP request fails due to a connection or 5xx error, this function
+    logs the event and tells `retrying` to try again.
     """
     if isinstance(e, requests.HTTPError) and 500 <= e.response.status_code:
         log.warning(
@@ -44,6 +44,9 @@ def on_http_exception(e):
             e.response.request.url,
             e.response.status_code,
         )
+        return True
+    elif isinstance(e, requests.RequestException):
+        log.warning("Request to %s failed: %s: %s", type(e).__name__, str(e))
         return True
     else:
         return False
