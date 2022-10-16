@@ -2,6 +2,7 @@ In Development
 --------------
 - When interacting with PyPI's Simple or JSON APIs, retry requests on general
   communication errors
+- Drop support for Python 3.6
 
 v2022.2.20
 ----------

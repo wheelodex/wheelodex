@@ -13,14 +13,13 @@ jobs:
       fail-fast: false
       matrix:
         python-version:
-          - '3.6'
           - '3.7'
           - '3.8'
           - '3.9'
           - '3.10'
         toxenv: [py]
         include:
-          - python-version: '3.6'
+          - python-version: '3.7'
             toxenv: lint
     steps:
       - name: Check out repository
