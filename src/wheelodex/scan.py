@@ -79,7 +79,7 @@ def scan_pypi():
     end_time = datetime.now(timezone.utc)
     log_dir = current_app.config.get("WHEELODEX_STATS_LOG_DIR")
     if log_dir is not None:
-        with open(join(log_dir, "scan_pypi.log"), "a") as fp:
+        with open(join(log_dir, "scan_pypi.log"), "a", encoding="utf-8") as fp:
             ### TODO: Also log projects and versions added?
             ### TODO: Distinguish between actually new wheels and wheels that
             ### were already in the system?
@@ -211,7 +211,7 @@ def scan_changelog(since):
     end_time = datetime.now(timezone.utc)
     log_dir = current_app.config.get("WHEELODEX_STATS_LOG_DIR")
     if log_dir is not None:
-        with open(join(log_dir, "scan_changelog.log"), "a") as fp:
+        with open(join(log_dir, "scan_changelog.log"), "a", encoding="utf-8") as fp:
             print(
                 json.dumps(
                     {

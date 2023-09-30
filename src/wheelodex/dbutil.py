@@ -297,7 +297,7 @@ def purge_old_versions():
     end_time = datetime.now(timezone.utc)
     log_dir = current_app.config.get("WHEELODEX_STATS_LOG_DIR")
     if log_dir is not None:
-        with open(join(log_dir, "purge_old_versions.log"), "a") as fp:
+        with open(join(log_dir, "purge_old_versions.log"), "a", encoding="utf-8") as fp:
             print(
                 json.dumps(
                     {

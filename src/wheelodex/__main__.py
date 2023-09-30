@@ -232,7 +232,9 @@ def process_orphan_wheels():
     end_time = datetime.now(timezone.utc)
     log_dir = current_app.config.get("WHEELODEX_STATS_LOG_DIR")
     if log_dir is not None:
-        with open(join(log_dir, "process_orphan_wheels.log"), "a") as fp:
+        with open(
+            join(log_dir, "process_orphan_wheels.log"), "a", encoding="utf-8"
+        ) as fp:
             print(
                 json.dumps(
                     {

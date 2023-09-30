@@ -1,3 +1,7 @@
+In Development
+--------------
+- Always open log files in UTF-8
+
 v2023.6.11
 ----------
 - When interacting with PyPI's Simple or JSON APIs, retry requests on general
