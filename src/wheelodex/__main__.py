@@ -143,7 +143,7 @@ def dump(dump_all, outfile):
     """
     with dbcontext():
         outfile %= {"serial": get_serial()}
-        with click.open_file(outfile, "w") as fp:
+        with click.open_file(outfile, "w", encoding="utf-8") as fp:
             q = Wheel.query
             if not dump_all:
                 q = q.filter(Wheel.data.has())
