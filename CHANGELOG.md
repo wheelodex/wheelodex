@@ -1,6 +1,7 @@
 In Development
 --------------
 - Always open log files in UTF-8
+- Support Python 3.12
 
 v2023.6.11
 ----------
