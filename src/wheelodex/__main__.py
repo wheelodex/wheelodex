@@ -58,7 +58,7 @@ with as_file(files("wheelodex") / "data" / "entry_points.ini") as ep_path:
 def main(log_level):
     """Manage a Wheelodex instance"""
     logging.basicConfig(
-        format="%(asctime)s %(levelname)s %(name)s %(message)s",
+        format="%(asctime)s [%(levelname)-8s] %(name)s: %(message)s",
         datefmt="%Y-%m-%dT%H:%M:%S%z",
         level=getattr(logging, log_level),
     )
