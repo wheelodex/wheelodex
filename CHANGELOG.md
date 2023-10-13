@@ -7,6 +7,7 @@ In Development
 - Update SQLAlchemy to 1.4.x
 - Update Flask to ~=2.2
 - Update Flask-SQLAlchemy to 3.0.x
+- Update pypi-simple to 1.x
 
 v2023.6.11
 ----------

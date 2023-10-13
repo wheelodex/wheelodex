@@ -2,7 +2,7 @@
 
 import logging
 from xmlrpc.client import ProtocolError, ServerProxy
-from pypi_simple import PyPISimple
+from pypi_simple import ACCEPT_JSON_PREFERRED, PyPISimple
 import requests
 from tenacity import retry, retry_if_exception, wait_exponential
 from .util import USER_AGENT
@@ -79,7 +79,7 @@ class PyPIAPI:
         """Returns a list of the names of all packages on PyPI"""
         # The Warehouse devs prefer it if the Simple API is used for this
         # instead of the XML-RPC API.
-        with PyPISimple() as ps:
+        with PyPISimple(accept=ACCEPT_JSON_PREFERRED) as ps:
             return ps.get_index_page().projects
 
     @retry(
