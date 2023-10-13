@@ -2,6 +2,7 @@ In Development
 --------------
 - Always open log files in UTF-8
 - Support Python 3.12
+- Drop support for Python 3.7
 - Drop pyRFC3339 dependency
 
 v2023.6.11
