@@ -5,6 +5,7 @@ import logging
 from os.path import join
 import sys
 import click
+from click_loglevel import LogLevel
 from flask import current_app
 from flask.cli import FlaskGroup
 from flask_migrate import stamp
@@ -41,26 +42,26 @@ with as_file(files("wheelodex") / "data" / "entry_points.ini") as ep_path:
 # thereby letting `db` do database operations.  This does require that
 # `ctx.obj` be left untouched, though.
 @click.group(cls=FlaskGroup, create_app=create_app)
-@click.option(
-    "-l",
-    "--log-level",
-    type=click.Choice(["CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"]),
-    default="INFO",
-    show_default=True,
-    help="Set command logging level",
-)
 @click.version_option(
     __version__,
     "-V",
     "--version",
     message="%(prog)s %(version)s",
 )
-def main(log_level):
+@click.option(
+    "-l",
+    "--log-level",
+    type=LogLevel(),
+    default="INFO",
+    help="Set logging level",
+    show_default=True,
+)
+def main(log_level: int) -> None:
     """Manage a Wheelodex instance"""
     logging.basicConfig(
         format="%(asctime)s [%(levelname)-8s] %(name)s: %(message)s",
         datefmt="%Y-%m-%dT%H:%M:%S%z",
-        level=getattr(logging, log_level),
+        level=log_level,
     )
 
 
