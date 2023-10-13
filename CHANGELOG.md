@@ -3,11 +3,13 @@ In Development
 - Always open log files in UTF-8
 - Support Python 3.12
 - Drop support for Python 3.7
-- Drop pyRFC3339 dependency
-- Update SQLAlchemy to 1.4.x
-- Update Flask to ~=2.2
-- Update Flask-SQLAlchemy to 3.0.x
-- Update pypi-simple to 1.x
+- Dependencies:
+    - Drop pyRFC3339 dependency
+    - Update SQLAlchemy to 1.4.x
+    - Update Flask to ~=2.2
+    - Update Flask-SQLAlchemy to 3.0.x
+    - Update pypi-simple to 1.x
+    - Unpin cmarkgfm version
 
 v2023.6.11
 ----------
