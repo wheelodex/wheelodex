@@ -1,5 +1,6 @@
 from datetime import datetime
 import pytest
+from sqlalchemy import text
 from wheelodex.app import create_app
 from wheelodex.dbutil import (
     add_orphan_wheel,
@@ -22,7 +23,7 @@ from wheelodex.util import parse_timestamp
 def tmpdb_inited():
     with create_app().app_context():
         # See <https://docs.sqlalchemy.org/en/latest/dialects/sqlite.html#foreign-key-support>:
-        db.session.execute("PRAGMA foreign_keys=ON")
+        db.session.execute(text("PRAGMA foreign_keys=ON"))
         db.create_all()
         yield
 

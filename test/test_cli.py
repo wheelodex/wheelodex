@@ -1,6 +1,7 @@
 from operator import attrgetter
 from click.testing import CliRunner
 import pytest
+from sqlalchemy import text
 from wheelodex.__main__ import main
 from wheelodex.app import create_app
 from wheelodex.models import EntryPointGroup, db
@@ -9,9 +10,9 @@ from wheelodex.models import EntryPointGroup, db
 @pytest.fixture(scope="session")
 def tmpdb_inited():
     with create_app().app_context():
-        db.create_all()
         # See <https://docs.sqlalchemy.org/en/latest/dialects/sqlite.html#foreign-key-support>:
-        db.session.execute("PRAGMA foreign_keys=ON")
+        db.session.execute(text("PRAGMA foreign_keys=ON"))
+        db.create_all()
         yield
 
 

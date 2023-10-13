@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 from flask import current_app
 import pytest
+from sqlalchemy import text
 from wheelodex.app import create_app
 from wheelodex.dbutil import add_wheel_from_json
 from wheelodex.models import db
@@ -11,7 +12,7 @@ from wheelodex.models import db
 def sampledb():
     with create_app(TESTING=True).app_context():
         # See <https://docs.sqlalchemy.org/en/latest/dialects/sqlite.html#foreign-key-support>:
-        db.session.execute("PRAGMA foreign_keys=ON")
+        db.session.execute(text("PRAGMA foreign_keys=ON"))
         db.create_all()
         with (Path(__file__).with_name("data") / "sampledb01.jsonl").open() as fp:
             for line in fp:

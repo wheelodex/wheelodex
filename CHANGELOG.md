@@ -4,6 +4,9 @@ In Development
 - Support Python 3.12
 - Drop support for Python 3.7
 - Drop pyRFC3339 dependency
+- Update SQLAlchemy to 1.4.x
+- Update Flask to ~=2.2
+- Update Flask-SQLAlchemy to 3.0.x
 
 v2023.6.11
 ----------

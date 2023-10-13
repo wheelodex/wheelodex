@@ -14,6 +14,7 @@ from typing import Optional, Union
 from flask import current_app
 from packaging.utils import canonicalize_name as normalize
 from packaging.utils import canonicalize_version as normversion
+from sqlalchemy.orm import with_parent
 from .models import (
     DependencyRelation,
     OrphanWheel,
@@ -264,7 +265,7 @@ def purge_old_versions():
                 Version.wheels.any(),
                 Version.wheels.any(Wheel.data.has()),
             )
-            .with_parent(p)
+            .where(with_parent(p, Project.versions))
             .order_by(Version.ordering.desc())
         ):
             if latest is None:

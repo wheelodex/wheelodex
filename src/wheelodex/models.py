@@ -147,7 +147,13 @@ class Version(Base):
     )
     project = relationship(
         "Project",
-        backref=backref("versions", cascade="all, delete-orphan", passive_deletes=True),
+        backref=backref(
+            "versions",
+            cascade="all, delete-orphan",
+            passive_deletes=True,
+            cascade_backrefs=False,
+        ),
+        cascade_backrefs=False,
     )
     #: The normalized version string
     name = S.Column(S.Unicode(2048), nullable=False)
@@ -178,7 +184,13 @@ class Wheel(Base):
     )
     version = relationship(
         "Version",
-        backref=backref("wheels", cascade="all, delete-orphan", passive_deletes=True),
+        backref=backref(
+            "wheels",
+            cascade="all, delete-orphan",
+            passive_deletes=True,
+            cascade_backrefs=False,
+        ),
+        cascade_backrefs=False,
     )
     size = S.Column(S.Integer, nullable=False)
     md5 = S.Column(S.Unicode(32), nullable=True)
@@ -264,7 +276,13 @@ class ProcessingError(Base):
     )
     wheel = relationship(
         "Wheel",
-        backref=backref("errors", cascade="all, delete-orphan", passive_deletes=True),
+        backref=backref(
+            "errors",
+            cascade="all, delete-orphan",
+            passive_deletes=True,
+            cascade_backrefs=False,
+        ),
+        cascade_backrefs=False,
     )
     errmsg = S.Column(S.Unicode(65535), nullable=False)
     timestamp = S.Column(S.DateTime(timezone=True), nullable=False)
@@ -293,7 +311,7 @@ class DependencyRelation(Base):
         nullable=False,
         primary_key=True,
     )
-    project = relationship("Project", foreign_keys=[project_id])
+    project = relationship("Project", foreign_keys=[project_id], cascade_backrefs=False)
 
     #: A redundant reference to the project to which the wheel belongs, stored
     #: here to make some queries faster:
@@ -319,8 +337,13 @@ class WheelData(Base):
     wheel = relationship(
         "Wheel",
         backref=backref(
-            "data", uselist=False, cascade="all, delete-orphan", passive_deletes=True
+            "data",
+            uselist=False,
+            cascade="all, delete-orphan",
+            passive_deletes=True,
+            cascade_backrefs=False,
         ),
+        cascade_backrefs=False,
     )
     raw_data = S.Column(JSONType, nullable=False)
     #: The time at which the raw data was extracted from the wheel and added to
@@ -421,8 +444,12 @@ class EntryPoint(Base):
     wheel_data = relationship(
         "WheelData",
         backref=backref(
-            "entry_points", cascade="all, delete-orphan", passive_deletes=True
+            "entry_points",
+            cascade="all, delete-orphan",
+            passive_deletes=True,
+            cascade_backrefs=False,
         ),
+        cascade_backrefs=False,
     )
     group_id = S.Column(
         S.Integer,
@@ -450,7 +477,13 @@ class File(Base):
     )
     wheel_data = relationship(
         "WheelData",
-        backref=backref("files", cascade="all, delete-orphan", passive_deletes=True),
+        backref=backref(
+            "files",
+            cascade="all, delete-orphan",
+            passive_deletes=True,
+            cascade_backrefs=False,
+        ),
+        cascade_backrefs=False,
     )
     path = S.Column(S.Unicode(2048), nullable=False)
 
@@ -469,7 +502,13 @@ class Module(Base):
     )
     wheel_data = relationship(
         "WheelData",
-        backref=backref("modules", cascade="all, delete-orphan", passive_deletes=True),
+        backref=backref(
+            "modules",
+            cascade="all, delete-orphan",
+            passive_deletes=True,
+            cascade_backrefs=False,
+        ),
+        cascade_backrefs=False,
     )
     name = S.Column(S.Unicode(2048), nullable=False)
 
@@ -488,7 +527,13 @@ class Keyword(Base):
     )
     wheel_data = relationship(
         "WheelData",
-        backref=backref("keywords", cascade="all, delete-orphan", passive_deletes=True),
+        backref=backref(
+            "keywords",
+            cascade="all, delete-orphan",
+            passive_deletes=True,
+            cascade_backrefs=False,
+        ),
+        cascade_backrefs=False,
     )
     name = S.Column(S.Unicode(2048), nullable=False)
 
