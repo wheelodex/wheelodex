@@ -1,11 +1,11 @@
 from collections import defaultdict
+from datetime import datetime, timezone
 from functools import total_ordering
 import platform
 import re
 from flask import Response
 from flask.json import dumps
 from packaging.version import parse
-import pyrfc3339
 import requests
 import requests_download
 from wheel_filename import parse_wheel_filename
@@ -267,14 +267,9 @@ def glob2like(s):
 
 def parse_timestamp(s):
     """Parse an ISO 8601 timestamp, assuming anything naïve is in UTC"""
-    if re.fullmatch(r"\d{4}-\d\d-\d\d[T ]\d\d:\d\d:\d\d(\.\d+)?", s):
-        s += "Z"
-    return pyrfc3339.parse(s)
-
-    # Python 3.7+:
-    # if s.endswith('Z'):
-    #    s = s[:-1] + '+00:00'
-    # dt = datetime.fromisoformat(s)
-    # if dt.tzinfo is None:
-    #    dt = dt.replace(tzinfo=timezone.utc)
-    # return dt
+    if s.endswith("Z"):
+        s = s[:-1] + "+00:00"
+    dt = datetime.fromisoformat(s)
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt

@@ -168,5 +168,4 @@ def test_parse_timestamp(s, dt):
     parsed = parse_timestamp(s)
     assert parsed == dt
     assert parsed.replace(tzinfo=None) == dt.replace(tzinfo=None)
-    # pyRFC3339 uses its own UTC type, so this is false:
-    # assert parsed.tzinfo == dt.tzinfo
+    assert parsed.tzinfo == dt.tzinfo

@@ -5,9 +5,9 @@ Revises: b3dbe476e055
 Create Date: 2019-10-29 22:31:51.573165+00:00
 
 """
+from datetime import datetime, timezone
 import re
 from   alembic import op
-import pyrfc3339
 import sqlalchemy as sa
 
 
@@ -82,7 +82,10 @@ def downgrade():
 
 # Importing this from ..util doesn't work for some reason
 def parse_timestamp(s):
-    """ Parse an ISO 8601 timestamp, assuming anything naïve is in UTC """
-    if re.fullmatch(r'\d{4}-\d\d-\d\d[T ]\d\d:\d\d:\d\d(\.\d+)?', s):
-        s += 'Z'
-    return pyrfc3339.parse(s)
+    """Parse an ISO 8601 timestamp, assuming anything naïve is in UTC"""
+    if s.endswith('Z'):
+        s = s[:-1] + '+00:00'
+    dt = datetime.fromisoformat(s)
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt
