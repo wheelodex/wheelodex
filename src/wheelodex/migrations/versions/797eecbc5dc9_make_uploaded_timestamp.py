@@ -42,7 +42,7 @@ def upgrade():
         sa.Column("uploaded_ts", sa.DateTime(timezone=True), nullable=True),
     )
     conn = op.get_bind()
-    for wid, uploaded_str in conn.execute(sa.select([wheels.c.id, wheels.c.uploaded])):
+    for wid, uploaded_str in conn.execute(sa.select(wheels.c.id, wheels.c.uploaded)):
         uploaded_ts = parse_timestamp(uploaded_str)
         conn.execute(
             wheels.update().values(uploaded_ts=uploaded_ts).where(wheels.c.id == wid)
@@ -62,7 +62,7 @@ def downgrade():
         sa.Column("uploaded_str", sa.Unicode(32), nullable=True),
     )
     conn = op.get_bind()
-    for wid, uploaded_ts in conn.execute(sa.select([wheels.c.id, wheels.c.uploaded])):
+    for wid, uploaded_ts in conn.execute(sa.select(wheels.c.id, wheels.c.uploaded)):
         uploaded_str = uploaded_ts.isoformat()
         conn.execute(
             wheels.update().values(uploaded_str=uploaded_str).where(wheels.c.id == wid)

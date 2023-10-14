@@ -145,17 +145,17 @@ def dump(dump_all, outfile):
     with dbcontext():
         outfile %= {"serial": get_serial()}
         with click.open_file(outfile, "w", encoding="utf-8") as fp:
-            q = Wheel.query
+            q = db.select(Wheel)
             if not dump_all:
                 q = q.filter(Wheel.data.has())
             # Dumping in pages gives a needed efficiency boost:
-            q = q.paginate(page=1, per_page=100)
+            page = db.paginate(q, page=1, per_page=100)
             ### TODO: Should the query be ordered by something?
             while True:
-                for whl in q.items:
+                for whl in page:
                     click.echo(json.dumps(whl.as_json()), file=fp)
-                if q.has_next:
-                    q = q.next()
+                if page.has_next:
+                    page = page.next()
                 else:
                     break
 
@@ -203,7 +203,7 @@ def process_orphan_wheels():
     pypi = PyPIAPI()
     max_age = current_app.config["WHEELODEX_MAX_ORPHAN_AGE_SECONDS"]
     with dbcontext():
-        for orphan in OrphanWheel.query:
+        for orphan in db.session.scalars(db.select(OrphanWheel)):
             data = pypi.asset_data(
                 orphan.project.name,
                 orphan.version.display_name,
@@ -225,10 +225,12 @@ def process_orphan_wheels():
             else:
                 log.info("Wheel %s: data not found", orphan.filename)
                 remaining += 1
-        expired = OrphanWheel.query.filter(
-            OrphanWheel.uploaded
-            < datetime.now(timezone.utc) - timedelta(seconds=max_age)
-        ).delete()
+        expired = db.session.execute(
+            db.delete(OrphanWheel).where(
+                OrphanWheel.uploaded
+                < datetime.now(timezone.utc) - timedelta(seconds=max_age)
+            )
+        )
         log.info("%d orphan wheels expired", expired)
     end_time = datetime.now(timezone.utc)
     log_dir = current_app.config.get("WHEELODEX_STATS_LOG_DIR")

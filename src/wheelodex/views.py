@@ -15,7 +15,7 @@ from flask import (
 )
 from packaging.utils import canonicalize_name as normalize
 from sqlalchemy.sql.functions import array_agg
-from .dbutil import rdepends_query
+from .dbutil import rdepends_count, rdepends_query
 from .models import (
     DependencyRelation,
     EntryPoint,
@@ -52,7 +52,7 @@ def project_view(f):
                 code=301,
             )
         else:
-            p = Project.query.filter(Project.name == normproj).first_or_404()
+            p = db.first_or_404(db.select(Project).filter_by(name=normproj))
             return f(project=p, **kwargs)
 
     return wrapped
@@ -64,9 +64,11 @@ def index():
     """The main page"""
     return render_template(
         "index.html",
-        proj_qty=Project.query.filter(Project.has_wheels).count(),
-        whl_qty=Wheel.query.count(),
-        # data_qty = WheelData.query.count(),
+        proj_qty=db.session.scalar(
+            db.select(db.func.count(Project.id)).filter(Project.has_wheels)
+        ),
+        whl_qty=db.session.scalar(db.select(db.func.count(Wheel.id))),
+        # data_qty=db.session.scalar(db.select(db.func.count(WheelData.id))),
     )
 
 
@@ -79,7 +81,7 @@ def about():
 @web.route("/json-api/")
 def json_api():
     """The "JSON API" page"""
-    p = Project.query.filter(Project.name == "requests").one_or_none()
+    p = db.session.scalars(db.select(Project).filter_by(name="requests")).one_or_none()
     example_wheel = p and p.best_wheel
     return render_template("json_api.html", example_wheel=example_wheel)
 
@@ -88,8 +90,8 @@ def json_api():
 def recent_wheels():
     """A list of recently-analyzed wheels"""
     qty = current_app.config["WHEELODEX_RECENT_WHEELS_QTY"]
-    recents = (
-        db.session.query(Project, Version, Wheel, WheelData)
+    recents = db.session.execute(
+        db.select(Project, Version, Wheel, WheelData)
         .join(Version, Project.versions)
         .join(Wheel, Version.wheels)
         .join(WheelData, Wheel.data)
@@ -103,8 +105,8 @@ def recent_wheels():
 ### TODO: Add caching
 def rdepends_leaders():
     qty = current_app.config["WHEELODEX_RDEPENDS_LEADERS_QTY"]
-    q = (
-        db.session.query(
+    q = db.session.execute(
+        db.select(
             Project,
             db.func.count(DependencyRelation.source_project_id.distinct()).label("qty"),
         )
@@ -120,10 +122,9 @@ def rdepends_leaders():
 def project_list():
     """A list of all projects with wheels"""
     per_page = current_app.config["WHEELODEX_PROJECTS_PER_PAGE"]
-    projects = (
-        Project.query.filter(Project.has_wheels)
-        .order_by(Project.name.asc())
-        .paginate(per_page=per_page)
+    projects = db.paginate(
+        db.select(Project).filter(Project.has_wheels).order_by(Project.name.asc()),
+        per_page=per_page,
     )
     return render_template("project_list.html", projects=projects)
 
@@ -134,7 +135,7 @@ def project(project):
     """
     A display of the data for a given project, including its "best wheel"
     """
-    rdeps_qty = rdepends_query(project).count()
+    rdeps_qty = rdepends_count(project)
     whl = project.best_wheel
     if whl is not None:
         return render_template(
@@ -160,7 +161,7 @@ def wheel_data(project, wheel):
     A display of the data for a project, focused on a given wheel.  If the
     wheel is unknown, redirect to the project's main page.
     """
-    whl = Wheel.query.filter(Wheel.filename == wheel).one_or_none()
+    whl = db.session.scalars(db.select(Wheel).filter_by(filename=wheel)).one_or_none()
     if whl is None:
         return redirect(url_for(".project", project=project.name), code=302)
     elif whl.project != project:
@@ -170,7 +171,7 @@ def wheel_data(project, wheel):
             "wheel_data.html",
             whl=whl,
             project=project,
-            rdepends_qty=rdepends_query(project).count(),
+            rdepends_qty=rdepends_count(project),
             all_wheels=project.versions_wheels_grid(),
             subpage=True,
         )
@@ -181,9 +182,7 @@ def wheel_data(project, wheel):
 def rdepends(project):
     """A list of reverse dependencies for a project"""
     per_page = current_app.config["WHEELODEX_RDEPENDS_PER_PAGE"]
-    rdeps = (
-        rdepends_query(project).order_by(Project.name.asc()).paginate(per_page=per_page)
-    )
+    rdeps = db.paginate(rdepends_query(project), per_page=per_page)
     return render_template(
         "rdepends.html",
         project=project,
@@ -204,7 +203,7 @@ def entry_point_groups():
     # Project-EntryPoint.name pairs before counting.  There's probably a better
     # way to do this.
     subq = (
-        db.session.query(EntryPoint.group_id)
+        db.select(EntryPoint.group_id)
         .join(WheelData)
         .join(Wheel)
         .join(Version)
@@ -213,7 +212,7 @@ def entry_point_groups():
         .subquery()
     )
     groups = (
-        db.session.query(
+        db.select(
             EntryPointGroup.name,
             EntryPointGroup.summary,
             db.func.count().label("qty"),
@@ -225,7 +224,7 @@ def entry_point_groups():
         groups = groups.order_by(db.desc("qty"))
     else:
         groups = groups.order_by(EntryPointGroup.name.asc())
-    groups = groups.paginate(per_page=per_page)
+    groups = db.paginate(groups, per_page=per_page)
     return render_template("entry_point_groups.html", groups=groups, sortby=sortby)
 
 
@@ -235,24 +234,20 @@ def entry_point(group):
     A list of all entry points in a given group and the packages that define
     them
     """
-    ep_group = (
-        db.session.query(EntryPointGroup)
-        .filter(EntryPointGroup.name == group)
-        .first_or_404()
-    )
+    ep_group = db.first_or_404(db.select(EntryPointGroup).filter_by(name=group))
     per_page = current_app.config["WHEELODEX_ENTRY_POINTS_PER_PAGE"]
     ### TODO: Use preferred wheel (Alternatively, limit to the latest
     ### data-having version of each project):
-    project_eps = (
-        db.session.query(Project, EntryPoint.name)
+    project_eps = db.paginate(
+        db.select(Project, EntryPoint.name)
         .join(Version)
         .join(Wheel)
         .join(WheelData)
         .join(EntryPoint)
         .filter(EntryPoint.group == ep_group)
         .group_by(Project, EntryPoint.name)
-        .order_by(Project.name.asc(), EntryPoint.name.asc())
-        .paginate(per_page=per_page)
+        .order_by(Project.name.asc(), EntryPoint.name.asc()),
+        per_page=per_page,
     )
     return render_template(
         "entry_point.html",
@@ -281,14 +276,14 @@ def search_projects():
         per_page = current_app.config["WHEELODEX_SEARCH_RESULTS_PER_PAGE"]
         normterm = re.sub(r"[-_.]+", "-", search_term.lower())
         # Only search projects that have wheels:
-        q = Project.query.filter(Project.has_wheels)
+        q = db.select(Project).filter(Project.has_wheels)
         if "*" in normterm or "?" in normterm:
             q = q.filter(Project.name.like(glob2like(normterm), escape="\\"))
-        elif q.filter(Project.name == normterm).one_or_none() is not None:
+        elif db.session.scalars(q.filter_by(name=normterm)).one_or_none() is not None:
             return redirect(url_for(".project", project=normterm), code=307)
         else:
             q = q.filter(Project.name.like(like_escape(normterm) + "%", escape="\\"))
-        results = q.order_by(Project.name.asc()).paginate(per_page=per_page)
+        results = db.paginate(q.order_by(Project.name.asc()), per_page=per_page)
     else:
         results = None
     return render_template(
@@ -307,7 +302,7 @@ def search_files():
         files_per_wheel = current_app.config["WHEELODEX_FILE_SEARCH_RESULTS_PER_WHEEL"]
         ### TODO: Limit to the latest data-having version of each project?
         q = (
-            db.session.query(Wheel, array_agg(File.path))
+            db.select(Wheel, array_agg(File.path))
             .join(WheelData, Wheel.data)
             .join(File, WheelData.files)
             .group_by(Wheel)
@@ -321,7 +316,7 @@ def search_files():
                 (db.func.lower(File.path) == db.func.lower(search_term))
                 | (File.path.ilike("%/" + like_escape(search_term), escape="\\"))
             )
-        results = q.paginate(per_page=per_page)
+        results = db.paginate(q, per_page=per_page)
     else:
         results = None
     return render_template(
@@ -342,7 +337,7 @@ def search_modules():
         per_page = current_app.config["WHEELODEX_SEARCH_RESULTS_PER_PAGE"]
         ### TODO: Limit to the latest data-having version of each project?
         q = (
-            db.session.query(Project, Wheel, Module)
+            db.select(Project, Wheel, Module)
             .join(Version, Project.versions)
             .join(Wheel, Version.wheels)
             .join(WheelData, Wheel.data)
@@ -353,7 +348,7 @@ def search_modules():
         else:
             q = q.filter(db.func.lower(Module.name) == db.func.lower(search_term))
         ### TODO: Order results by something?
-        results = q.paginate(per_page=per_page)
+        results = db.paginate(q, per_page=per_page)
     else:
         results = None
     return render_template(
@@ -369,12 +364,12 @@ def search_commands():
     search_term = request.args.get("q", "").strip()
     if search_term:
         per_page = current_app.config["WHEELODEX_SEARCH_RESULTS_PER_PAGE"]
-        group = EntryPointGroup.query.filter(
-            EntryPointGroup.name == "console_scripts"
-        ).first_or_404()
+        group = db.first_or_404(
+            db.select(EntryPointGroup).filter_by(name="console_scripts")
+        )
         ### TODO: Limit to the latest data-having version of each project?
         q = (
-            db.session.query(Project, Wheel, EntryPoint)
+            db.select(Project, Wheel, EntryPoint)
             .join(Version, Project.versions)
             .join(Wheel, Version.wheels)
             .join(WheelData, Wheel.data)
@@ -385,7 +380,7 @@ def search_commands():
             q = q.filter(EntryPoint.name.ilike(glob2like(search_term), escape="\\"))
         else:
             q = q.filter(db.func.lower(EntryPoint.name) == db.func.lower(search_term))
-        results = q.order_by(EntryPoint.name.asc()).paginate(per_page=per_page)
+        results = db.paginate(q.order_by(EntryPoint.name.asc()), per_page=per_page)
     else:
         results = None
     return render_template(
@@ -438,9 +433,7 @@ def project_data_json(project):
 def project_rdepends_json(project):
     """A JSON view of the reverse dependencies for a project"""
     per_page = current_app.config["WHEELODEX_RDEPENDS_PER_PAGE"]
-    rdeps = (
-        rdepends_query(project).order_by(Project.name.asc()).paginate(per_page=per_page)
-    )
+    rdeps = db.paginate(rdepends_query(project), per_page=per_page)
     return jsonify(
         {
             "items": [
@@ -474,5 +467,5 @@ def project_rdepends_json(project):
 @web.route("/json/wheels/<wheel>.json")
 def wheel_json(wheel):
     """A JSON view of the data for a given wheel"""
-    whl = db.session.query(Wheel).filter(Wheel.filename == wheel).first_or_404()
+    whl = db.first_or_404(db.select(Wheel).filter_by(filename=wheel))
     return jsonify(whl.as_json())

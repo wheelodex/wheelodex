@@ -1,5 +1,6 @@
 from operator import attrgetter
-from click.testing import CliRunner
+from traceback import format_exception
+from click.testing import CliRunner, Result
 import pytest
 from sqlalchemy import text
 from wheelodex.__main__ import main
@@ -24,8 +25,20 @@ def tmpdb(tmpdb_inited):  # noqa: U100
         db.session.rollback()
 
 
+def show_result(r: Result) -> str:
+    if r.exception is not None:
+        assert isinstance(r.exc_info, tuple)
+        return "".join(format_exception(*r.exc_info))
+    else:
+        return r.output
+
+
+def get_all(cls):
+    return db.session.scalars(db.select(cls)).all()
+
+
 def test_load_entry_points():
-    assert EntryPointGroup.query.all() == []
+    assert get_all(EntryPointGroup) == []
     db.session.add(EntryPointGroup(name="describe.me"))
     db.session.add(
         EntryPointGroup(
@@ -75,9 +88,11 @@ summary = New Summary
         # This should match the commit at the end of the command, allowing
         # everything done in this test to be rolled back by `tmpdb`:
         ### XXX: db.session.begin(subtransactions=True)
-        r = runner.invoke(main, ["load-entry-points", "test.ini"])
-        assert r.exit_code == 0, r.output
-    groups = sorted(EntryPointGroup.query.all(), key=attrgetter("name"))
+        r = runner.invoke(
+            main, ["load-entry-points", "test.ini"], standalone_mode=False
+        )
+        assert r.exit_code == 0, show_result(r)
+    groups = sorted(get_all(EntryPointGroup), key=attrgetter("name"))
     assert len(groups) == 6
     assert groups[0].name == "DESCRIBE.ME"
     assert groups[0].summary == "This is a new, different entry point group."

@@ -44,6 +44,10 @@ def sort_wheels(ws):
     return sorted(ws, key=lambda w: w.filename)
 
 
+def get_all(cls):
+    return db.session.scalars(db.select(cls)).all()
+
+
 FOOBAR_1_WHEEL = {
     "filename": "FooBar-1.0-py3-none-any.whl",
     "url": "http://example.com/FooBar-1.0-py3-none-any.whl",
@@ -106,16 +110,16 @@ QUUX_1_5_WHEEL = {
 
 
 def test_add_wheel():
-    assert Wheel.query.all() == []
+    assert get_all(Wheel) == []
     p = add_project("FooBar")
     assert not p.has_wheels
     v1 = add_version(p, "1.0")
     whl1 = add_wheel(version=v1, **FOOBAR_1_WHEEL)
-    assert Wheel.query.all() == [whl1]
+    assert get_all(Wheel) == [whl1]
     assert p.has_wheels
     v2 = add_version(p, "2.0")
     whl2 = add_wheel(version=v2, **FOOBAR_2_WHEEL)
-    assert sort_wheels(Wheel.query.all()) == [whl1, whl2]
+    assert sort_wheels(get_all(Wheel)) == [whl1, whl2]
     assert v1.wheels == [whl1]
     assert v2.wheels == [whl2]
     assert get_version(p, "1.0").wheels == [whl1]
@@ -127,11 +131,11 @@ def test_add_wheel_extant():
     Add two wheels with the same project, version, & filename and assert that
     only the first one exists
     """
-    assert Wheel.query.all() == []
+    assert get_all(Wheel) == []
     p = add_project("FooBar")
     v1 = add_version(p, "1.0")
     whl1 = add_wheel(version=v1, **FOOBAR_1_WHEEL)
-    assert Wheel.query.all() == [whl1]
+    assert get_all(Wheel) == [whl1]
     add_wheel(
         version=v1,
         filename="FooBar-1.0-py3-none-any.whl",
@@ -141,7 +145,7 @@ def test_add_wheel_extant():
         sha256="1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
         uploaded="2018-09-26T15:14:33.987654Z",
     )
-    (whl,) = Wheel.query.all()
+    (whl,) = get_all(Wheel)
     assert v1.wheels == [whl1]
     assert whl.url == FOOBAR_1_WHEEL["url"]
     assert whl.size == FOOBAR_1_WHEEL["size"]
@@ -151,20 +155,20 @@ def test_add_wheel_extant():
 
 
 def test_remove_wheel():
-    assert Wheel.query.all() == []
+    assert get_all(Wheel) == []
     p = add_project("FooBar")
     v1 = add_version(p, "1.0")
     whl1 = add_wheel(version=v1, **FOOBAR_1_WHEEL)
-    assert Wheel.query.all() == [whl1]
+    assert get_all(Wheel) == [whl1]
     remove_wheel("FooBar-1.0-py3-none-any.whl")
-    assert Wheel.query.all() == []
+    assert get_all(Wheel) == []
     assert not p.has_wheels
 
 
 def test_add_project():
-    assert Project.query.all() == []
+    assert get_all(Project) == []
     add_project("FooBar")
-    (p,) = Project.query.all()
+    (p,) = get_all(Project)
     assert p.name == "foobar"
     assert p.display_name == "FooBar"
     assert p.versions == []
@@ -172,10 +176,10 @@ def test_add_project():
 
 
 def test_add_project_extant():
-    assert Project.query.all() == []
+    assert get_all(Project) == []
     add_project("FooBar")
     add_project("FOOBAR")
-    (p,) = Project.query.all()
+    (p,) = get_all(Project)
     assert p.name == "foobar"
     assert p.display_name == "FooBar"
     assert p.versions == []
@@ -183,7 +187,7 @@ def test_add_project_extant():
 
 
 def test_get_project():
-    assert Project.query.all() == []
+    assert get_all(Project) == []
     add_project("FooBar")
     for name in ["FooBar", "foobar", "FOOBAR"]:
         p = get_project(name)
@@ -194,7 +198,7 @@ def test_get_project():
 
 
 def test_remove_project():
-    assert Project.query.all() == []
+    assert get_all(Project) == []
     p = add_project("FooBar")
     v1 = add_version(p, "1.0")
     add_wheel(version=v1, **FOOBAR_1_WHEEL)
@@ -204,20 +208,20 @@ def test_remove_project():
     v3 = add_version(q, "1.5")
     whl3 = add_wheel(version=v3, **QUUX_1_5_WHEEL)
     remove_project("FooBar")
-    assert Project.query.all() in ([p, q], [q, p])
-    assert Version.query.all() == [v3]
+    assert get_all(Project) in ([p, q], [q, p])
+    assert get_all(Version) == [v3]
     assert get_version("foobar", "1.0") is None
     assert get_version("foobar", "2.0") is None
-    assert Wheel.query.all() == [whl3]
+    assert get_all(Wheel) == [whl3]
     assert p.latest_version is None
     assert not p.has_wheels
 
 
 def test_add_version_str():
-    assert Project.query.all() == []
+    assert get_all(Project) == []
     add_project("FooBar")
     add_version("FooBar", "1.0")
-    (p,) = Project.query.all()
+    (p,) = get_all(Project)
     assert p.name == "foobar"
     (v,) = p.versions
     assert v.name == "1"
@@ -227,10 +231,10 @@ def test_add_version_str():
 
 
 def test_add_version_project():
-    assert Project.query.all() == []
+    assert get_all(Project) == []
     p = add_project("FooBar")
     add_version(p, "1.0")
-    (q,) = Project.query.all()
+    (q,) = get_all(Project)
     assert p == q
     (v,) = p.versions
     assert v.name == "1"
@@ -240,9 +244,9 @@ def test_add_version_project():
 
 
 def test_add_version_new_str():
-    assert Project.query.all() == []
+    assert get_all(Project) == []
     add_version("FooBar", "1.0")
-    (p,) = Project.query.all()
+    (p,) = get_all(Project)
     assert p.name == "foobar"
     (v,) = p.versions
     assert v.name == "1"
@@ -252,7 +256,7 @@ def test_add_version_new_str():
 
 
 def test_add_version_extant():
-    assert Project.query.all() == []
+    assert get_all(Project) == []
     p = add_project("FooBar")
     v = add_version("FooBar", "1.0")
     u = add_version("FooBar", "1.0.0")
@@ -265,7 +269,7 @@ def test_add_version_extant():
 
 
 def test_get_version_str():
-    assert Project.query.all() == []
+    assert get_all(Project) == []
     add_project("FooBar")
     add_version("FooBar", "1.0")
     for project in ["foobar", "FooBar", "FOOBAR"]:
@@ -280,7 +284,7 @@ def test_get_version_str():
 
 
 def test_get_version_project():
-    assert Project.query.all() == []
+    assert get_all(Project) == []
     p = add_project("FooBar")
     add_version("FooBar", "1.0")
     for version in ["1", "1.0", "1.0.0"]:
@@ -293,7 +297,7 @@ def test_get_version_project():
 
 
 def test_latest_version():
-    assert Project.query.all() == []
+    assert get_all(Project) == []
     p = add_project("FooBar")
     assert p.latest_version is None
     v1 = add_version(p, "1.0")
@@ -307,33 +311,33 @@ def test_latest_version():
 
 
 def test_remove_version():
-    assert Project.query.all() == []
+    assert get_all(Project) == []
     p = add_project("FooBar")
     v1 = add_version(p, "1.0")
     whl1 = add_wheel(version=v1, **FOOBAR_1_WHEEL)
     v2 = add_version(p, "2.0")
     add_wheel(version=v2, **FOOBAR_2_WHEEL)
     remove_version("FooBar", "2.0")
-    assert Project.query.all() == [p]
+    assert get_all(Project) == [p]
     assert get_version("foobar", "1.0") is not None
     assert get_version("foobar", "2.0") is None
-    assert Version.query.all() == [v1]
+    assert get_all(Version) == [v1]
     assert p.latest_version == v1
-    assert Wheel.query.all() == [whl1]
+    assert get_all(Wheel) == [whl1]
     assert p.has_wheels
 
 
 def test_purge_old_versions_one_version():
     v1 = add_version("foobar", "1.0")
     purge_old_versions()
-    assert Version.query.all() == [v1]
+    assert get_all(Version) == [v1]
 
 
 def test_purge_old_versions_two_versions():
     add_version("foobar", "1.0")
     v2 = add_version("foobar", "2.0")
     purge_old_versions()
-    assert Version.query.all() == [v2]
+    assert get_all(Version) == [v2]
 
 
 def test_purge_old_versions_latest_plus_wheel():
@@ -341,7 +345,7 @@ def test_purge_old_versions_latest_plus_wheel():
     add_wheel(version=v1, **FOOBAR_1_WHEEL)
     v2 = add_version("foobar", "2.0")
     purge_old_versions()
-    assert sort_versions(Version.query.all()) == [v1, v2]
+    assert sort_versions(get_all(Version)) == [v1, v2]
 
 
 def test_purge_old_versions_latest_plus_wheel_plus_mid():
@@ -350,7 +354,7 @@ def test_purge_old_versions_latest_plus_wheel_plus_mid():
     add_version("foobar", "1.5")
     v2 = add_version("foobar", "2.0")
     purge_old_versions()
-    assert sort_versions(Version.query.all()) == [v1, v2]
+    assert sort_versions(get_all(Version)) == [v1, v2]
 
 
 def test_purge_old_versions_latest_has_wheel_plus_one():
@@ -358,7 +362,7 @@ def test_purge_old_versions_latest_has_wheel_plus_one():
     v2 = add_version("foobar", "2.0")
     add_wheel(version=v2, **FOOBAR_2_WHEEL)
     purge_old_versions()
-    assert Version.query.all() == [v2]
+    assert get_all(Version) == [v2]
 
 
 def test_purge_old_versions_latest_has_wheel_plus_wheel():
@@ -367,7 +371,7 @@ def test_purge_old_versions_latest_has_wheel_plus_wheel():
     v2 = add_version("foobar", "2.0")
     add_wheel(version=v2, **FOOBAR_2_WHEEL)
     purge_old_versions()
-    assert Version.query.all() == [v2]
+    assert get_all(Version) == [v2]
 
 
 def test_purge_old_versions_latest_has_data():
@@ -375,7 +379,7 @@ def test_purge_old_versions_latest_has_data():
     whl1 = add_wheel(version=v1, **FOOBAR_1_WHEEL)
     whl1.set_data(FOOBAR_1_DATA)
     purge_old_versions()
-    assert sort_versions(Version.query.all()) == [v1]
+    assert sort_versions(get_all(Version)) == [v1]
 
 
 def test_purge_old_versions_latest_plus_data():
@@ -384,7 +388,7 @@ def test_purge_old_versions_latest_plus_data():
     whl1.set_data(FOOBAR_1_DATA)
     v2 = add_version("foobar", "2.0")
     purge_old_versions()
-    assert sort_versions(Version.query.all()) == [v1, v2]
+    assert sort_versions(get_all(Version)) == [v1, v2]
 
 
 def test_purge_old_versions_latest_plus_data_plus_mid():
@@ -394,7 +398,7 @@ def test_purge_old_versions_latest_plus_data_plus_mid():
     add_version("foobar", "1.5")
     v2 = add_version("foobar", "2.0")
     purge_old_versions()
-    assert sort_versions(Version.query.all()) == [v1, v2]
+    assert sort_versions(get_all(Version)) == [v1, v2]
 
 
 def test_purge_old_versions_latest_plus_wheel_plus_data():
@@ -405,7 +409,7 @@ def test_purge_old_versions_latest_plus_wheel_plus_data():
     add_wheel(version=v2, **FOOBAR_2_WHEEL)
     v3 = add_version("foobar", "3.0")
     purge_old_versions()
-    assert sort_versions(Version.query.all()) == [v1, v2, v3]
+    assert sort_versions(get_all(Version)) == [v1, v2, v3]
 
 
 def test_purge_old_versions_latest_plus_wheel_plus_data_plus_mid():
@@ -418,7 +422,7 @@ def test_purge_old_versions_latest_plus_wheel_plus_data_plus_mid():
     add_version("foobar", "2.5")
     v3 = add_version("foobar", "3.0")
     purge_old_versions()
-    assert sort_versions(Version.query.all()) == [v1, v2, v3]
+    assert sort_versions(get_all(Version)) == [v1, v2, v3]
 
 
 def test_purge_old_versions_latest_has_data_plus_data():
@@ -429,7 +433,7 @@ def test_purge_old_versions_latest_has_data_plus_data():
     whl2 = add_wheel(version=v2, **FOOBAR_2_WHEEL)
     whl2.set_data(FOOBAR_2_DATA)
     purge_old_versions()
-    assert sort_versions(Version.query.all()) == [v2]
+    assert sort_versions(get_all(Version)) == [v2]
 
 
 def test_purge_old_versions_latest_has_data_plus_data_plus_mid():
@@ -441,7 +445,7 @@ def test_purge_old_versions_latest_has_data_plus_data_plus_mid():
     whl2 = add_wheel(version=v2, **FOOBAR_2_WHEEL)
     whl2.set_data(FOOBAR_2_DATA)
     purge_old_versions()
-    assert sort_versions(Version.query.all()) == [v2]
+    assert sort_versions(get_all(Version)) == [v2]
 
 
 def test_preferred_wheel_two_data():
@@ -596,11 +600,11 @@ def test_versions_wheels_grid():
 
 
 def test_add_orphan_wheel():
-    assert OrphanWheel.query.all() == []
+    assert get_all(OrphanWheel) == []
     p = add_project("FooBar")
     v1 = add_version(p, "1.0")
     add_orphan_wheel(v1, "FooBar-1.0-py3-none-any.whl", 1537974774)
-    orphans = OrphanWheel.query.all()
+    orphans = get_all(OrphanWheel)
     assert len(orphans) == 1
     assert orphans[0].version == v1
     assert orphans[0].filename == "FooBar-1.0-py3-none-any.whl"
@@ -611,12 +615,12 @@ def test_add_orphan_wheel():
 
 
 def test_add_duplicate_orphan_wheel():
-    assert OrphanWheel.query.all() == []
+    assert get_all(OrphanWheel) == []
     p = add_project("FooBar")
     v1 = add_version(p, "1.0")
     add_orphan_wheel(v1, "FooBar-1.0-py3-none-any.whl", 1537974774)
     add_orphan_wheel(v1, "FooBar-1.0-py3-none-any.whl", 1555868651)
-    orphans = OrphanWheel.query.all()
+    orphans = get_all(OrphanWheel)
     assert len(orphans) == 1
     assert orphans[0].version == v1
     assert orphans[0].filename == "FooBar-1.0-py3-none-any.whl"

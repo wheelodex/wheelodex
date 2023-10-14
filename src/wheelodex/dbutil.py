@@ -47,7 +47,7 @@ def dbcontext():
 
 def get_serial() -> Optional[int]:
     """Returns the serial ID of the last seen PyPI event"""
-    ps = PyPISerial.query.one_or_none()
+    ps = db.session.scalars(db.select(PyPISerial)).one_or_none()
     return ps and ps.serial
 
 
@@ -56,7 +56,7 @@ def set_serial(value: int):
     Advances the serial ID of the last seen PyPI event to ``value``.  If
     ``value`` is less than the currently-stored serial, no change is made.
     """
-    ps = PyPISerial.query.one_or_none()
+    ps = db.session.scalars(db.select(PyPISerial)).one_or_none()
     if ps is None:
         db.session.add(PyPISerial(serial=value))
     else:
@@ -70,7 +70,9 @@ def add_wheel(version: "Version", filename, url, size, md5, sha256, uploaded):
     If a wheel with the given filename is already registered, no change is made
     to the database, and the already-registered wheel is returned.
     """
-    whl = Wheel.query.filter(Wheel.filename == filename).one_or_none()
+    whl = db.session.scalars(
+        db.select(Wheel).filter_by(filename=filename)
+    ).one_or_none()
     if whl is None:
         whl = Wheel(
             version=version,
@@ -118,17 +120,15 @@ def iterqueue(max_wheel_size=None) -> [Wheel]:
         returned
     """
     subq = (
-        db.session.query(
-            Project.id,
-            db.func.max(Version.ordering).label("max_order"),
-        )
+        db.select(Project.id, db.func.max(Version.ordering).label("max_order"))
         .join(Version)
         .join(Wheel)
         .group_by(Project.id)
         .subquery()
     )
     q = (
-        Wheel.query.join(Version)
+        db.select(Wheel)
+        .join(Version)
         .join(Project)
         .join(subq, (Project.id == subq.c.id) & (Version.ordering == subq.c.max_order))
         .filter(~Wheel.data.has())
@@ -138,7 +138,7 @@ def iterqueue(max_wheel_size=None) -> [Wheel]:
         q = q.filter(Wheel.size <= max_wheel_size)
     ### TODO: Would leaving off the ".all()" give an iterable that plays well
     ### with wheels being given data concurrently?
-    return q.all()
+    return db.session.scalars(q).all()
 
 
 def remove_wheel(filename: str):
@@ -146,8 +146,8 @@ def remove_wheel(filename: str):
     Delete all `Wheel`\ s and `OrphanWheel`\ s with the given filename from the
     database
     """
-    Wheel.query.filter(Wheel.filename == filename).delete()
-    OrphanWheel.query.filter(OrphanWheel.filename == filename).delete()
+    db.session.execute(db.delete(Wheel).where(Wheel.filename == filename))
+    db.session.execute(db.delete(OrphanWheel).where(OrphanWheel.filename == filename))
     p = get_project(filename.split("-")[0])
     if p is not None:
         update_has_wheels(p)
@@ -167,7 +167,9 @@ def get_project(name: str):
     Return the `Project` with the given name (*modulo* normalization), or
     `None` if there is no such project
     """
-    return Project.query.filter(Project.name == normalize(name)).one_or_none()
+    return db.session.scalars(
+        db.select(Project).filter_by(name=normalize(name))
+    ).one_or_none()
 
 
 def remove_project(project: str):
@@ -181,7 +183,7 @@ def remove_project(project: str):
     # PyPI changelog.
     p = get_project(project)
     if p is not None:
-        Version.query.filter(Version.project == p).delete()
+        db.session.execute(db.delete(Version).where(Version.project == p))
     p.has_wheels = False
 
 
@@ -195,11 +197,9 @@ def add_version(project: Union[str, "Project"], version: str):
     if isinstance(project, str):
         project = add_project(project)
     vnorm = normversion(version)
-    v = (
-        Version.query.filter(Version.project == project)
-        .filter(Version.name == vnorm)
-        .one_or_none()
-    )
+    v = db.session.scalars(
+        db.select(Version).filter_by(project=project, name=vnorm)
+    ).one_or_none()
     if v is None:
         v = Version(project=project, name=vnorm, display_name=version)
         db.session.add(v)
@@ -221,11 +221,9 @@ def get_version(project: Union[str, "Project"], version: str):
         project = get_project(project)
     if project is None:
         return None
-    return (
-        Version.query.filter(Version.project == project)
-        .filter(Version.name == normversion(version))
-        .one_or_none()
-    )
+    return db.session.scalars(
+        db.select(Version).filter_by(project=project, name=normversion(version))
+    ).one_or_none()
 
 
 def remove_version(project: str, version: str):
@@ -238,9 +236,11 @@ def remove_version(project: str, version: str):
     # "remove" events in the PyPI changelog.
     p = get_project(project)
     if p is not None:
-        Version.query.filter(Version.project == p).filter(
-            Version.name == normversion(version)
-        ).delete()
+        db.session.execute(
+            db.delete(Version)
+            .where(Version.project == p)
+            .where(Version.name == normversion(version))
+        )
     update_has_wheels(p)
 
 
@@ -253,14 +253,15 @@ def purge_old_versions():
     log.info("BEGIN purge_old_versions")
     start_time = datetime.now(timezone.utc)
     purged = 0
-    for p in (
-        Project.query.join(Version)
+    for p in db.session.scalars(
+        db.select(Project)
+        .join(Version)
         .group_by(Project)
         .having(db.func.count(Version.id) > 1)
     ):
         latest = latest_wheel = latest_data = None
-        for v, vwheels, vdata in (
-            db.session.query(
+        for v, vwheels, vdata in db.session.execute(
+            db.select(
                 Version,
                 Version.wheels.any(),
                 Version.wheels.any(Wheel.data.has()),
@@ -268,6 +269,7 @@ def purge_old_versions():
             .where(with_parent(p, Project.versions))
             .order_by(Version.ordering.desc())
         ):
+            keep = False
             if latest is None:
                 log.debug(
                     "Project %s: keeping latest version: %s",
@@ -275,6 +277,7 @@ def purge_old_versions():
                     v.display_name,
                 )
                 latest = v
+                keep = True
             if vwheels and latest_wheel is None:
                 log.debug(
                     "Project %s: keeping latest version with wheels: %s",
@@ -282,6 +285,7 @@ def purge_old_versions():
                     v.display_name,
                 )
                 latest_wheel = v
+                keep = True
             if vdata and latest_data is None:
                 log.debug(
                     "Project %s: keeping latest version with data: %s",
@@ -289,7 +293,8 @@ def purge_old_versions():
                     v.display_name,
                 )
                 latest_data = v
-            if v not in (latest, latest_wheel, latest_data):
+                keep = True
+            if not keep:
                 log.info(
                     "Project %s: deleting version %s", p.display_name, v.display_name
                 )
@@ -321,13 +326,11 @@ def add_orphan_wheel(version: Version, filename, uploaded_epoch):
     ``uploaded`` timestamp and do nothing else.
     """
     uploaded = datetime.fromtimestamp(uploaded_epoch, timezone.utc)
-    whl = OrphanWheel.query.filter(OrphanWheel.filename == filename).one_or_none()
+    whl = db.session.scalars(
+        db.select(OrphanWheel).filter_by(filename=filename)
+    ).one_or_none()
     if whl is None:
-        whl = OrphanWheel(
-            version=version,
-            filename=filename,
-            uploaded=uploaded,
-        )
+        whl = OrphanWheel(version=version, filename=filename, uploaded=uploaded)
         db.session.add(whl)
     else:
         # If they keep uploading the wheel, keep checking the JSON API for it.
@@ -337,20 +340,43 @@ def add_orphan_wheel(version: Version, filename, uploaded_epoch):
 def rdepends_query(project: Project):
     r"""
     Returns a query object that returns all `Project`\ s that depend on the
-    given `Project`.  No ordering is applied to the query.
+    given `Project`, ordered by name.
     """
     ### TODO: Use preferred wheel?
-    return Project.query.filter(
-        db.exists()
-        .where(Project.id == DependencyRelation.source_project_id)
-        .where(DependencyRelation.project_id == project.id)
+    return (
+        db.select(Project)
+        .filter(
+            db.exists()
+            .where(Project.id == DependencyRelation.source_project_id)
+            .where(DependencyRelation.project_id == project.id)
+            .select()
+            .scalar_subquery()
+        )
+        .order_by(Project.name.asc())
+    )
+
+
+def rdepends_count(project: Project):
+    r"""
+    Returns the number of `Project`\ s that depend on the given `Project`
+    """
+    ### TODO: Use preferred wheel?
+    return db.session.scalar(
+        db.select(db.func.count(Project.id)).filter(
+            db.exists()
+            .where(Project.id == DependencyRelation.source_project_id)
+            .where(DependencyRelation.project_id == project.id)
+            .select()
+            .scalar_subquery()
+        )
     )
 
 
 def update_has_wheels(project: Project):
     """Update the value of the given `Project`'s ``has_wheels`` attribute"""
-    project.has_wheels = db.session.query(
+    project.has_wheels = db.session.execute(
         db.exists()
         .where(Version.project_id == project.id)
         .where(Wheel.version_id == Version.id)
+        .select()
     ).scalar()

@@ -109,7 +109,7 @@ def upgrade():
 
     """
     for pid, wdid in conn.execute(
-        sa.select([project.c.id, wheel_data.c.id])
+        sa.select(project.c.id, wheel_data.c.id)
           .select_from(project.join(version).join(wheel).join(wheel_data))
     ):
         conn.execute(

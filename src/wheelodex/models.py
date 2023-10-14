@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from itertools import groupby
 from flask_sqlalchemy import SQLAlchemy
 from packaging.utils import canonicalize_name as normalize
-import sqlalchemy as S
+import sqlalchemy as sa
 from sqlalchemy.orm import backref, relationship
 from sqlalchemy_utils import JSONType
 from wheel_inspect import __version__ as wheel_inspect_version
@@ -23,8 +23,8 @@ class PyPISerial(Base):
 
     __tablename__ = "pypi_serial"
 
-    id = S.Column(S.Integer, primary_key=True, nullable=False)
-    serial = S.Column(S.Integer, nullable=False)
+    id = sa.Column(sa.Integer, primary_key=True, nullable=False)
+    serial = sa.Column(sa.Integer, nullable=False)
 
     def __repr__(self):
         return reprify(self, ["serial"])
@@ -35,19 +35,19 @@ class Project(Base):
 
     __tablename__ = "projects"
 
-    id = S.Column(S.Integer, primary_key=True, nullable=False)
+    id = sa.Column(sa.Integer, primary_key=True, nullable=False)
     #: The project's normalized name
-    name = S.Column(S.Unicode(2048), nullable=False, unique=True)
+    name = sa.Column(sa.Unicode(2048), nullable=False, unique=True)
     #: The preferred non-normalized form of the project's name
-    display_name = S.Column(S.Unicode(2048), nullable=False, unique=True)
+    display_name = sa.Column(sa.Unicode(2048), nullable=False, unique=True)
     #: A summary of the project taken from its most recently-analyzed wheel.
     #: (The summary is stored here instead of in `WheelData` because storing it
     #: in `WheelData` would mean that listing projects with their summaries
     #: would involve a complicated query that ends up being noticeably too
     #: slow.)
-    summary = S.Column(S.Unicode(2048), nullable=True)
+    summary = sa.Column(sa.Unicode(2048), nullable=True)
     #: Whether this project has any wheels known to the database
-    has_wheels = S.Column(S.Boolean, default=False, nullable=False)
+    has_wheels = sa.Column(sa.Boolean, default=False, nullable=False)
 
     def __repr__(self):
         return reprify(self, "name display_name".split())
@@ -58,7 +58,9 @@ class Project(Base):
         Construct a `Project` with the given name and return it.  If such a
         project already exists, return that one instead.
         """
-        proj = cls.query.filter(cls.name == normalize(name)).one_or_none()
+        proj = db.session.scalars(
+            db.select(cls).filter_by(name=normalize(name))
+        ).one_or_none()
         if proj is None:
             proj = cls(name=normalize(name), display_name=name)
             db.session.add(proj)
@@ -70,11 +72,12 @@ class Project(Base):
         The `Version` for this `Project` with the highest ``ordering`` value,
         or `None` if there are no `Version`\ s
         """
-        return (
-            Version.query.filter(Version.project == self)
+        return db.session.scalars(
+            db.select(Version)
+            .filter_by(project=self)
             .order_by(Version.ordering.desc())
-            .first()
-        )
+            .limit(1)
+        ).first()
 
     @property
     def preferred_wheel(self):
@@ -82,14 +85,15 @@ class Project(Base):
         The project's "preferred wheel": the highest-ordered wheel with data
         for the highest-ordered version
         """
-        return (
-            Wheel.query.join(Version)
+        return db.session.scalars(
+            db.select(Wheel)
+            .join(Version)
             .filter(Version.project == self)
             .filter(Wheel.data.has())
             .order_by(Version.ordering.desc())
             .order_by(Wheel.ordering.desc())
-            .first()
-        )
+            .limit(1)
+        ).first()
 
     @property
     def best_wheel(self):
@@ -98,15 +102,16 @@ class Project(Base):
         project's wheels have data); otherwise, the highest-ordered wheel for
         the highest-ordered version
         """
-        return (
-            Wheel.query.join(Version)
+        return db.session.scalars(
+            db.select(Wheel)
+            .join(Version)
             .filter(Version.project == self)
             .outerjoin(WheelData)
             .order_by(WheelData.id.isnot(None).desc())
             .order_by(Version.ordering.desc())
             .order_by(Wheel.ordering.desc())
-            .first()
-        )
+            .limit(1)
+        ).first()
 
     def versions_wheels_grid(self):
         r"""
@@ -119,8 +124,8 @@ class Project(Base):
         ordered from highest ``ordering`` to lowest.  Versions that do not have
         wheels are ignored.
         """
-        q = (
-            db.session.query(Version.display_name, Wheel, WheelData.id.isnot(None))
+        q = db.session.execute(
+            db.select(Version.display_name, Wheel, WheelData.id.isnot(None))
             .join(Wheel, Version.wheels)
             .outerjoin(WheelData)
             .filter(Version.project == self)
@@ -137,33 +142,27 @@ class Version(Base):
     """A version (a.k.a. release) of a `Project`"""
 
     __tablename__ = "versions"
-    __table_args__ = (S.UniqueConstraint("project_id", "name"),)
+    __table_args__ = (sa.UniqueConstraint("project_id", "name"),)
 
-    id = S.Column(S.Integer, primary_key=True, nullable=False)
-    project_id = S.Column(
-        S.Integer,
-        S.ForeignKey("projects.id", ondelete="CASCADE"),
+    id = sa.Column(sa.Integer, primary_key=True, nullable=False)
+    project_id = sa.Column(
+        sa.Integer,
+        sa.ForeignKey("projects.id", ondelete="CASCADE"),
         nullable=False,
     )
     project = relationship(
         "Project",
-        backref=backref(
-            "versions",
-            cascade="all, delete-orphan",
-            passive_deletes=True,
-            cascade_backrefs=False,
-        ),
-        cascade_backrefs=False,
+        backref=backref("versions", cascade="all, delete-orphan", passive_deletes=True),
     )
     #: The normalized version string
-    name = S.Column(S.Unicode(2048), nullable=False)
+    name = sa.Column(sa.Unicode(2048), nullable=False)
     #: The preferred non-normalized version string
-    display_name = S.Column(S.Unicode(2048), nullable=False)
+    display_name = sa.Column(sa.Unicode(2048), nullable=False)
     #: The index of this version when all versions for the project are sorted
     #: in PEP 440 order with prereleases at the bottom.  (The latest version
     #: has the highest `ordering` value.)  This column is set every time a new
     #: version is added to the project with `add_version()`.
-    ordering = S.Column(S.Integer, nullable=False, default=0)
+    ordering = sa.Column(sa.Integer, nullable=False, default=0)
 
     def __repr__(self):
         return reprify(self, "project name display_name ordering".split())
@@ -174,32 +173,26 @@ class Wheel(Base):
 
     __tablename__ = "wheels"
 
-    id = S.Column(S.Integer, primary_key=True, nullable=False)
-    filename = S.Column(S.Unicode(2048), nullable=False, unique=True)
-    url = S.Column(S.Unicode(2048), nullable=False)
-    version_id = S.Column(
-        S.Integer,
-        S.ForeignKey("versions.id", ondelete="CASCADE"),
+    id = sa.Column(sa.Integer, primary_key=True, nullable=False)
+    filename = sa.Column(sa.Unicode(2048), nullable=False, unique=True)
+    url = sa.Column(sa.Unicode(2048), nullable=False)
+    version_id = sa.Column(
+        sa.Integer,
+        sa.ForeignKey("versions.id", ondelete="CASCADE"),
         nullable=False,
     )
     version = relationship(
         "Version",
-        backref=backref(
-            "wheels",
-            cascade="all, delete-orphan",
-            passive_deletes=True,
-            cascade_backrefs=False,
-        ),
-        cascade_backrefs=False,
+        backref=backref("wheels", cascade="all, delete-orphan", passive_deletes=True),
     )
-    size = S.Column(S.Integer, nullable=False)
-    md5 = S.Column(S.Unicode(32), nullable=True)
-    sha256 = S.Column(S.Unicode(64), nullable=True)
-    uploaded = S.Column(S.DateTime(timezone=True), nullable=False)
+    size = sa.Column(sa.Integer, nullable=False)
+    md5 = sa.Column(sa.Unicode(32), nullable=True)
+    sha256 = sa.Column(sa.Unicode(64), nullable=True)
+    uploaded = sa.Column(sa.DateTime(timezone=True), nullable=False)
     #: The index of this wheel when all wheels for the version are sorted by
     #: applying `wheel_sort_key()` to their filenames.  This column is set
     #: every time a new wheel is added to the version with `add_wheel()`.
-    ordering = S.Column(S.Integer, nullable=False, default=0)
+    ordering = sa.Column(sa.Integer, nullable=False, default=0)
 
     def __repr__(self):
         return reprify(self, ["filename"])
@@ -268,26 +261,20 @@ class ProcessingError(Base):
 
     __tablename__ = "processing_errors"
 
-    id = S.Column(S.Integer, primary_key=True, nullable=False)
-    wheel_id = S.Column(
-        S.Integer,
-        S.ForeignKey("wheels.id", ondelete="CASCADE"),
+    id = sa.Column(sa.Integer, primary_key=True, nullable=False)
+    wheel_id = sa.Column(
+        sa.Integer,
+        sa.ForeignKey("wheels.id", ondelete="CASCADE"),
         nullable=False,
     )
     wheel = relationship(
         "Wheel",
-        backref=backref(
-            "errors",
-            cascade="all, delete-orphan",
-            passive_deletes=True,
-            cascade_backrefs=False,
-        ),
-        cascade_backrefs=False,
+        backref=backref("errors", cascade="all, delete-orphan", passive_deletes=True),
     )
-    errmsg = S.Column(S.Unicode(65535), nullable=False)
-    timestamp = S.Column(S.DateTime(timezone=True), nullable=False)
-    wheelodex_version = S.Column(S.Unicode(32), nullable=False)
-    wheel_inspect_version = S.Column(S.Unicode(32), nullable=True)
+    errmsg = sa.Column(sa.Unicode(65535), nullable=False)
+    timestamp = sa.Column(sa.DateTime(timezone=True), nullable=False)
+    wheelodex_version = sa.Column(sa.Unicode(32), nullable=False)
+    wheel_inspect_version = sa.Column(sa.Unicode(32), nullable=True)
 
 
 class DependencyRelation(Base):
@@ -298,26 +285,26 @@ class DependencyRelation(Base):
 
     __tablename__ = "dependency_tbl"
 
-    wheel_data_id = S.Column(
-        S.Integer,
-        S.ForeignKey("wheel_data.id", ondelete="CASCADE"),
+    wheel_data_id = sa.Column(
+        sa.Integer,
+        sa.ForeignKey("wheel_data.id", ondelete="CASCADE"),
         nullable=False,
         primary_key=True,
     )
 
-    project_id = S.Column(
-        S.Integer,
-        S.ForeignKey("projects.id", ondelete="RESTRICT"),
+    project_id = sa.Column(
+        sa.Integer,
+        sa.ForeignKey("projects.id", ondelete="RESTRICT"),
         nullable=False,
         primary_key=True,
     )
-    project = relationship("Project", foreign_keys=[project_id], cascade_backrefs=False)
+    project = relationship("Project", foreign_keys=[project_id])
 
     #: A redundant reference to the project to which the wheel belongs, stored
     #: here to make some queries faster:
-    source_project_id = S.Column(
-        S.Integer,
-        S.ForeignKey("projects.id", ondelete="CASCADE"),
+    source_project_id = sa.Column(
+        sa.Integer,
+        sa.ForeignKey("projects.id", ondelete="CASCADE"),
         nullable=False,
     )
 
@@ -327,34 +314,29 @@ class WheelData(Base):
 
     __tablename__ = "wheel_data"
 
-    id = S.Column(S.Integer, primary_key=True, nullable=False)
-    wheel_id = S.Column(
-        S.Integer,
-        S.ForeignKey("wheels.id", ondelete="CASCADE"),
+    id = sa.Column(sa.Integer, primary_key=True, nullable=False)
+    wheel_id = sa.Column(
+        sa.Integer,
+        sa.ForeignKey("wheels.id", ondelete="CASCADE"),
         nullable=False,
         unique=True,
     )
     wheel = relationship(
         "Wheel",
         backref=backref(
-            "data",
-            uselist=False,
-            cascade="all, delete-orphan",
-            passive_deletes=True,
-            cascade_backrefs=False,
+            "data", uselist=False, cascade="all, delete-orphan", passive_deletes=True
         ),
-        cascade_backrefs=False,
     )
-    raw_data = S.Column(JSONType, nullable=False)
+    raw_data = sa.Column(JSONType, nullable=False)
     #: The time at which the raw data was extracted from the wheel and added to
     #: the database
-    processed = S.Column(S.DateTime(timezone=True), nullable=False)
+    processed = sa.Column(sa.DateTime(timezone=True), nullable=False)
     #: The version of wheel-inspect that produced the ``raw_data``
-    wheel_inspect_version = S.Column(S.Unicode(32), nullable=False)
+    wheel_inspect_version = sa.Column(sa.Unicode(32), nullable=False)
     ### TODO: What are the right `cascade` and `passive_deletes` settings for
     ### this relationship?
     dependency_rels = relationship("DependencyRelation")
-    valid = S.Column(S.Boolean, nullable=False)
+    valid = sa.Column(sa.Boolean, nullable=False)
 
     @property
     def dependencies(self):
@@ -397,7 +379,7 @@ class WheelData(Base):
         )
 
 
-S.Index("wheel_data_processed_idx", WheelData.processed.desc())
+sa.Index("wheel_data_processed_idx", WheelData.processed.desc())
 
 
 class EntryPointGroup(Base):
@@ -405,14 +387,14 @@ class EntryPointGroup(Base):
 
     __tablename__ = "entry_point_groups"
 
-    id = S.Column(S.Integer, primary_key=True, nullable=False)
-    name = S.Column(S.Unicode(2048), nullable=False, unique=True)
+    id = sa.Column(sa.Integer, primary_key=True, nullable=False)
+    name = sa.Column(sa.Unicode(2048), nullable=False, unique=True)
     #: A brief Markdown description of the group for display in the web
     #: interface
-    summary = S.Column(S.Unicode(2048), nullable=True, default=None)
+    summary = sa.Column(sa.Unicode(2048), nullable=True, default=None)
     #: A longer Markdown description of the group for display in the web
     #: interface
-    description = S.Column(S.Unicode(65535), nullable=True, default=None)
+    description = sa.Column(sa.Unicode(65535), nullable=True, default=None)
 
     def __repr__(self):
         return reprify(self, ["name"])
@@ -423,7 +405,7 @@ class EntryPointGroup(Base):
         Construct an `EntryPointGroup` with the given name and return it.  If
         such a group already exists, return that one instead.
         """
-        epg = cls.query.filter(cls.name == name).one_or_none()
+        epg = db.session.scalars(db.select(cls).filter_by(name=name)).one_or_none()
         if epg is None:
             epg = cls(name=name)
             db.session.add(epg)
@@ -435,29 +417,25 @@ class EntryPoint(Base):
 
     __tablename__ = "entry_points"
 
-    id = S.Column(S.Integer, primary_key=True, nullable=False)
-    wheel_data_id = S.Column(
-        S.Integer,
-        S.ForeignKey("wheel_data.id", ondelete="CASCADE"),
+    id = sa.Column(sa.Integer, primary_key=True, nullable=False)
+    wheel_data_id = sa.Column(
+        sa.Integer,
+        sa.ForeignKey("wheel_data.id", ondelete="CASCADE"),
         nullable=False,
     )
     wheel_data = relationship(
         "WheelData",
         backref=backref(
-            "entry_points",
-            cascade="all, delete-orphan",
-            passive_deletes=True,
-            cascade_backrefs=False,
+            "entry_points", cascade="all, delete-orphan", passive_deletes=True
         ),
-        cascade_backrefs=False,
     )
-    group_id = S.Column(
-        S.Integer,
-        S.ForeignKey("entry_point_groups.id", ondelete="RESTRICT"),
+    group_id = sa.Column(
+        sa.Integer,
+        sa.ForeignKey("entry_point_groups.id", ondelete="RESTRICT"),
         nullable=False,
     )
     group = relationship("EntryPointGroup")
-    name = S.Column(S.Unicode(2048), nullable=False)
+    name = sa.Column(sa.Unicode(2048), nullable=False)
 
     def __repr__(self):
         return reprify(self, "wheel_data group name".split())
@@ -467,75 +445,57 @@ class File(Base):
     """A file in a wheel"""
 
     __tablename__ = "files"
-    __table_args__ = (S.UniqueConstraint("wheel_data_id", "path"),)
+    __table_args__ = (sa.UniqueConstraint("wheel_data_id", "path"),)
 
-    id = S.Column(S.Integer, primary_key=True, nullable=False)
-    wheel_data_id = S.Column(
-        S.Integer,
-        S.ForeignKey("wheel_data.id", ondelete="CASCADE"),
+    id = sa.Column(sa.Integer, primary_key=True, nullable=False)
+    wheel_data_id = sa.Column(
+        sa.Integer,
+        sa.ForeignKey("wheel_data.id", ondelete="CASCADE"),
         nullable=False,
     )
     wheel_data = relationship(
         "WheelData",
-        backref=backref(
-            "files",
-            cascade="all, delete-orphan",
-            passive_deletes=True,
-            cascade_backrefs=False,
-        ),
-        cascade_backrefs=False,
+        backref=backref("files", cascade="all, delete-orphan", passive_deletes=True),
     )
-    path = S.Column(S.Unicode(2048), nullable=False)
+    path = sa.Column(sa.Unicode(2048), nullable=False)
 
 
 class Module(Base):
     """A Python module in a wheel"""
 
     __tablename__ = "modules"
-    __table_args__ = (S.UniqueConstraint("wheel_data_id", "name"),)
+    __table_args__ = (sa.UniqueConstraint("wheel_data_id", "name"),)
 
-    id = S.Column(S.Integer, primary_key=True, nullable=False)
-    wheel_data_id = S.Column(
-        S.Integer,
-        S.ForeignKey("wheel_data.id", ondelete="CASCADE"),
+    id = sa.Column(sa.Integer, primary_key=True, nullable=False)
+    wheel_data_id = sa.Column(
+        sa.Integer,
+        sa.ForeignKey("wheel_data.id", ondelete="CASCADE"),
         nullable=False,
     )
     wheel_data = relationship(
         "WheelData",
-        backref=backref(
-            "modules",
-            cascade="all, delete-orphan",
-            passive_deletes=True,
-            cascade_backrefs=False,
-        ),
-        cascade_backrefs=False,
+        backref=backref("modules", cascade="all, delete-orphan", passive_deletes=True),
     )
-    name = S.Column(S.Unicode(2048), nullable=False)
+    name = sa.Column(sa.Unicode(2048), nullable=False)
 
 
 class Keyword(Base):
     """A keyword declared by a wheel"""
 
     __tablename__ = "keywords"
-    __table_args__ = (S.UniqueConstraint("wheel_data_id", "name"),)
+    __table_args__ = (sa.UniqueConstraint("wheel_data_id", "name"),)
 
-    id = S.Column(S.Integer, primary_key=True, nullable=False)
-    wheel_data_id = S.Column(
-        S.Integer,
-        S.ForeignKey("wheel_data.id", ondelete="CASCADE"),
+    id = sa.Column(sa.Integer, primary_key=True, nullable=False)
+    wheel_data_id = sa.Column(
+        sa.Integer,
+        sa.ForeignKey("wheel_data.id", ondelete="CASCADE"),
         nullable=False,
     )
     wheel_data = relationship(
         "WheelData",
-        backref=backref(
-            "keywords",
-            cascade="all, delete-orphan",
-            passive_deletes=True,
-            cascade_backrefs=False,
-        ),
-        cascade_backrefs=False,
+        backref=backref("keywords", cascade="all, delete-orphan", passive_deletes=True),
     )
-    name = S.Column(S.Unicode(2048), nullable=False)
+    name = sa.Column(sa.Unicode(2048), nullable=False)
 
 
 class OrphanWheel(Base):
@@ -558,15 +518,15 @@ class OrphanWheel(Base):
 
     __tablename__ = "orphan_wheels"
 
-    id = S.Column(S.Integer, primary_key=True, nullable=False)
-    version_id = S.Column(
-        S.Integer,
-        S.ForeignKey("versions.id", ondelete="CASCADE"),
+    id = sa.Column(sa.Integer, primary_key=True, nullable=False)
+    version_id = sa.Column(
+        sa.Integer,
+        sa.ForeignKey("versions.id", ondelete="CASCADE"),
         nullable=False,
     )
     version = relationship("Version")  # No backref
-    filename = S.Column(S.Unicode(2048), nullable=False, unique=True)
-    uploaded = S.Column(S.DateTime(timezone=True), nullable=False)
+    filename = sa.Column(sa.Unicode(2048), nullable=False, unique=True)
+    uploaded = sa.Column(sa.DateTime(timezone=True), nullable=False)
 
     def __repr__(self):
         return reprify(self, ["filename"])

@@ -44,11 +44,9 @@ def upgrade():
     conn = op.get_bind()
     subq = (
         sa.select(
-            [
-                sa.func.MIN(keywords.c.id).label("id"),
-                keywords.c.wheel_data_id,
-                keywords.c.name,
-            ]
+            sa.func.MIN(keywords.c.id).label("id"),
+            keywords.c.wheel_data_id,
+            keywords.c.name,
         )
         .group_by(keywords.c.wheel_data_id, keywords.c.name)
         .having(sa.func.count() > 1)
