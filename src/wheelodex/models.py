@@ -23,7 +23,7 @@ class PyPISerial(Base):
 
     __tablename__ = "pypi_serial"
 
-    id = S.Column(S.Integer, primary_key=True, nullable=False)  # noqa: B001
+    id = S.Column(S.Integer, primary_key=True, nullable=False)
     serial = S.Column(S.Integer, nullable=False)
 
     def __repr__(self):
@@ -35,7 +35,7 @@ class Project(Base):
 
     __tablename__ = "projects"
 
-    id = S.Column(S.Integer, primary_key=True, nullable=False)  # noqa: B001
+    id = S.Column(S.Integer, primary_key=True, nullable=False)
     #: The project's normalized name
     name = S.Column(S.Unicode(2048), nullable=False, unique=True)
     #: The preferred non-normalized form of the project's name
@@ -139,7 +139,7 @@ class Version(Base):
     __tablename__ = "versions"
     __table_args__ = (S.UniqueConstraint("project_id", "name"),)
 
-    id = S.Column(S.Integer, primary_key=True, nullable=False)  # noqa: B001
+    id = S.Column(S.Integer, primary_key=True, nullable=False)
     project_id = S.Column(
         S.Integer,
         S.ForeignKey("projects.id", ondelete="CASCADE"),
@@ -174,7 +174,7 @@ class Wheel(Base):
 
     __tablename__ = "wheels"
 
-    id = S.Column(S.Integer, primary_key=True, nullable=False)  # noqa: B001
+    id = S.Column(S.Integer, primary_key=True, nullable=False)
     filename = S.Column(S.Unicode(2048), nullable=False, unique=True)
     url = S.Column(S.Unicode(2048), nullable=False)
     version_id = S.Column(
@@ -268,7 +268,7 @@ class ProcessingError(Base):
 
     __tablename__ = "processing_errors"
 
-    id = S.Column(S.Integer, primary_key=True, nullable=False)  # noqa: B001
+    id = S.Column(S.Integer, primary_key=True, nullable=False)
     wheel_id = S.Column(
         S.Integer,
         S.ForeignKey("wheels.id", ondelete="CASCADE"),
@@ -327,7 +327,7 @@ class WheelData(Base):
 
     __tablename__ = "wheel_data"
 
-    id = S.Column(S.Integer, primary_key=True, nullable=False)  # noqa: B001
+    id = S.Column(S.Integer, primary_key=True, nullable=False)
     wheel_id = S.Column(
         S.Integer,
         S.ForeignKey("wheels.id", ondelete="CASCADE"),
@@ -405,7 +405,7 @@ class EntryPointGroup(Base):
 
     __tablename__ = "entry_point_groups"
 
-    id = S.Column(S.Integer, primary_key=True, nullable=False)  # noqa: B001
+    id = S.Column(S.Integer, primary_key=True, nullable=False)
     name = S.Column(S.Unicode(2048), nullable=False, unique=True)
     #: A brief Markdown description of the group for display in the web
     #: interface
@@ -435,7 +435,7 @@ class EntryPoint(Base):
 
     __tablename__ = "entry_points"
 
-    id = S.Column(S.Integer, primary_key=True, nullable=False)  # noqa: B001
+    id = S.Column(S.Integer, primary_key=True, nullable=False)
     wheel_data_id = S.Column(
         S.Integer,
         S.ForeignKey("wheel_data.id", ondelete="CASCADE"),
@@ -469,7 +469,7 @@ class File(Base):
     __tablename__ = "files"
     __table_args__ = (S.UniqueConstraint("wheel_data_id", "path"),)
 
-    id = S.Column(S.Integer, primary_key=True, nullable=False)  # noqa: B001
+    id = S.Column(S.Integer, primary_key=True, nullable=False)
     wheel_data_id = S.Column(
         S.Integer,
         S.ForeignKey("wheel_data.id", ondelete="CASCADE"),
@@ -494,7 +494,7 @@ class Module(Base):
     __tablename__ = "modules"
     __table_args__ = (S.UniqueConstraint("wheel_data_id", "name"),)
 
-    id = S.Column(S.Integer, primary_key=True, nullable=False)  # noqa: B001
+    id = S.Column(S.Integer, primary_key=True, nullable=False)
     wheel_data_id = S.Column(
         S.Integer,
         S.ForeignKey("wheel_data.id", ondelete="CASCADE"),
@@ -519,7 +519,7 @@ class Keyword(Base):
     __tablename__ = "keywords"
     __table_args__ = (S.UniqueConstraint("wheel_data_id", "name"),)
 
-    id = S.Column(S.Integer, primary_key=True, nullable=False)  # noqa: B001
+    id = S.Column(S.Integer, primary_key=True, nullable=False)
     wheel_data_id = S.Column(
         S.Integer,
         S.ForeignKey("wheel_data.id", ondelete="CASCADE"),
@@ -558,7 +558,7 @@ class OrphanWheel(Base):
 
     __tablename__ = "orphan_wheels"
 
-    id = S.Column(S.Integer, primary_key=True, nullable=False)  # noqa: B001
+    id = S.Column(S.Integer, primary_key=True, nullable=False)
     version_id = S.Column(
         S.Integer,
         S.ForeignKey("versions.id", ondelete="CASCADE"),
