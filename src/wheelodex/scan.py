@@ -1,5 +1,6 @@
 """ Functions for scanning PyPI for wheels to register """
 
+from __future__ import annotations
 from datetime import datetime, timezone
 import json
 import logging
@@ -21,7 +22,7 @@ from .util import latest_version
 log = logging.getLogger(__name__)
 
 
-def scan_pypi():
+def scan_pypi() -> None:
     """
     Use PyPI's XML-RPC and JSON APIs to find & register all wheels for the
     latest version of every project on PyPI.  The database's serial ID is also
@@ -56,6 +57,7 @@ def scan_pypi():
         versions = list(data["releases"].keys())
         log.debug("Available versions: %r", versions)
         latest = latest_version(versions)
+        assert latest is not None
         log.info("Using latest version: %r", latest)
         qty_queued = 0
         vobj = add_version(project, latest)
@@ -97,7 +99,7 @@ def scan_pypi():
     log.info("END scan_pypi")
 
 
-def scan_changelog(since):
+def scan_changelog(since: int) -> None:
     """
     Use PyPI's XML-RPC and JSON APIs to update the wheel registry based on all
     events that have happened on PyPI since serial ID ``since``.  The

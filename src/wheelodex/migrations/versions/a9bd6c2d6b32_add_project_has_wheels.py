@@ -1,18 +1,20 @@
-"""Add Project.has_wheels
+"""
+Add Project.has_wheels
 
 Revision ID: a9bd6c2d6b32
 Revises: b37f849a527d
 Create Date: 2020-04-03 19:55:05.312729+00:00
-
 """
+
+from __future__ import annotations
 from alembic import op
 import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = "a9bd6c2d6b32"
 down_revision = "b37f849a527d"
-branch_labels = None
-depends_on = None
+branch_labels: None = None
+depends_on: None = None
 
 schema = sa.MetaData()
 
@@ -48,7 +50,7 @@ wheel = sa.Table(
 )
 
 
-def upgrade():
+def upgrade() -> None:
     op.add_column("projects", sa.Column("has_wheels", sa.Boolean(), nullable=True))
     conn = op.get_bind()
     conn.execute(project.update().values(has_wheels=False))
@@ -61,5 +63,5 @@ def upgrade():
     op.alter_column("projects", "has_wheels", nullable=False)
 
 
-def downgrade():
+def downgrade() -> None:
     op.drop_column("projects", "has_wheels")

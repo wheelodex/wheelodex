@@ -1,19 +1,24 @@
 """ Custom Jinja filters """
 
+from __future__ import annotations
+from collections.abc import Iterable, Iterator
 import heapq
 import re
+from typing import TypeVar
 from cmarkgfm import markdown_to_html
 from flask import url_for
 from markupsafe import Markup
 from packaging.utils import canonicalize_name as normalize
 from .views import web
 
+T = TypeVar("T")
+
 
 @web.app_template_filter()
-def flatten_metadata(metadata):
+def flatten_metadata(metadata: dict) -> Iterator[tuple[str, str]]:
     """
     Convert a `dict` representation of a ``METADATA`` file as returned by
-    `inspect_wheel()` to a sequence of ``(fieldname, value)`` pairs in which
+    `inspect_wheel()` to an iterator of ``(fieldname, value)`` pairs in which
     both elements are ready for display in HTML.
 
     Known fields are listed in an opinionated order.  Unknown fields are listed
@@ -94,7 +99,7 @@ def flatten_metadata(metadata):
 
 
 @web.app_template_filter()
-def flatten_wheel_info(wheel_info):
+def flatten_wheel_info(wheel_info: dict) -> Iterator[tuple[str, str]]:
     """
     Convert a `dict` representation of a ``WHEEL`` file as returned by
     `inspect_wheel()` to a sequence of ``(fieldname, value)`` pairs in which
@@ -130,19 +135,20 @@ def flatten_wheel_info(wheel_info):
 
 
 @web.app_template_filter()
-def extlink(url):
+def extlink(url: str) -> Markup:
     """Convert a URL to a hyperlink with ``rel="nofollow"``"""
-    return Markup('<a href="{0}" rel="nofollow">{0}</a>'.format(Markup.escape(url)))
+    esc_url = Markup.escape(url)
+    return Markup(f'<a href="{esc_url}" rel="nofollow">{esc_url}</a>')
 
 
 @web.app_template_filter()
-def markdown(src):
+def markdown(src: str) -> Markup:
     """Render Markdown text"""
     return Markup(markdown_to_html(src))
 
 
 @web.app_template_filter()
-def markdown_inline(src):
+def markdown_inline(src: str) -> Markup:
     """
     Render Markdown text for inline display, with outer ``<p> ... </p>`` tags
     removed
@@ -151,5 +157,5 @@ def markdown_inline(src):
 
 
 @web.app_template_filter()
-def nsmallest(iterable, n):
+def nsmallest(iterable: Iterable[T], n: int) -> list[T]:
     return heapq.nsmallest(n, iterable)

@@ -5,16 +5,20 @@ All of these functions require a Flask application context with a database
 connection to be in effect.
 """
 
+from __future__ import annotations
+from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from datetime import datetime, timezone
 import json
 import logging
 from os.path import join
-from typing import Optional, Union
+from typing import cast
 from flask import current_app
+from flask_sqlalchemy.session import Session
 from packaging.utils import canonicalize_name as normalize
 from packaging.utils import canonicalize_version as normversion
-from sqlalchemy.orm import with_parent
+import sqlalchemy as sa
+from sqlalchemy.orm import scoped_session, with_parent
 from .models import (
     DependencyRelation,
     OrphanWheel,
@@ -25,13 +29,14 @@ from .models import (
     WheelData,
     db,
 )
-from .util import parse_timestamp, version_sort_key, wheel_sort_key
+from .util import parse_timestamp, version_sort_key
+from .wheel_sort import wheel_sort_key
 
 log = logging.getLogger(__name__)
 
 
 @contextmanager
-def dbcontext():
+def dbcontext() -> Iterator[scoped_session[Session]]:
     """
     A context manager that yields the current application's database session,
     commits on success, and rolls back on error
@@ -46,13 +51,13 @@ def dbcontext():
         db.session.close()
 
 
-def get_serial() -> Optional[int]:
+def get_serial() -> int | None:
     """Returns the serial ID of the last seen PyPI event"""
     ps = db.session.scalars(db.select(PyPISerial)).one_or_none()
     return ps and ps.serial
 
 
-def set_serial(value: int):
+def set_serial(value: int) -> None:
     """
     Advances the serial ID of the last seen PyPI event to ``value``.  If
     ``value`` is less than the currently-stored serial, no change is made.
@@ -64,10 +69,18 @@ def set_serial(value: int):
         ps.serial = max(ps.serial, value)
 
 
-def add_wheel(version: "Version", filename, url, size, md5, sha256, uploaded):
-    r"""
+def add_wheel(
+    version: Version,
+    filename: str,
+    url: str,
+    size: int,
+    md5: str | None,
+    sha256: str | None,
+    uploaded: str,
+) -> Wheel:
+    """
     Registers a wheel for the given `Version` and updates the ``ordering``
-    values for the `Version`'s `Wheel`\ s.  The new `Wheel` object is returned.
+    values for the `Version`'s `Wheel`\\s.  The new `Wheel` object is returned.
     If a wheel with the given filename is already registered, no change is made
     to the database, and the already-registered wheel is returned.
     """
@@ -95,7 +108,7 @@ def add_wheel(version: "Version", filename, url, size, md5, sha256, uploaded):
     return whl
 
 
-def add_wheel_from_json(about: dict):
+def add_wheel_from_json(about: dict) -> None:
     """
     Add a wheel (possibly with data) from a structure produced by
     `Wheel.as_json()`
@@ -107,11 +120,12 @@ def add_wheel_from_json(about: dict):
     whl = add_wheel(version, **about["pypi"])
     if "data" in about and whl.data is None:
         whl.set_data(about["data"])
-        whl.data.processed = parse_timestamp(about["wheelodex"]["processed"])
+        assert whl.data is not None
+        whl.data.processed = parse_timestamp(about["wheelodex"]["processed"])  # type: ignore[unreachable]
         whl.data.wheel_inspect_version = about["wheelodex"]["wheel_inspect_version"]
 
 
-def iterqueue(max_wheel_size=None) -> [Wheel]:
+def iterqueue(max_wheel_size: int | None = None) -> Sequence[Wheel]:
     """
     Returns the "queue" of wheels to process: a list of all wheels with neither
     data nor errors for the latest nonempty (i.e., having wheels) version of
@@ -142,9 +156,9 @@ def iterqueue(max_wheel_size=None) -> [Wheel]:
     return db.session.scalars(q).all()
 
 
-def remove_wheel(filename: str):
-    r"""
-    Delete all `Wheel`\ s and `OrphanWheel`\ s with the given filename from the
+def remove_wheel(filename: str) -> None:
+    """
+    Delete all `Wheel`\\s and `OrphanWheel`\\s with the given filename from the
     database
     """
     db.session.execute(db.delete(Wheel).where(Wheel.filename == filename))
@@ -154,7 +168,7 @@ def remove_wheel(filename: str):
         update_has_wheels(p)
 
 
-def add_project(name: str):
+def add_project(name: str) -> Project:
     """
     Create a `Project` with the given name and return it.  If there already
     exists a project with the same name (after normalization), do nothing and
@@ -163,7 +177,7 @@ def add_project(name: str):
     return Project.from_name(name)
 
 
-def get_project(name: str):
+def get_project(name: str) -> Project | None:
     """
     Return the `Project` with the given name (*modulo* normalization), or
     `None` if there is no such project
@@ -173,9 +187,9 @@ def get_project(name: str):
     ).one_or_none()
 
 
-def remove_project(project: str):
-    r"""
-    Delete all `Version`\ s (and `Wheel`\ s etc.) for the `Project` with the
+def remove_project(project: str) -> None:
+    """
+    Delete all `Version`\\s (and `Wheel`\\s etc.) for the `Project` with the
     given name (*modulo* normalization).  The `Project` entry itself is
     retained in case it's still referenced as a dependency of other projects.
     """
@@ -185,13 +199,13 @@ def remove_project(project: str):
     p = get_project(project)
     if p is not None:
         db.session.execute(db.delete(Version).where(Version.project == p))
-    p.has_wheels = False
+        p.has_wheels = False
 
 
-def add_version(project: Union[str, "Project"], version: str):
-    r"""
+def add_version(project: str | Project, version: str) -> Version:
+    """
     Create a `Version` with the given project & version string and return it;
-    the ``ordering`` values for the project's `Version`\ s are updated as well.
+    the ``ordering`` values for the project's `Version`\\s are updated as well.
     If there already exists a version with the same details, do nothing and
     return that instead.
     """
@@ -213,23 +227,25 @@ def add_version(project: Union[str, "Project"], version: str):
     return v
 
 
-def get_version(project: Union[str, "Project"], version: str):
+def get_version(project: str | Project, version: str) -> Version | None:
     """
     Return the `Version` with the given project and version string (*modulo*
     canonicalization), or `None` if there is no such version
     """
     if isinstance(project, str):
-        project = get_project(project)
-    if project is None:
+        p = get_project(project)
+    else:
+        p = project
+    if p is None:
         return None
     return db.session.scalars(
-        db.select(Version).filter_by(project=project, name=normversion(version))
+        db.select(Version).filter_by(project=p, name=normversion(version))
     ).one_or_none()
 
 
-def remove_version(project: str, version: str):
-    r"""
-    Delete the `Version` (and `Wheel`\ s etc.) for the given project and
+def remove_version(project: str, version: str) -> None:
+    """
+    Delete the `Version` (and `Wheel`\\s etc.) for the given project and
     version string
     """
     # Note that this filters by PyPI project & version, not by wheel filename
@@ -242,10 +258,10 @@ def remove_version(project: str, version: str):
             .where(Version.project == p)
             .where(Version.name == normversion(version))
         )
-    update_has_wheels(p)
+        update_has_wheels(p)
 
 
-def purge_old_versions():
+def purge_old_versions() -> None:
     """
     For each project, keep (a) the latest version, (b) the latest version with
     wheels registered, and (c) the latest version with wheel data, and delete
@@ -325,7 +341,7 @@ def purge_old_versions():
     log.info("END purge_old_versions")
 
 
-def add_orphan_wheel(version: Version, filename, uploaded_epoch):
+def add_orphan_wheel(version: Version, filename: str, uploaded_epoch: int) -> None:
     """
     Register an `OrphanWheel` for the given version, with the given filename,
     uploaded at ``uploaded_epoch`` seconds after the Unix epoch.  If an orphan
@@ -344,13 +360,14 @@ def add_orphan_wheel(version: Version, filename, uploaded_epoch):
         whl.uploaded = uploaded
 
 
-def rdepends_query(project: Project):
-    r"""
-    Returns a query object that returns all `Project`\ s that depend on the
+def rdepends_query(project: Project) -> sa.Select:
+    """
+    Returns a query object that returns all `Project`\\s that depend on the
     given `Project`, ordered by name.
     """
     ### TODO: Use preferred wheel?
-    return (
+    return cast(
+        sa.Select,
         db.select(Project)
         .filter(
             db.exists()
@@ -359,16 +376,16 @@ def rdepends_query(project: Project):
             .select()
             .scalar_subquery()
         )
-        .order_by(Project.name.asc())
+        .order_by(Project.name.asc()),
     )
 
 
-def rdepends_count(project: Project):
-    r"""
-    Returns the number of `Project`\ s that depend on the given `Project`
+def rdepends_count(project: Project) -> int:
+    """
+    Returns the number of `Project`\\s that depend on the given `Project`
     """
     ### TODO: Use preferred wheel?
-    return db.session.scalar(
+    r = db.session.scalar(
         db.select(db.func.count(Project.id)).filter(
             db.exists()
             .where(Project.id == DependencyRelation.source_project_id)
@@ -377,9 +394,11 @@ def rdepends_count(project: Project):
             .scalar_subquery()
         )
     )
+    assert isinstance(r, int)
+    return r
 
 
-def update_has_wheels(project: Project):
+def update_has_wheels(project: Project) -> None:
     """Update the value of the given `Project`'s ``has_wheels`` attribute"""
     project.has_wheels = db.session.execute(
         db.exists()

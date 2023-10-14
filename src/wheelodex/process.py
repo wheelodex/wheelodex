@@ -1,5 +1,6 @@
 """ Functions for downloading & analyzing wheels """
 
+from __future__ import annotations
 from datetime import datetime, timezone
 import json
 import logging
@@ -7,6 +8,7 @@ import os
 from os.path import join
 from tempfile import TemporaryDirectory
 import traceback
+from typing import Any
 from flask import current_app
 from requests_download import download
 from wheel_inspect import inspect_wheel
@@ -17,7 +19,7 @@ from .util import USER_AGENT
 log = logging.getLogger(__name__)
 
 
-def process_queue(max_wheel_size=None):
+def process_queue(max_wheel_size: int | None = None) -> None:
     """
     Process all of the wheels returned by `iterqueue()` one by one and store
     the results in the database.  If an error occurs, the traceback is stored
@@ -85,7 +87,9 @@ def process_queue(max_wheel_size=None):
                     )
 
 
-def process_wheel(filename, url, size, md5, sha256, tmpdir):
+def process_wheel(
+    filename: str, url: str, size: int, md5: str | None, sha256: str | None, tmpdir: str
+) -> dict:
     """
     Process an individual wheel.  The wheel is downloaded from ``url`` to the
     directory ``tmpdir``, analyzed with `inspect_wheel()`, and then deleted.
@@ -101,7 +105,7 @@ def process_wheel(filename, url, size, md5, sha256, tmpdir):
     download(url, fpath, headers={"user-agent": USER_AGENT})
     log.info("Inspecting %s ...", filename)
     try:
-        about = inspect_wheel(fpath)
+        about: dict[str, Any] = inspect_wheel(fpath)
     finally:
         os.remove(fpath)
     if about["file"]["size"] != size:

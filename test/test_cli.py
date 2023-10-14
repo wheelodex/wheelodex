@@ -1,15 +1,21 @@
+from __future__ import annotations
+from collections.abc import Iterator, Sequence
 from operator import attrgetter
 from traceback import format_exception
+from typing import TypeVar
 from click.testing import CliRunner, Result
 import pytest
 from sqlalchemy import text
+from sqlalchemy.orm import DeclarativeBase
 from wheelodex.__main__ import main
 from wheelodex.app import create_app
 from wheelodex.models import EntryPointGroup, db
 
+T = TypeVar("T", bound=DeclarativeBase)
+
 
 @pytest.fixture(scope="session")
-def tmpdb_inited():
+def tmpdb_inited() -> Iterator[None]:
     with create_app().app_context():
         # See <https://docs.sqlalchemy.org/en/latest/dialects/sqlite.html#foreign-key-support>:
         db.session.execute(text("PRAGMA foreign_keys=ON"))
@@ -18,7 +24,7 @@ def tmpdb_inited():
 
 
 @pytest.fixture(autouse=True)
-def tmpdb(tmpdb_inited):  # noqa: U100
+def tmpdb(tmpdb_inited: None) -> Iterator[None]:  # noqa: U100
     try:
         yield
     finally:
@@ -33,11 +39,11 @@ def show_result(r: Result) -> str:
         return r.output
 
 
-def get_all(cls):
+def get_all(cls: type[T]) -> Sequence[T]:
     return db.session.scalars(db.select(cls)).all()
 
 
-def test_load_entry_points():
+def test_load_entry_points() -> None:
     assert get_all(EntryPointGroup) == []
     db.session.add(EntryPointGroup(name="describe.me"))
     db.session.add(

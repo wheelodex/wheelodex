@@ -1,18 +1,20 @@
-"""Delete empty keywords
+"""
+Delete empty keywords
 
 Revision ID: dac430582787
 Revises: 6d99988d42b9
 Create Date: 2020-01-30 20:08:37.311976+00:00
-
 """
+
+from __future__ import annotations
 from alembic import op
 import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = "dac430582787"
 down_revision = "6d99988d42b9"
-branch_labels = None
-depends_on = None
+branch_labels: None = None
+depends_on: None = None
 
 keywords = sa.Table(
     "keywords",
@@ -24,7 +26,7 @@ keywords = sa.Table(
 )
 
 
-def sql_strip(col):
+def sql_strip(col: sa.Column) -> sa.Function:
     # This produces `TRIM(col, chars)`, which works in PostgreSQL and SQLite
     # but not MySQL:
     return sa.func.trim(col, " \t\n\r\x0B\f")
@@ -35,11 +37,11 @@ def sql_strip(col):
     # syntax is emitted for whichever database type is in use.
 
 
-def upgrade():
+def upgrade() -> None:
     conn = op.get_bind()
     conn.execute(keywords.delete().where(sql_strip(keywords.c.name) == ""))
     conn.execute(keywords.update().values(name=sql_strip(keywords.c.name)))
 
 
-def downgrade():
+def downgrade() -> None:
     pass

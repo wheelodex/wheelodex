@@ -1,10 +1,12 @@
-"""Rename "verified" to "valid"
+"""
+Rename "verified" to "valid"
 
 Revision ID: b835c6894d5a
 Revises: aec0bfd26f9a
 Create Date: 2018-10-11 20:19:13.081503+00:00
-
 """
+
+from __future__ import annotations
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy_utils import JSONType
@@ -12,8 +14,8 @@ from sqlalchemy_utils import JSONType
 # revision identifiers, used by Alembic.
 revision = "b835c6894d5a"
 down_revision = "aec0bfd26f9a"
-branch_labels = None
-depends_on = None
+branch_labels: None = None
+depends_on: None = None
 
 wheel_data = sa.Table(
     "wheel_data",
@@ -34,7 +36,7 @@ wheel_data = sa.Table(
 )
 
 
-def upgrade():
+def upgrade() -> None:
     op.alter_column("wheel_data", "verified", new_column_name="valid")
     conn = op.get_bind()
     for wdid, data in conn.execute(sa.select(wheel_data.c.id, wheel_data.c.raw_data)):
@@ -46,7 +48,7 @@ def upgrade():
         )
 
 
-def downgrade():
+def downgrade() -> None:
     conn = op.get_bind()
     for wdid, data in conn.execute(sa.select(wheel_data.c.id, wheel_data.c.raw_data)):
         data["verifies"] = data.pop("valid")

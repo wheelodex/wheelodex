@@ -1,5 +1,7 @@
+from __future__ import annotations
 import os
 from pathlib import Path
+from typing import Any
 from flask import Flask
 from flask_migrate import Migrate
 
@@ -20,7 +22,7 @@ DEFAULT_CONFIG = {
 }
 
 
-def create_app(**kwargs):
+def create_app(**kwargs: Any) -> Flask:
     app = Flask("wheelodex")
     app.config.update(DEFAULT_CONFIG)
     if "WHEELODEX_CONFIG" in os.environ:

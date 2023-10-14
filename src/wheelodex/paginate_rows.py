@@ -28,9 +28,10 @@ class RowPagination:
         if not self.items and self.page != 1:
             abort(404)
         sub = select.options(lazyload("*")).order_by(None).subquery()
-        self.total: int = db.session.execute(
-            sa.select(sa.func.count()).select_from(sub)
-        ).scalar()
+        self.total: int = (
+            db.session.execute(sa.select(sa.func.count()).select_from(sub)).scalar()
+            or 0
+        )
 
     def __iter__(self) -> Iterator[sa.Row]:
         return iter(self.items)

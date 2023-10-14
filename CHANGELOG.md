@@ -3,6 +3,7 @@ In Development
 - Always open log files in UTF-8
 - Support Python 3.12
 - Drop support for Python 3.7
+- Add type annotations
 - Dependencies:
     - Drop pyRFC3339 dependency
     - Update SQLAlchemy to 2.x

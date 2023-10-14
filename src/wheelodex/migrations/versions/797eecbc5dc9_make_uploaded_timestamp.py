@@ -1,10 +1,12 @@
-"""Make uploaded timestamp
+"""
+Make uploaded timestamp
 
 Revision ID: 797eecbc5dc9
 Revises: b3dbe476e055
 Create Date: 2019-10-29 22:31:51.573165+00:00
-
 """
+
+from __future__ import annotations
 from datetime import datetime, timezone
 from alembic import op
 import sqlalchemy as sa
@@ -12,8 +14,8 @@ import sqlalchemy as sa
 # revision identifiers, used by Alembic.
 revision = "797eecbc5dc9"
 down_revision = "b3dbe476e055"
-branch_labels = None
-depends_on = None
+branch_labels: None = None
+depends_on: None = None
 
 wheels = sa.Table(
     "wheels",
@@ -36,7 +38,7 @@ wheels = sa.Table(
 )
 
 
-def upgrade():
+def upgrade() -> None:
     op.add_column(
         "wheels",
         sa.Column("uploaded_ts", sa.DateTime(timezone=True), nullable=True),
@@ -56,7 +58,7 @@ def upgrade():
     )
 
 
-def downgrade():
+def downgrade() -> None:
     op.add_column(
         "wheels",
         sa.Column("uploaded_str", sa.Unicode(32), nullable=True),
@@ -77,7 +79,7 @@ def downgrade():
 
 
 # Importing this from ..util doesn't work for some reason
-def parse_timestamp(s):
+def parse_timestamp(s: str) -> datetime:
     """Parse an ISO 8601 timestamp, assuming anything naïve is in UTC"""
     if s.endswith("Z"):
         s = s[:-1] + "+00:00"

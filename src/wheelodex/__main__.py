@@ -1,9 +1,11 @@
+from __future__ import annotations
 from configparser import ConfigParser
 from datetime import datetime, timedelta, timezone
 import json
 import logging
 from os.path import join
 import sys
+from typing import IO
 import click
 from click_loglevel import LogLevel
 from flask import current_app
@@ -31,11 +33,6 @@ else:
     from importlib_resources import as_file, files
 
 log = logging.getLogger(__name__)
-
-with as_file(files("wheelodex") / "data" / "entry_points.ini") as ep_path:
-    # Violating the context manager like this means that wheelodex can't be run
-    # from within a zipfile.
-    ep_path = str(ep_path)
 
 
 # FlaskGroup causes all commands to be run inside an application context,
@@ -67,7 +64,7 @@ def main(log_level: int) -> None:
 
 @main.command()
 @click.option("-f", "--force", is_flag=True, help="Force initialization")
-def initdb(force):
+def initdb(force: bool) -> None:
     """
     Initialize the database.
 
@@ -88,14 +85,14 @@ def initdb(force):
 
 
 @main.command("scan-pypi")
-def scan_pypi_cmd():
+def scan_pypi_cmd() -> None:
     """Scan all PyPI projects for wheels"""
     with dbcontext():
         scan_pypi()
 
 
 @main.command("scan-changelog")
-def scan_changelog_cmd():
+def scan_changelog_cmd() -> None:
     """Scan the PyPI changelog for new wheels"""
     with dbcontext():
         serial = get_serial()
@@ -108,7 +105,7 @@ def scan_changelog_cmd():
 @click.option(
     "-S", "--max-wheel-size", type=int, help="Maximum size of wheels to process"
 )
-def process_queue_cmd(max_wheel_size):
+def process_queue_cmd(max_wheel_size: int | None) -> None:
     """
     Analyze new wheels.
 
@@ -127,7 +124,7 @@ def process_queue_cmd(max_wheel_size):
 @main.command()
 @click.option("-A", "--all", "dump_all", is_flag=True, help="Dump all wheels")
 @click.option("-o", "--outfile", default="-", help="File to dump to")
-def dump(dump_all, outfile):
+def dump(dump_all: bool, outfile: str) -> None:
     """
     Dump wheel data as line-delimited JSON.
 
@@ -150,7 +147,6 @@ def dump(dump_all, outfile):
                 q = q.filter(Wheel.data.has())
             # Dumping in pages gives a needed efficiency boost:
             page = db.paginate(q, page=1, per_page=100)
-            ### TODO: Should the query be ordered by something?
             while True:
                 for whl in page:
                     click.echo(json.dumps(whl.as_json()), file=fp)
@@ -162,8 +158,8 @@ def dump(dump_all, outfile):
 
 @main.command()
 @click.option("-S", "--serial", type=int, help="Also update PyPI serial to given value")
-@click.argument("infile", type=click.File())
-def load(infile, serial):
+@click.argument("infile", type=click.File(encoding="utf-8"))
+def load(infile: IO[str], serial: int | None) -> None:
     """
     Load wheel data from line-delimited JSON.
 
@@ -179,14 +175,14 @@ def load(infile, serial):
 
 
 @main.command("purge-old-versions")
-def purge_old_versions_cmd():
+def purge_old_versions_cmd() -> None:
     """Delete old versions from the database"""
     with dbcontext():
         purge_old_versions()
 
 
 @main.command()
-def process_orphan_wheels():
+def process_orphan_wheels() -> None:
     """
     Register or expire orphan wheels.
 
@@ -201,7 +197,7 @@ def process_orphan_wheels():
     unorphaned = 0
     remaining = 0
     pypi = PyPIAPI()
-    max_age = current_app.config["WHEELODEX_MAX_ORPHAN_AGE_SECONDS"]
+    max_age = int(current_app.config["WHEELODEX_MAX_ORPHAN_AGE_SECONDS"])
     with dbcontext():
         for orphan in db.session.scalars(db.select(OrphanWheel)):
             data = pypi.asset_data(
@@ -233,7 +229,7 @@ def process_orphan_wheels():
         )
         log.info("%d orphan wheels expired", expired)
     end_time = datetime.now(timezone.utc)
-    log_dir = current_app.config.get("WHEELODEX_STATS_LOG_DIR")
+    log_dir = str(current_app.config.get("WHEELODEX_STATS_LOG_DIR"))
     if log_dir is not None:
         with open(
             join(log_dir, "process_orphan_wheels.log"), "a", encoding="utf-8"
@@ -255,8 +251,8 @@ def process_orphan_wheels():
 
 
 @main.command()
-@click.argument("infile", type=click.File(), default=ep_path)
-def load_entry_points(infile):
+@click.argument("infile", type=click.File(encoding="utf-8"), required=False)
+def load_entry_points(infile: IO[str] | None) -> None:
     """
     Load entry point group descriptions from a file.
 
@@ -273,7 +269,12 @@ def load_entry_points(infile):
     limited to 65535 characters and may span multiple lines.
     """
     epgs = ConfigParser(interpolation=None)
-    epgs.read_file(infile)
+    if infile is None:
+        with as_file(files("wheelodex") / "data" / "entry_points.ini") as ep_path:
+            with ep_path.open(encoding="utf-8") as fp:
+                epgs.read_file(fp)
+    else:
+        epgs.read_file(infile)
     with dbcontext():
         for name in epgs.sections():
             group = EntryPointGroup.from_name(name)

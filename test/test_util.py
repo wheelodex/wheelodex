@@ -1,12 +1,8 @@
+from __future__ import annotations
 from datetime import datetime, timezone
 import pytest
-from wheelodex.util import (
-    VersionNoDot,
-    glob2like,
-    latest_version,
-    parse_timestamp,
-    wheel_sort_key,
-)
+from wheelodex.util import glob2like, latest_version, parse_timestamp
+from wheelodex.wheel_sort import VersionNoDot, wheel_sort_key
 
 
 @pytest.mark.parametrize(
@@ -19,7 +15,7 @@ from wheelodex.util import (
         (["2001.01.01", "1999.12.31"], "2001.01.01"),
     ],
 )
-def test_latest_version(versions, latest):
+def test_latest_version(versions: list[str], latest: str) -> None:
     assert latest_version(versions) == latest
 
 
@@ -88,7 +84,7 @@ WHEEL_PREFERENCES = [
     "lower,higher",
     zip(WHEEL_PREFERENCES, WHEEL_PREFERENCES[1:]),
 )
-def test_wheel_sort_key(lower, higher):
+def test_wheel_sort_key(lower: str, higher: str) -> None:
     assert wheel_sort_key(lower) < wheel_sort_key(higher)
 
 
@@ -120,7 +116,7 @@ VERSIONS_NO_DOTS = [
     "lower,higher",
     zip(VERSIONS_NO_DOTS, VERSIONS_NO_DOTS[1:]),
 )
-def test_version_no_dot(lower, higher):
+def test_version_no_dot(lower: str, higher: str) -> None:
     assert VersionNoDot(lower) < VersionNoDot(higher)
 
 
@@ -139,7 +135,7 @@ def test_version_no_dot(lower, higher):
         (r"foo\\bar", r"foo\\bar"),
     ],
 )
-def test_glob2like(glob, like):
+def test_glob2like(glob: str, like: str) -> None:
     assert glob2like(glob) == like
 
 
@@ -164,7 +160,7 @@ def test_glob2like(glob, like):
         ),
     ],
 )
-def test_parse_timestamp(s, dt):
+def test_parse_timestamp(s: str, dt: datetime) -> None:
     parsed = parse_timestamp(s)
     assert parsed == dt
     assert parsed.replace(tzinfo=None) == dt.replace(tzinfo=None)

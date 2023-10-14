@@ -1,8 +1,8 @@
 """ Flask views """
 
-from collections import OrderedDict
-from functools import wraps
+from __future__ import annotations
 import re
+from typing import Tuple, Union
 from flask import (
     Blueprint,
     abort,
@@ -15,6 +15,8 @@ from flask import (
 )
 from packaging.utils import canonicalize_name as normalize
 from sqlalchemy.sql.functions import array_agg
+from werkzeug.exceptions import HTTPException
+from werkzeug.sansio.response import Response
 from .dbutil import rdepends_count, rdepends_query
 from .models import (
     DependencyRelation,
@@ -29,39 +31,33 @@ from .models import (
     db,
 )
 from .paginate_rows import paginate_rows
-from .util import glob2like, json_response, like_escape
+from .util import glob2like, like_escape
 
 web = Blueprint("web", __name__)
 
 from . import macros  # noqa
 
+ResponseValue = Union["Response", str, Tuple["Response", int]]
 
-def project_view(f):
-    """
-    A decorator for views that take a ``project`` parameter.  If the project
-    name is not in normalized form, a 301 redirect is issued.  Otherwise, the
-    `Project` object is fetched from the database and passed to the view
-    function as the ``project`` parameter.
-    """
 
-    @wraps(f)
-    def wrapped(project, **kwargs):
-        normproj = normalize(project)
-        if normproj != project:
-            return redirect(
-                url_for("." + f.__name__, project=normproj, **kwargs),
-                code=301,
-            )
-        else:
-            p = db.first_or_404(db.select(Project).filter_by(name=normproj))
-            return f(project=p, **kwargs)
-
-    return wrapped
+def resolve_project(project: str) -> Project:
+    normproj = normalize(project)
+    if normproj != project:
+        view_args = request.view_args or {}
+        view_args["project"] = normproj
+        assert request.endpoint is not None
+        raise HTTPException(
+            response=redirect(url_for(request.endpoint, **view_args), code=301)
+        )
+    else:
+        p = db.first_or_404(db.select(Project).filter_by(name=normproj))
+        assert isinstance(p, Project)
+        return p
 
 
 @web.route("/index.html")
 @web.route("/")
-def index():
+def index() -> ResponseValue:
     """The main page"""
     return render_template(
         "index.html",
@@ -74,13 +70,13 @@ def index():
 
 
 @web.route("/about/")
-def about():
+def about() -> ResponseValue:
     """The "About" page"""
     return render_template("about.html")
 
 
 @web.route("/json-api/")
-def json_api():
+def json_api() -> ResponseValue:
     """The "JSON API" page"""
     p = db.session.scalars(db.select(Project).filter_by(name="requests")).one_or_none()
     example_wheel = p and p.best_wheel
@@ -88,7 +84,7 @@ def json_api():
 
 
 @web.route("/recent/")
-def recent_wheels():
+def recent_wheels() -> ResponseValue:
     """A list of recently-analyzed wheels"""
     qty = current_app.config["WHEELODEX_RECENT_WHEELS_QTY"]
     recents = db.session.execute(
@@ -104,7 +100,7 @@ def recent_wheels():
 
 @web.route("/rdepends-leaders/")
 ### TODO: Add caching
-def rdepends_leaders():
+def rdepends_leaders() -> ResponseValue:
     qty = current_app.config["WHEELODEX_RDEPENDS_LEADERS_QTY"]
     q = db.session.execute(
         db.select(
@@ -120,7 +116,7 @@ def rdepends_leaders():
 
 
 @web.route("/projects/")
-def project_list():
+def project_list() -> ResponseValue:
     """A list of all projects with wheels"""
     per_page = current_app.config["WHEELODEX_PROJECTS_PER_PAGE"]
     projects = db.paginate(
@@ -131,68 +127,62 @@ def project_list():
 
 
 @web.route("/projects/<project>/")
-@project_view
-def project(project):
+def project(project: str) -> ResponseValue:
     """
     A display of the data for a given project, including its "best wheel"
     """
-    rdeps_qty = rdepends_count(project)
-    whl = project.best_wheel
+    p = resolve_project(project)
+    rdeps_qty = rdepends_count(p)
+    whl = p.best_wheel
     if whl is not None:
         return render_template(
             "wheel_data.html",
             whl=whl,
-            project=project,
+            project=p,
             rdepends_qty=rdeps_qty,
-            all_wheels=project.versions_wheels_grid(),
+            all_wheels=p.versions_wheels_grid(),
             subpage=False,
         )
     else:
         return render_template(
-            "project_nowheel.html",
-            project=project,
-            rdepends_qty=rdeps_qty,
+            "project_nowheel.html", project=p, rdepends_qty=rdeps_qty
         )
 
 
 @web.route("/projects/<project>/wheels/<wheel>/")
-@project_view
-def wheel_data(project, wheel):
+def wheel_data(project: str, wheel: str) -> ResponseValue:
     """
     A display of the data for a project, focused on a given wheel.  If the
     wheel is unknown, redirect to the project's main page.
     """
+    p = resolve_project(project)
     whl = db.session.scalars(db.select(Wheel).filter_by(filename=wheel)).one_or_none()
     if whl is None:
-        return redirect(url_for(".project", project=project.name), code=302)
-    elif whl.project != project:
+        return redirect(url_for(".project", project=p.name), code=302)
+    elif whl.project != p:
         abort(404)
     else:
         return render_template(
             "wheel_data.html",
             whl=whl,
-            project=project,
-            rdepends_qty=rdepends_count(project),
-            all_wheels=project.versions_wheels_grid(),
+            project=p,
+            rdepends_qty=rdepends_count(p),
+            all_wheels=p.versions_wheels_grid(),
             subpage=True,
         )
 
 
 @web.route("/projects/<project>/rdepends/")
-@project_view
-def rdepends(project):
+def rdepends(project: str) -> ResponseValue:
     """A list of reverse dependencies for a project"""
+    p = resolve_project(project)
     per_page = current_app.config["WHEELODEX_RDEPENDS_PER_PAGE"]
-    rdeps = db.paginate(rdepends_query(project), per_page=per_page)
-    return render_template(
-        "rdepends.html",
-        project=project,
-        rdepends=rdeps,
-    )
+    rdeps = db.paginate(rdepends_query(p), per_page=per_page)
+    return render_template("rdepends.html", project=p, rdepends=rdeps)
 
 
 @web.route("/entry-points/")
-def entry_point_groups():
+def entry_point_groups() -> ResponseValue:
     """
     A list of all entry point groups (excluding those without any entry points)
     """
@@ -230,7 +220,7 @@ def entry_point_groups():
 
 
 @web.route("/entry-points/<group>/")
-def entry_point(group):
+def entry_point(group: str) -> ResponseValue:
     """
     A list of all entry points in a given group and the packages that define
     them
@@ -258,7 +248,7 @@ def entry_point(group):
 
 
 @web.route("/search/projects/")
-def search_projects():
+def search_projects() -> ResponseValue:
     """
     Search for projects
 
@@ -295,7 +285,7 @@ def search_projects():
 
 
 @web.route("/search/files/")
-def search_files():
+def search_files() -> ResponseValue:
     """Search for wheels containing files with a given name or pattern"""
     search_term = request.args.get("q", "").strip()
     if search_term:
@@ -329,7 +319,7 @@ def search_files():
 
 
 @web.route("/search/modules/")
-def search_modules():
+def search_modules() -> ResponseValue:
     """
     Search for wheels containing Python modules with a given name or pattern
     """
@@ -360,7 +350,7 @@ def search_modules():
 
 
 @web.route("/search/commands/")
-def search_commands():
+def search_commands() -> ResponseValue:
     """Search for wheels defining a given ``console_scripts`` command"""
     search_term = request.args.get("q", "").strip()
     if search_term:
@@ -392,14 +382,14 @@ def search_commands():
 
 
 @web.route("/json/projects/<project>")
-@project_view
-def project_json(project):
+def project_json(project: str) -> ResponseValue:
     """
     A JSON view of the names of all known wheels (with links) for the given
     project and whether they have data, organized by version
     """
-    response = OrderedDict()
-    for v, wheels in project.versions_wheels_grid():
+    p = resolve_project(project)
+    response = {}
+    for v, wheels in p.versions_wheels_grid():
         lst = []
         for w, d in wheels:
             lst.append(
@@ -414,27 +404,24 @@ def project_json(project):
 
 
 @web.route("/json/projects/<project>/data")
-@project_view
-def project_data_json(project):
+def project_data_json(project: str) -> ResponseValue:
     """A JSON view of the data for a given project's best wheel"""
     ### TODO: Should this use preferred_wheel instead?  The URL does say
     ### "data"...
-    whl = project.best_wheel
+    p = resolve_project(project)
+    whl = p.best_wheel
     if whl is not None:
         return jsonify(whl.as_json())
     else:
-        return json_response(
-            {"message": "No wheels found for project"},
-            status_code=404,
-        )
+        return (jsonify({"message": "No wheels found for project"}), 404)
 
 
 @web.route("/json/projects/<project>/rdepends")
-@project_view
-def project_rdepends_json(project):
+def project_rdepends_json(project: str) -> ResponseValue:
     """A JSON view of the reverse dependencies for a project"""
+    p = resolve_project(project)
     per_page = current_app.config["WHEELODEX_RDEPENDS_PER_PAGE"]
-    rdeps = db.paginate(rdepends_query(project), per_page=per_page)
+    rdeps = db.paginate(rdepends_query(p), per_page=per_page)
     return jsonify(
         {
             "items": [
@@ -448,14 +435,14 @@ def project_rdepends_json(project):
             "links": {
                 "next": url_for(
                     ".project_rdepends_json",
-                    project=project.name,
+                    project=p.name,
                     page=rdeps.next_num,
                 )
                 if rdeps.has_next
                 else None,
                 "prev": url_for(
                     ".project_rdepends_json",
-                    project=project.name,
+                    project=p.name,
                     page=rdeps.prev_num,
                 )
                 if rdeps.has_prev
@@ -466,7 +453,7 @@ def project_rdepends_json(project):
 
 
 @web.route("/json/wheels/<wheel>.json")
-def wheel_json(wheel):
+def wheel_json(wheel: str) -> ResponseValue:
     """A JSON view of the data for a given wheel"""
     whl = db.first_or_404(db.select(Wheel).filter_by(filename=wheel))
     return jsonify(whl.as_json())
