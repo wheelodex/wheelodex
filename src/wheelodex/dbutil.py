@@ -22,6 +22,7 @@ from .models import (
     PyPISerial,
     Version,
     Wheel,
+    WheelData,
     db,
 )
 from .util import parse_timestamp, version_sort_key, wheel_sort_key
@@ -261,12 +262,18 @@ def purge_old_versions():
     ):
         latest = latest_wheel = latest_data = None
         for v, vwheels, vdata in db.session.execute(
+            # This queries the versions of project `p`, along with the number
+            # of wheels each version has and the number of wheels with data
+            # each has:
             db.select(
                 Version,
-                Version.wheels.any(),
-                Version.wheels.any(Wheel.data.has()),
+                db.func.count(Wheel.id),
+                db.func.count(WheelData.id),
             )
+            .join_from(Version, Wheel, isouter=True)
+            .join_from(Wheel, WheelData, isouter=True)
             .where(with_parent(p, Project.versions))
+            .group_by(Version)
             .order_by(Version.ordering.desc())
         ):
             keep = False
