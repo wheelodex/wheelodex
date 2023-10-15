@@ -6,19 +6,7 @@ import pytest
 from sqlalchemy import text
 from sqlalchemy.orm import DeclarativeBase
 from wheelodex.app import create_app
-from wheelodex.dbutil import (
-    add_orphan_wheel,
-    add_project,
-    add_version,
-    add_wheel,
-    get_project,
-    get_version,
-    iterqueue,
-    purge_old_versions,
-    remove_project,
-    remove_version,
-    remove_wheel,
-)
+from wheelodex.dbutil import purge_old_versions, remove_wheel
 from wheelodex.models import OrphanWheel, Project, Version, Wheel, db
 from wheelodex.util import parse_timestamp
 
@@ -124,35 +112,34 @@ QUUX_1_5_WHEEL: WheelArgs = {
 }
 
 
-def test_add_wheel() -> None:
+def test_ensure_wheel() -> None:
     assert get_all(Wheel) == []
-    p = add_project("FooBar")
+    p = Project.ensure("FooBar")
     assert not p.has_wheels
-    v1 = add_version(p, "1.0")
-    whl1 = add_wheel(version=v1, **FOOBAR_1_WHEEL)
+    v1 = p.ensure_version("1.0")
+    whl1 = v1.ensure_wheel(**FOOBAR_1_WHEEL)
     assert get_all(Wheel) == [whl1]
     assert p.has_wheels
-    v2 = add_version(p, "2.0")  # type: ignore[unreachable]
-    whl2 = add_wheel(version=v2, **FOOBAR_2_WHEEL)
+    v2 = p.ensure_version("2.0")  # type: ignore[unreachable]
+    whl2 = v2.ensure_wheel(**FOOBAR_2_WHEEL)
     assert sort_wheels(get_all(Wheel)) == [whl1, whl2]
     assert v1.wheels == [whl1]
     assert v2.wheels == [whl2]
-    assert get_version(p, "1.0").wheels == [whl1]
-    assert get_version(p, "2.0").wheels == [whl2]
+    assert p.get_version_or_none("1.0").wheels == [whl1]
+    assert p.get_version_or_none("2.0").wheels == [whl2]
 
 
-def test_add_wheel_extant() -> None:
+def test_ensure_wheel_extant() -> None:
     """
     Add two wheels with the same project, version, & filename and assert that
     only the first one exists
     """
     assert get_all(Wheel) == []
-    p = add_project("FooBar")
-    v1 = add_version(p, "1.0")
-    whl1 = add_wheel(version=v1, **FOOBAR_1_WHEEL)
+    p = Project.ensure("FooBar")
+    v1 = p.ensure_version("1.0")
+    whl1 = v1.ensure_wheel(**FOOBAR_1_WHEEL)
     assert get_all(Wheel) == [whl1]
-    add_wheel(
-        version=v1,
+    v1.ensure_wheel(
         filename="FooBar-1.0-py3-none-any.whl",
         url="http://example.org/FooBar-1.0-py3-none-any.whl",
         size=69105,
@@ -171,18 +158,18 @@ def test_add_wheel_extant() -> None:
 
 def test_remove_wheel() -> None:
     assert get_all(Wheel) == []
-    p = add_project("FooBar")
-    v1 = add_version(p, "1.0")
-    whl1 = add_wheel(version=v1, **FOOBAR_1_WHEEL)
+    p = Project.ensure("FooBar")
+    v1 = p.ensure_version("1.0")
+    whl1 = v1.ensure_wheel(**FOOBAR_1_WHEEL)
     assert get_all(Wheel) == [whl1]
     remove_wheel("FooBar-1.0-py3-none-any.whl")
     assert get_all(Wheel) == []
     assert not p.has_wheels
 
 
-def test_add_project() -> None:
+def test_project_ensure() -> None:
     assert get_all(Project) == []
-    add_project("FooBar")
+    Project.ensure("FooBar")
     (p,) = get_all(Project)
     assert p.name == "foobar"
     assert p.display_name == "FooBar"
@@ -190,10 +177,10 @@ def test_add_project() -> None:
     assert p.latest_version is None
 
 
-def test_add_project_extant() -> None:
+def test_project_ensure_extant() -> None:
     assert get_all(Project) == []
-    add_project("FooBar")
-    add_project("FOOBAR")
+    Project.ensure("FooBar")
+    Project.ensure("FOOBAR")
     (p,) = get_all(Project)
     assert p.name == "foobar"
     assert p.display_name == "FooBar"
@@ -201,54 +188,41 @@ def test_add_project_extant() -> None:
     assert p.latest_version is None
 
 
-def test_get_project() -> None:
+def test_project_get_or_none() -> None:
     assert get_all(Project) == []
-    add_project("FooBar")
+    Project.ensure("FooBar")
     for name in ["FooBar", "foobar", "FOOBAR"]:
-        p = get_project(name)
+        p = Project.get_or_none(name)
         assert p is not None
         assert p.name == "foobar"
         assert p.display_name == "FooBar"
-    assert get_project("barfoo") is None
+    assert Project.get_or_none("barfoo") is None
 
 
-def test_remove_project() -> None:
+def test_project_remove() -> None:
     assert get_all(Project) == []
-    p = add_project("FooBar")
-    v1 = add_version(p, "1.0")
-    add_wheel(version=v1, **FOOBAR_1_WHEEL)
-    v2 = add_version(p, "2.0")
-    add_wheel(version=v2, **FOOBAR_2_WHEEL)
-    q = add_project("quux")
-    v3 = add_version(q, "1.5")
-    whl3 = add_wheel(version=v3, **QUUX_1_5_WHEEL)
-    remove_project("FooBar")
+    p = Project.ensure("FooBar")
+    v1 = p.ensure_version("1.0")
+    v1.ensure_wheel(**FOOBAR_1_WHEEL)
+    v2 = p.ensure_version("2.0")
+    v2.ensure_wheel(**FOOBAR_2_WHEEL)
+    q = Project.ensure("quux")
+    v3 = q.ensure_version("1.5")
+    whl3 = v3.ensure_wheel(**QUUX_1_5_WHEEL)
+    p.remove()
     assert get_all(Project) in ([p, q], [q, p])
     assert get_all(Version) == [v3]
-    assert get_version("foobar", "1.0") is None
-    assert get_version("foobar", "2.0") is None
+    assert p.get_version_or_none("1.0") is None
+    assert p.get_version_or_none("2.0") is None
     assert get_all(Wheel) == [whl3]
     assert p.latest_version is None
     assert not p.has_wheels
 
 
-def test_add_version_str() -> None:
+def test_ensure_version() -> None:
     assert get_all(Project) == []
-    add_project("FooBar")
-    add_version("FooBar", "1.0")
-    (p,) = get_all(Project)
-    assert p.name == "foobar"
-    (v,) = p.versions
-    assert v.name == "1"
-    assert v.display_name == "1.0"
-    assert v.wheels == []
-    assert p.latest_version == v
-
-
-def test_add_version_project() -> None:
-    assert get_all(Project) == []
-    p = add_project("FooBar")
-    add_version(p, "1.0")
+    p = Project.ensure("FooBar")
+    p.ensure_version("1.0")
     (q,) = get_all(Project)
     assert p == q
     (v,) = p.versions
@@ -258,23 +232,11 @@ def test_add_version_project() -> None:
     assert p.latest_version == v
 
 
-def test_add_version_new_str() -> None:
+def test_ensure_version_extant() -> None:
     assert get_all(Project) == []
-    add_version("FooBar", "1.0")
-    (p,) = get_all(Project)
-    assert p.name == "foobar"
-    (v,) = p.versions
-    assert v.name == "1"
-    assert v.display_name == "1.0"
-    assert v.wheels == []
-    assert p.latest_version == v
-
-
-def test_add_version_extant() -> None:
-    assert get_all(Project) == []
-    p = add_project("FooBar")
-    v = add_version("FooBar", "1.0")
-    u = add_version("FooBar", "1.0.0")
+    p = Project.ensure("FooBar")
+    v = p.ensure_version("1.0")
+    u = p.ensure_version("1.0.0")
     assert v == u
     assert p.versions == [v]
     assert v.name == "1"
@@ -283,61 +245,45 @@ def test_add_version_extant() -> None:
     assert p.latest_version == v
 
 
-def test_get_version_str() -> None:
+def test_get_version_or_none() -> None:
     assert get_all(Project) == []
-    add_project("FooBar")
-    add_version("FooBar", "1.0")
-    for project in ["foobar", "FooBar", "FOOBAR"]:
-        for version in ["1", "1.0", "1.0.0"]:
-            v = get_version(project, version)
-            assert v is not None
-            assert v.project.name == "foobar"
-            assert v.name == "1"
-            assert v.display_name == "1.0"
-            assert v.wheels == []
-    assert get_version("foobar", "2.0") is None
-    assert get_version("quux", "2.0") is None
-
-
-def test_get_version_project() -> None:
-    assert get_all(Project) == []
-    p = add_project("FooBar")
-    add_version("FooBar", "1.0")
+    p = Project.ensure("FooBar")
+    p.ensure_version("1.0")
     for version in ["1", "1.0", "1.0.0"]:
-        v = get_version(p, version)
+        v = p.get_version_or_none(version)
         assert v is not None
         assert v.project == p
         assert v.name == "1"
         assert v.display_name == "1.0"
         assert v.wheels == []
-    assert get_version(p, "2.0") is None
+    assert p.get_version_or_none("2.0") is None
 
 
 def test_latest_version() -> None:
     assert get_all(Project) == []
-    p = add_project("FooBar")
+    p = Project.ensure("FooBar")
     assert p.latest_version is None
-    v1 = add_version(p, "1.0")
+    v1 = p.ensure_version("1.0")
     assert p.latest_version == v1
-    v2 = add_version(p, "2.0")
+    v2 = p.ensure_version("2.0")
     assert p.latest_version == v2
-    add_version(p, "2.1.dev1")
+    p.ensure_version("2.1.dev1")
     assert p.latest_version == v2
-    add_version(p, "1.5")
+    p.ensure_version("1.5")
     assert p.latest_version == v2
 
 
 def test_remove_version() -> None:
     assert get_all(Project) == []
-    p = add_project("FooBar")
-    v1 = add_version(p, "1.0")
-    whl1 = add_wheel(version=v1, **FOOBAR_1_WHEEL)
-    v2 = add_version(p, "2.0")
-    add_wheel(version=v2, **FOOBAR_2_WHEEL)
-    remove_version("FooBar", "2.0")
+    p = Project.ensure("FooBar")
+    v1 = p.ensure_version("1.0")
+    whl1 = v1.ensure_wheel(**FOOBAR_1_WHEEL)
+    v2 = p.ensure_version("2.0")
+    v2.ensure_wheel(**FOOBAR_2_WHEEL)
+    p.remove_version("2.0")
     assert get_all(Project) == [p]
-    assert get_version("foobar", "1.0") is not None
-    assert get_version("foobar", "2.0") is None
+    assert p.get_version_or_none("1.0") is not None
+    assert p.get_version_or_none("2.0") is None
     assert get_all(Version) == [v1]
     assert p.latest_version == v1
     assert get_all(Wheel) == [whl1]
@@ -345,282 +291,294 @@ def test_remove_version() -> None:
 
 
 def test_purge_old_versions_one_version() -> None:
-    v1 = add_version("foobar", "1.0")
+    v1 = Project.ensure("foobar").ensure_version("1.0")
     purge_old_versions()
     assert get_all(Version) == [v1]
 
 
 def test_purge_old_versions_two_versions() -> None:
-    add_version("foobar", "1.0")
-    v2 = add_version("foobar", "2.0")
+    p = Project.ensure("foobar")
+    p.ensure_version("1.0")
+    v2 = p.ensure_version("2.0")
     purge_old_versions()
     assert get_all(Version) == [v2]
 
 
 def test_purge_old_versions_latest_plus_wheel() -> None:
-    v1 = add_version("foobar", "1.0")
-    add_wheel(version=v1, **FOOBAR_1_WHEEL)
-    v2 = add_version("foobar", "2.0")
+    p = Project.ensure("foobar")
+    v1 = p.ensure_version("1.0")
+    v1.ensure_wheel(**FOOBAR_1_WHEEL)
+    v2 = p.ensure_version("2.0")
     purge_old_versions()
     assert sort_versions(get_all(Version)) == [v1, v2]
 
 
 def test_purge_old_versions_latest_plus_wheel_plus_mid() -> None:
-    v1 = add_version("foobar", "1.0")
-    add_wheel(version=v1, **FOOBAR_1_WHEEL)
-    add_version("foobar", "1.5")
-    v2 = add_version("foobar", "2.0")
+    p = Project.ensure("foobar")
+    v1 = p.ensure_version("1.0")
+    v1.ensure_wheel(**FOOBAR_1_WHEEL)
+    p.ensure_version("1.5")
+    v2 = p.ensure_version("2.0")
     purge_old_versions()
     assert sort_versions(get_all(Version)) == [v1, v2]
 
 
 def test_purge_old_versions_latest_has_wheel_plus_one() -> None:
-    add_version("foobar", "1.0")
-    v2 = add_version("foobar", "2.0")
-    add_wheel(version=v2, **FOOBAR_2_WHEEL)
+    p = Project.ensure("foobar")
+    p.ensure_version("1.0")
+    v2 = p.ensure_version("2.0")
+    v2.ensure_wheel(**FOOBAR_2_WHEEL)
     purge_old_versions()
     assert get_all(Version) == [v2]
 
 
 def test_purge_old_versions_latest_has_wheel_plus_wheel() -> None:
-    v1 = add_version("foobar", "1.0")
-    add_wheel(version=v1, **FOOBAR_1_WHEEL)
-    v2 = add_version("foobar", "2.0")
-    add_wheel(version=v2, **FOOBAR_2_WHEEL)
+    p = Project.ensure("foobar")
+    v1 = p.ensure_version("1.0")
+    v1.ensure_wheel(**FOOBAR_1_WHEEL)
+    v2 = p.ensure_version("2.0")
+    v2.ensure_wheel(**FOOBAR_2_WHEEL)
     purge_old_versions()
     assert get_all(Version) == [v2]
 
 
 def test_purge_old_versions_latest_has_data() -> None:
-    v1 = add_version("foobar", "1.0")
-    whl1 = add_wheel(version=v1, **FOOBAR_1_WHEEL)
+    p = Project.ensure("foobar")
+    v1 = p.ensure_version("1.0")
+    whl1 = v1.ensure_wheel(**FOOBAR_1_WHEEL)
     whl1.set_data(FOOBAR_1_DATA)
     purge_old_versions()
     assert sort_versions(get_all(Version)) == [v1]
 
 
 def test_purge_old_versions_latest_plus_data() -> None:
-    v1 = add_version("foobar", "1.0")
-    whl1 = add_wheel(version=v1, **FOOBAR_1_WHEEL)
+    p = Project.ensure("foobar")
+    v1 = p.ensure_version("1.0")
+    whl1 = v1.ensure_wheel(**FOOBAR_1_WHEEL)
     whl1.set_data(FOOBAR_1_DATA)
-    v2 = add_version("foobar", "2.0")
+    v2 = p.ensure_version("2.0")
     purge_old_versions()
     assert sort_versions(get_all(Version)) == [v1, v2]
 
 
 def test_purge_old_versions_latest_plus_data_plus_mid() -> None:
-    v1 = add_version("foobar", "1.0")
-    whl1 = add_wheel(version=v1, **FOOBAR_1_WHEEL)
+    p = Project.ensure("foobar")
+    v1 = p.ensure_version("1.0")
+    whl1 = v1.ensure_wheel(**FOOBAR_1_WHEEL)
     whl1.set_data(FOOBAR_1_DATA)
-    add_version("foobar", "1.5")
-    v2 = add_version("foobar", "2.0")
+    p.ensure_version("1.5")
+    v2 = p.ensure_version("2.0")
     purge_old_versions()
     assert sort_versions(get_all(Version)) == [v1, v2]
 
 
 def test_purge_old_versions_latest_plus_wheel_plus_data() -> None:
-    v1 = add_version("foobar", "1.0")
-    whl1 = add_wheel(version=v1, **FOOBAR_1_WHEEL)
+    p = Project.ensure("foobar")
+    v1 = p.ensure_version("1.0")
+    whl1 = v1.ensure_wheel(**FOOBAR_1_WHEEL)
     whl1.set_data(FOOBAR_1_DATA)
-    v2 = add_version("foobar", "2.0")
-    add_wheel(version=v2, **FOOBAR_2_WHEEL)
-    v3 = add_version("foobar", "3.0")
+    v2 = p.ensure_version("2.0")
+    v2.ensure_wheel(**FOOBAR_2_WHEEL)
+    v3 = p.ensure_version("3.0")
     purge_old_versions()
     assert sort_versions(get_all(Version)) == [v1, v2, v3]
 
 
 def test_purge_old_versions_latest_plus_wheel_plus_data_plus_mid() -> None:
-    v1 = add_version("foobar", "1.0")
-    whl1 = add_wheel(version=v1, **FOOBAR_1_WHEEL)
+    p = Project.ensure("foobar")
+    v1 = p.ensure_version("1.0")
+    whl1 = v1.ensure_wheel(**FOOBAR_1_WHEEL)
     whl1.set_data(FOOBAR_1_DATA)
-    add_version("foobar", "1.5")
-    v2 = add_version("foobar", "2.0")
-    add_wheel(version=v2, **FOOBAR_2_WHEEL)
-    add_version("foobar", "2.5")
-    v3 = add_version("foobar", "3.0")
+    p.ensure_version("1.5")
+    v2 = p.ensure_version("2.0")
+    v2.ensure_wheel(**FOOBAR_2_WHEEL)
+    p.ensure_version("2.5")
+    v3 = p.ensure_version("3.0")
     purge_old_versions()
     assert sort_versions(get_all(Version)) == [v1, v2, v3]
 
 
 def test_purge_old_versions_latest_has_data_plus_data() -> None:
-    v1 = add_version("foobar", "1.0")
-    whl1 = add_wheel(version=v1, **FOOBAR_1_WHEEL)
+    p = Project.ensure("foobar")
+    v1 = p.ensure_version("1.0")
+    whl1 = v1.ensure_wheel(**FOOBAR_1_WHEEL)
     whl1.set_data(FOOBAR_1_DATA)
-    v2 = add_version("foobar", "2.0")
-    whl2 = add_wheel(version=v2, **FOOBAR_2_WHEEL)
+    v2 = p.ensure_version("2.0")
+    whl2 = v2.ensure_wheel(**FOOBAR_2_WHEEL)
     whl2.set_data(FOOBAR_2_DATA)
     purge_old_versions()
     assert sort_versions(get_all(Version)) == [v2]
 
 
 def test_purge_old_versions_latest_has_data_plus_data_plus_mid() -> None:
-    v1 = add_version("foobar", "1.0")
-    whl1 = add_wheel(version=v1, **FOOBAR_1_WHEEL)
+    p = Project.ensure("foobar")
+    v1 = p.ensure_version("1.0")
+    whl1 = v1.ensure_wheel(**FOOBAR_1_WHEEL)
     whl1.set_data(FOOBAR_1_DATA)
-    add_version("foobar", "1.5")
-    v2 = add_version("foobar", "2.0")
-    whl2 = add_wheel(version=v2, **FOOBAR_2_WHEEL)
+    p.ensure_version("1.5")
+    v2 = p.ensure_version("2.0")
+    whl2 = v2.ensure_wheel(**FOOBAR_2_WHEEL)
     whl2.set_data(FOOBAR_2_DATA)
     purge_old_versions()
     assert sort_versions(get_all(Version)) == [v2]
 
 
 def test_preferred_wheel_two_data() -> None:
-    p = add_project("FooBar")
-    v1 = add_version(p, "1.0")
-    whl1 = add_wheel(version=v1, **FOOBAR_1_WHEEL)
+    p = Project.ensure("FooBar")
+    v1 = p.ensure_version("1.0")
+    whl1 = v1.ensure_wheel(**FOOBAR_1_WHEEL)
     whl1.set_data(FOOBAR_1_DATA)
-    v2 = add_version(p, "2.0")
-    whl2 = add_wheel(version=v2, **FOOBAR_2_WHEEL)
+    v2 = p.ensure_version("2.0")
+    whl2 = v2.ensure_wheel(**FOOBAR_2_WHEEL)
     whl2.set_data(FOOBAR_2_DATA)
     assert p.preferred_wheel == whl2
     assert p.best_wheel == whl2
 
 
 def test_preferred_wheel_two_wheels_nodata() -> None:
-    p = add_project("FooBar")
-    v1 = add_version(p, "1.0")
-    add_wheel(version=v1, **FOOBAR_1_WHEEL)
-    v2 = add_version(p, "2.0")
-    whl2 = add_wheel(version=v2, **FOOBAR_2_WHEEL)
+    p = Project.ensure("FooBar")
+    v1 = p.ensure_version("1.0")
+    v1.ensure_wheel(**FOOBAR_1_WHEEL)
+    v2 = p.ensure_version("2.0")
+    whl2 = v2.ensure_wheel(**FOOBAR_2_WHEEL)
     assert p.preferred_wheel is None
     assert p.best_wheel == whl2
 
 
 def test_preferred_wheel_lower_data() -> None:
-    p = add_project("FooBar")
-    v1 = add_version(p, "1.0")
-    whl1 = add_wheel(version=v1, **FOOBAR_1_WHEEL)
+    p = Project.ensure("FooBar")
+    v1 = p.ensure_version("1.0")
+    whl1 = v1.ensure_wheel(**FOOBAR_1_WHEEL)
     whl1.set_data(FOOBAR_1_DATA)
-    v2 = add_version(p, "2.0")
-    add_wheel(version=v2, **FOOBAR_2_WHEEL)
+    v2 = p.ensure_version("2.0")
+    v2.ensure_wheel(**FOOBAR_2_WHEEL)
     assert p.preferred_wheel == whl1
     assert p.best_wheel == whl1
 
 
 def test_preferred_wheel_higher_data() -> None:
-    p = add_project("FooBar")
-    v1 = add_version(p, "1.0")
-    add_wheel(version=v1, **FOOBAR_1_WHEEL)
-    v2 = add_version(p, "2.0")
-    whl2 = add_wheel(version=v2, **FOOBAR_2_WHEEL)
+    p = Project.ensure("FooBar")
+    v1 = p.ensure_version("1.0")
+    v1.ensure_wheel(**FOOBAR_1_WHEEL)
+    v2 = p.ensure_version("2.0")
+    whl2 = v2.ensure_wheel(**FOOBAR_2_WHEEL)
     whl2.set_data(FOOBAR_2_DATA)
     assert p.preferred_wheel == whl2
     assert p.best_wheel == whl2
 
 
-def test_iterqueue_skip_data() -> None:
-    assert iterqueue() == []
-    p = add_project("FooBar")
-    v1 = add_version(p, "1.0")
-    whl1 = add_wheel(version=v1, **FOOBAR_1_WHEEL)
-    assert iterqueue() == [whl1]
+def test_to_process_skip_data() -> None:
+    assert Wheel.to_process() == []
+    p = Project.ensure("FooBar")
+    v1 = p.ensure_version("1.0")
+    whl1 = v1.ensure_wheel(**FOOBAR_1_WHEEL)
+    assert Wheel.to_process() == [whl1]
     whl1.set_data(FOOBAR_1_DATA)
-    assert iterqueue() == []
+    assert Wheel.to_process() == []
 
 
-def test_iterqueue_skip_error() -> None:
-    assert iterqueue() == []
-    p = add_project("FooBar")
-    v1 = add_version(p, "1.0")
-    whl1 = add_wheel(version=v1, **FOOBAR_1_WHEEL)
-    assert iterqueue() == [whl1]
+def test_to_process_skip_error() -> None:
+    assert Wheel.to_process() == []
+    p = Project.ensure("FooBar")
+    v1 = p.ensure_version("1.0")
+    whl1 = v1.ensure_wheel(**FOOBAR_1_WHEEL)
+    assert Wheel.to_process() == [whl1]
     whl1.add_error("Testing")
-    assert iterqueue() == []
+    assert Wheel.to_process() == []
 
 
-def test_iterqueue_skip_non_latest() -> None:
-    assert iterqueue() == []
-    p = add_project("FooBar")
-    v1 = add_version(p, "1.0")
-    whl1 = add_wheel(version=v1, **FOOBAR_1_WHEEL)
-    assert iterqueue() == [whl1]
-    v2 = add_version(p, "2.0")
-    whl2 = add_wheel(version=v2, **FOOBAR_2_WHEEL)
-    assert iterqueue() == [whl2]
+def test_to_process_skip_non_latest() -> None:
+    assert Wheel.to_process() == []
+    p = Project.ensure("FooBar")
+    v1 = p.ensure_version("1.0")
+    whl1 = v1.ensure_wheel(**FOOBAR_1_WHEEL)
+    assert Wheel.to_process() == [whl1]
+    v2 = p.ensure_version("2.0")
+    whl2 = v2.ensure_wheel(**FOOBAR_2_WHEEL)
+    assert Wheel.to_process() == [whl2]
 
 
-def test_iterqueue_ignore_empty_latest() -> None:
-    assert iterqueue() == []
-    p = add_project("FooBar")
-    v1 = add_version(p, "1.0")
-    whl1 = add_wheel(version=v1, **FOOBAR_1_WHEEL)
-    assert iterqueue() == [whl1]
-    add_version(p, "2.0")
-    assert iterqueue() == [whl1]
+def test_to_process_ignore_empty_latest() -> None:
+    assert Wheel.to_process() == []
+    p = Project.ensure("FooBar")
+    v1 = p.ensure_version("1.0")
+    whl1 = v1.ensure_wheel(**FOOBAR_1_WHEEL)
+    assert Wheel.to_process() == [whl1]
+    p.ensure_version("2.0")
+    assert Wheel.to_process() == [whl1]
 
 
-def test_iterqueue_skip_large() -> None:
-    assert iterqueue() == []
-    p = add_project("FooBar")
-    v1 = add_version(p, "1.0")
-    whl1 = add_wheel(version=v1, **FOOBAR_1_WHEEL)
-    whl1b = add_wheel(version=v1, **FOOBAR_1_WHEEL2)
+def test_to_process_skip_large() -> None:
+    assert Wheel.to_process() == []
+    p = Project.ensure("FooBar")
+    v1 = p.ensure_version("1.0")
+    whl1 = v1.ensure_wheel(**FOOBAR_1_WHEEL)
+    whl1b = v1.ensure_wheel(**FOOBAR_1_WHEEL2)
     if whl1.size < whl1b.size:
-        assert iterqueue(max_wheel_size=whl1.size) == [whl1]
+        assert Wheel.to_process(max_wheel_size=whl1.size) == [whl1]
     else:
-        assert iterqueue(max_wheel_size=whl1b.size) == [whl1b]
+        assert Wheel.to_process(max_wheel_size=whl1b.size) == [whl1b]
 
 
-def test_iterqueue_multiwheel_version() -> None:
-    assert iterqueue() == []
-    p = add_project("FooBar")
-    v1 = add_version(p, "1.0")
-    whl1 = add_wheel(version=v1, **FOOBAR_1_WHEEL)
-    whl1b = add_wheel(version=v1, **FOOBAR_1_WHEEL2)
-    assert sort_wheels(iterqueue()) == [whl1b, whl1]
+def test_to_process_multiwheel_version() -> None:
+    assert Wheel.to_process() == []
+    p = Project.ensure("FooBar")
+    v1 = p.ensure_version("1.0")
+    whl1 = v1.ensure_wheel(**FOOBAR_1_WHEEL)
+    whl1b = v1.ensure_wheel(**FOOBAR_1_WHEEL2)
+    assert sort_wheels(Wheel.to_process()) == [whl1b, whl1]
 
 
-def test_iterqueue_multiwheel_version_some_data() -> None:
-    assert iterqueue() == []
-    p = add_project("FooBar")
-    v1 = add_version(p, "1.0")
-    whl1 = add_wheel(version=v1, **FOOBAR_1_WHEEL)
+def test_to_process_multiwheel_version_some_data() -> None:
+    assert Wheel.to_process() == []
+    p = Project.ensure("FooBar")
+    v1 = p.ensure_version("1.0")
+    whl1 = v1.ensure_wheel(**FOOBAR_1_WHEEL)
     whl1.set_data(FOOBAR_1_DATA)
-    whl1b = add_wheel(version=v1, **FOOBAR_1_WHEEL2)
-    assert iterqueue() == [whl1b]
+    whl1b = v1.ensure_wheel(**FOOBAR_1_WHEEL2)
+    assert Wheel.to_process() == [whl1b]
 
 
-def test_iterqueue_multiwheel_version_some_error() -> None:
-    assert iterqueue() == []
-    p = add_project("FooBar")
-    v1 = add_version(p, "1.0")
-    whl1 = add_wheel(version=v1, **FOOBAR_1_WHEEL)
+def test_to_process_multiwheel_version_some_error() -> None:
+    assert Wheel.to_process() == []
+    p = Project.ensure("FooBar")
+    v1 = p.ensure_version("1.0")
+    whl1 = v1.ensure_wheel(**FOOBAR_1_WHEEL)
     whl1.add_error("Testing")
-    whl1b = add_wheel(version=v1, **FOOBAR_1_WHEEL2)
-    assert iterqueue() == [whl1b]
+    whl1b = v1.ensure_wheel(**FOOBAR_1_WHEEL2)
+    assert Wheel.to_process() == [whl1b]
 
 
-def test_iterqueue_multiwheel_version_some_data_other_error() -> None:
-    assert iterqueue() == []
-    p = add_project("FooBar")
-    v1 = add_version(p, "1.0")
-    whl1 = add_wheel(version=v1, **FOOBAR_1_WHEEL)
+def test_to_process_multiwheel_version_some_data_other_error() -> None:
+    assert Wheel.to_process() == []
+    p = Project.ensure("FooBar")
+    v1 = p.ensure_version("1.0")
+    whl1 = v1.ensure_wheel(**FOOBAR_1_WHEEL)
     whl1.set_data(FOOBAR_1_DATA)
-    whl1b = add_wheel(version=v1, **FOOBAR_1_WHEEL2)
+    whl1b = v1.ensure_wheel(**FOOBAR_1_WHEEL2)
     whl1b.add_error("Testing")
-    assert iterqueue() == []
+    assert Wheel.to_process() == []
 
 
 def test_versions_wheels_grid() -> None:
-    p = add_project("FooBar")
-    v1 = add_version(p, "1.0")
-    whl1 = add_wheel(version=v1, **FOOBAR_1_WHEEL)
+    p = Project.ensure("FooBar")
+    v1 = p.ensure_version("1.0")
+    whl1 = v1.ensure_wheel(**FOOBAR_1_WHEEL)
     whl1.set_data(FOOBAR_1_DATA)
-    whl1b = add_wheel(version=v1, **FOOBAR_1_WHEEL2)
-    v2 = add_version(p, "2.0")
-    whl2 = add_wheel(version=v2, **FOOBAR_2_WHEEL)
+    whl1b = v1.ensure_wheel(**FOOBAR_1_WHEEL2)
+    v2 = p.ensure_version("2.0")
+    whl2 = v2.ensure_wheel(**FOOBAR_2_WHEEL)
     assert p.versions_wheels_grid() == [
         ("2.0", [(whl2, False)]),
         ("1.0", [(whl1, True), (whl1b, False)]),
     ]
 
 
-def test_add_orphan_wheel() -> None:
+def test_orphan_wheel_register() -> None:
     assert get_all(OrphanWheel) == []
-    p = add_project("FooBar")
-    v1 = add_version(p, "1.0")
-    add_orphan_wheel(v1, "FooBar-1.0-py3-none-any.whl", 1537974774)
+    p = Project.ensure("FooBar")
+    v1 = p.ensure_version("1.0")
+    OrphanWheel.register(v1, "FooBar-1.0-py3-none-any.whl", 1537974774)
     orphans = get_all(OrphanWheel)
     assert len(orphans) == 1
     assert orphans[0].version == v1
@@ -631,12 +589,12 @@ def test_add_orphan_wheel() -> None:
     assert orphans[0].project == p
 
 
-def test_add_duplicate_orphan_wheel() -> None:
+def test_orphan_wheel_register_duplicate() -> None:
     assert get_all(OrphanWheel) == []
-    p = add_project("FooBar")
-    v1 = add_version(p, "1.0")
-    add_orphan_wheel(v1, "FooBar-1.0-py3-none-any.whl", 1537974774)
-    add_orphan_wheel(v1, "FooBar-1.0-py3-none-any.whl", 1555868651)
+    p = Project.ensure("FooBar")
+    v1 = p.ensure_version("1.0")
+    OrphanWheel.register(v1, "FooBar-1.0-py3-none-any.whl", 1537974774)
+    OrphanWheel.register(v1, "FooBar-1.0-py3-none-any.whl", 1555868651)
     orphans = get_all(OrphanWheel)
     assert len(orphans) == 1
     assert orphans[0].version == v1
@@ -648,8 +606,9 @@ def test_add_duplicate_orphan_wheel() -> None:
 
 
 def test_set_data_with_dependency() -> None:
-    v1 = add_version("foobar", "1.0")
-    whl1 = add_wheel(version=v1, **FOOBAR_1_WHEEL)
+    p = Project.ensure("foobar")
+    v1 = p.ensure_version("1.0")
+    whl1 = v1.ensure_wheel(**FOOBAR_1_WHEEL)
     whl1.set_data(
         {
             "project": "FooBar",
@@ -663,9 +622,9 @@ def test_set_data_with_dependency() -> None:
             },
         }
     )
-    p = get_project("glarch")
+    p2 = Project.get_or_none("glarch")
     assert whl1.data is not None
-    assert whl1.data.dependencies == [p]
+    assert whl1.data.dependencies == [p2]
 
 
 ### TODO: TO TEST:

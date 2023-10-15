@@ -4,16 +4,8 @@ from __future__ import annotations
 from datetime import datetime, timezone
 import logging
 from .app import emit_json_log
-from .dbutil import (
-    add_orphan_wheel,
-    add_project,
-    add_version,
-    add_wheel,
-    remove_project,
-    remove_version,
-    remove_wheel,
-    set_serial,
-)
+from .dbutil import remove_wheel
+from .models import OrphanWheel, Project, PyPISerial
 from .pypi_api import PyPIAPI
 from .util import latest_version
 
@@ -44,10 +36,10 @@ def scan_pypi() -> None:
     pypi = PyPIAPI()
     serial = pypi.changelog_last_serial()
     log.info("changlog_last_serial() = %d", serial)
-    set_serial(serial)
+    PyPISerial.set(serial)
     for pkg in pypi.list_packages():
         log.info("Adding wheels for project %r", pkg)
-        project = add_project(pkg)
+        project = Project.ensure(pkg)
         data = pypi.project_data(pkg)
         if data is None or not data.get("releases", {}):
             log.info("Project has no releases")
@@ -58,7 +50,7 @@ def scan_pypi() -> None:
         assert latest is not None
         log.info("Using latest version: %r", latest)
         qty_queued = 0
-        vobj = add_version(project, latest)
+        vobj = project.ensure_version(latest)
         for asset in data["releases"][latest]:
             if not asset["filename"].endswith(".whl"):
                 log.debug("Asset %s: not a wheel; skipping", asset["filename"])
@@ -66,8 +58,7 @@ def scan_pypi() -> None:
                 log.debug("Asset %s: adding", asset["filename"])
                 qty_queued += 1
                 total_queued += 1
-                add_wheel(
-                    version=vobj,
+                vobj.ensure_wheel(
                     filename=asset["filename"],
                     url=asset["url"],
                     size=asset["size"],
@@ -150,12 +141,11 @@ def scan_changelog(since: int) -> None:
             # later.  There's likely little to nothing to be gained by
             # comparing `rel` to the latest version in the database at this
             # point.
-            v = add_version(proj, rel)
+            v = Project.ensure(proj).ensure_version(rel)
             data = pypi.asset_data(proj, rel, filename)
             if data is not None:
                 log.info("Asset %s: adding", filename)
-                add_wheel(
-                    version=v,
+                v.ensure_wheel(
                     filename=data["filename"],
                     url=data["url"],
                     size=data["size"],
@@ -166,7 +156,7 @@ def scan_changelog(since: int) -> None:
                 wheels_added += 1
             else:
                 log.info("Asset %s not found in JSON API; will check later", filename)
-                add_orphan_wheel(v, filename, ts)
+                OrphanWheel.register(v, filename, ts)
                 orphans_added += 1
 
         elif (
@@ -180,28 +170,30 @@ def scan_changelog(since: int) -> None:
 
         elif action == "create":
             log.info("Event %d: project %r created", serial, proj)
-            add_project(proj)
+            Project.ensure(proj)
             projects_added += 1
 
         elif action == "remove project":
             log.info("Event %d: project %r removed", serial, proj)
-            remove_project(proj)
+            if (p := Project.get_or_none(proj)) is not None:
+                p.remove()
             projects_removed += 1
 
         elif action == "new release":
             log.info("Event %d: version %r of project %r released", serial, rel, proj)
-            add_version(proj, rel)
+            Project.ensure(proj).ensure_version(rel)
             versions_added += 1
 
         elif action == "remove release":
             log.info("Event %d: version %r of project %r removed", serial, rel, proj)
-            remove_version(proj, rel)
+            if (p := Project.get_or_none(proj)) is not None:
+                p.remove_version(rel)
             versions_removed += 1
 
         else:
             log.debug("Event %d: %r: ignoring", serial, action)
 
-        set_serial(serial)
+        PyPISerial.set(serial)
 
     end_time = datetime.now(timezone.utc)
     emit_json_log(

@@ -17,7 +17,6 @@ from packaging.utils import canonicalize_name as normalize
 from sqlalchemy.sql.functions import array_agg
 from werkzeug.exceptions import HTTPException
 from werkzeug.sansio.response import Response
-from .dbutil import rdepends_count, rdepends_query
 from .models import (
     DependencyRelation,
     EntryPoint,
@@ -132,7 +131,7 @@ def project(project: str) -> ResponseValue:
     A display of the data for a given project, including its "best wheel"
     """
     p = resolve_project(project)
-    rdeps_qty = rdepends_count(p)
+    rdeps_qty = p.rdepends_count()
     whl = p.best_wheel
     if whl is not None:
         return render_template(
@@ -166,7 +165,7 @@ def wheel_data(project: str, wheel: str) -> ResponseValue:
             "wheel_data.html",
             whl=whl,
             project=p,
-            rdepends_qty=rdepends_count(p),
+            rdepends_qty=p.rdepends_count(),
             all_wheels=p.versions_wheels_grid(),
             subpage=True,
         )
@@ -177,7 +176,7 @@ def rdepends(project: str) -> ResponseValue:
     """A list of reverse dependencies for a project"""
     p = resolve_project(project)
     per_page = current_app.config["WHEELODEX_RDEPENDS_PER_PAGE"]
-    rdeps = db.paginate(rdepends_query(p), per_page=per_page)
+    rdeps = db.paginate(p.rdepends_query(), per_page=per_page)
     return render_template("rdepends.html", project=p, rdepends=rdeps)
 
 
@@ -421,7 +420,7 @@ def project_rdepends_json(project: str) -> ResponseValue:
     """A JSON view of the reverse dependencies for a project"""
     p = resolve_project(project)
     per_page = current_app.config["WHEELODEX_RDEPENDS_PER_PAGE"]
-    rdeps = db.paginate(rdepends_query(p), per_page=per_page)
+    rdeps = db.paginate(p.rdepends_query(), per_page=per_page)
     return jsonify(
         {
             "items": [

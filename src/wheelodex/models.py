@@ -1,11 +1,13 @@
 """ Database classes """
 
 from __future__ import annotations
+from collections.abc import Sequence
 from datetime import datetime, timezone
 from itertools import groupby
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 from flask_sqlalchemy import SQLAlchemy
 from packaging.utils import canonicalize_name as normalize
+from packaging.utils import canonicalize_version as normversion
 import sqlalchemy as sa
 from sqlalchemy.orm import (
     DeclarativeBase,
@@ -17,6 +19,8 @@ from sqlalchemy.orm import (
 )
 from wheel_inspect import __version__ as wheel_inspect_version
 from . import __version__
+from .util import parse_timestamp, version_sort_key
+from .wheel_sort import wheel_sort_key
 
 
 class Base(DeclarativeBase):
@@ -42,6 +46,24 @@ class PyPISerial(MappedAsDataclass, Model):
 
     id: Mapped[int] = mapped_column(init=False, primary_key=True)
     serial: Mapped[int]
+
+    @classmethod
+    def get(cls) -> int | None:
+        """Returns the serial ID of the last seen PyPI event"""
+        ps = db.session.scalars(db.select(cls)).one_or_none()
+        return ps and ps.serial
+
+    @classmethod
+    def set(cls, value: int) -> None:
+        """
+        Advances the serial ID of the last seen PyPI event to ``value``.  If
+        ``value`` is less than the currently-stored serial, no change is made.
+        """
+        ps = db.session.scalars(db.select(cls)).one_or_none()
+        if ps is None:
+            db.session.add(cls(serial=value))
+        else:
+            ps.serial = max(ps.serial, value)
 
 
 class Project(MappedAsDataclass, Model):
@@ -70,7 +92,7 @@ class Project(MappedAsDataclass, Model):
     has_wheels: Mapped[bool] = mapped_column(default=False)
 
     @classmethod
-    def from_name(cls, name: str) -> Project:
+    def ensure(cls, name: str) -> Project:
         """
         Construct a `Project` with the given name and return it.  If such a
         project already exists, return that one instead.
@@ -82,6 +104,16 @@ class Project(MappedAsDataclass, Model):
             proj = cls(name=normalize(name), display_name=name)
             db.session.add(proj)
         return proj
+
+    @classmethod
+    def get_or_none(cls, name: str) -> Project | None:
+        """
+        Return the `Project` with the given name (*modulo* normalization), or
+        `None` if there is no such project
+        """
+        return db.session.scalars(
+            db.select(Project).filter_by(name=normalize(name))
+        ).one_or_none()
 
     @property
     def latest_version(self) -> Version | None:
@@ -154,6 +186,97 @@ class Project(MappedAsDataclass, Model):
             results.append((v, [(w, b) for _, w, b in ws]))
         return results
 
+    def update_has_wheels(self) -> None:
+        """Update the value of the `Project`'s ``has_wheels`` attribute"""
+        self.has_wheels = db.session.execute(
+            db.exists()
+            .where(Version.project_id == self.id)
+            .where(Wheel.version_id == Version.id)
+            .select()
+        ).scalar()
+
+    def rdepends_query(self) -> sa.Select:
+        """
+        Returns a query object that returns all `Project`\\s that depend on
+        this `Project`, ordered by name.
+        """
+        subq = (
+            db.select(Project.id.distinct().label("id"))
+            .join(
+                DependencyRelation, Project.id == DependencyRelation.source_project_id
+            )
+            .where(DependencyRelation.project_id == self.id)
+            .subquery()
+        )
+        return cast(
+            sa.Select,
+            db.select(Project)
+            .join(subq, Project.id == subq.c.id)
+            .order_by(Project.name.asc()),
+        )
+
+    def rdepends_count(self) -> int:
+        """Returns the number of `Project`\\s that depend on this `Project`"""
+        r = db.session.scalar(
+            db.select(
+                db.func.count(DependencyRelation.source_project_id.distinct())
+            ).where(DependencyRelation.project_id == self.id)
+        )
+        assert isinstance(r, int)
+        return r
+
+    def remove(self) -> None:
+        """
+        Delete all `Version`\\s (and `Wheel`\\s etc.) for this `Project`.  The
+        `Project` entry itself is retained in case it's still referenced as a
+        dependency of other projects.
+        """
+        db.session.execute(db.delete(Version).where(Version.project == self))
+        self.has_wheels = False
+
+    def ensure_version(self, version: str) -> Version:
+        """
+        Create a `Version` for the `Project` with the given version string and
+        return it; the ``ordering`` values for the project's `Version`\\s are
+        updated as well.  If there already exists a version with the same
+        details, do nothing and return that instead.
+        """
+        vnorm = normversion(version)
+        v = db.session.scalars(
+            db.select(Version).filter_by(project=self, name=vnorm)
+        ).one_or_none()
+        if v is None:
+            v = Version(project=self, name=vnorm, display_name=version)
+            db.session.add(v)
+            for i, u in enumerate(
+                ### TODO: Is `self.versions` safe to use when some of its
+                ### elements may have been deleted earlier in the transaction?
+                sorted(self.versions, key=lambda x: version_sort_key(x.name))
+            ):
+                u.ordering = i
+        return v
+
+    def get_version_or_none(self, version: str) -> Version | None:
+        """
+        Return the project's `Version` with the given version string (*modulo*
+        canonicalization), or `None` if there is no such version
+        """
+        return db.session.scalars(
+            db.select(Version).filter_by(project=self, name=normversion(version))
+        ).one_or_none()
+
+    def remove_version(self, version: str) -> None:
+        """
+        Delete the project's `Version` (and `Wheel`\\s etc.) entries for the
+        given version string
+        """
+        db.session.execute(
+            db.delete(Version)
+            .where(Version.project == self)
+            .where(Version.name == normversion(version))
+        )
+        self.update_has_wheels()
+
 
 class Version(MappedAsDataclass, Model):
     """A version (a.k.a. release) of a `Project`"""
@@ -180,8 +303,47 @@ class Version(MappedAsDataclass, Model):
     #: The index of this version when all versions for the project are sorted
     #: in PEP 440 order with prereleases at the bottom.  (The latest version
     #: has the highest `ordering` value.)  This column is set every time a new
-    #: version is added to the project with `add_version()`.
+    #: version is added to the project with `Project.ensure_version()`.
     ordering: Mapped[int] = mapped_column(default=0)
+
+    def ensure_wheel(
+        self,
+        *,
+        filename: str,
+        url: str,
+        size: int,
+        md5: str | None,
+        sha256: str | None,
+        uploaded: str,
+    ) -> Wheel:
+        """
+        Registers a wheel for the `Version` and updates the ``ordering`` values
+        for the `Version`'s `Wheel`\\s.  The new `Wheel` object is returned.
+        If a wheel with the given filename is already registered, no change is
+        made to the database, and the already-registered wheel is returned.
+        """
+        whl = db.session.scalars(
+            db.select(Wheel).filter_by(filename=filename)
+        ).one_or_none()
+        if whl is None:
+            whl = Wheel(
+                version=self,
+                filename=filename,
+                url=url,
+                size=size,
+                md5=md5,
+                sha256=sha256,
+                uploaded=parse_timestamp(uploaded),
+            )
+            db.session.add(whl)
+            for i, w in enumerate(
+                ### TODO: Is `self.wheels` safe to use when some of its
+                ### elements may have been deleted earlier in the transaction?
+                sorted(self.wheels, key=lambda x: wheel_sort_key(x.filename))
+            ):
+                w.ordering = i
+            self.project.has_wheels = True
+        return whl
 
 
 class Wheel(MappedAsDataclass, Model):
@@ -215,7 +377,7 @@ class Wheel(MappedAsDataclass, Model):
     )
     #: The index of this wheel when all wheels for the version are sorted by
     #: applying `wheel_sort_key()` to their filenames.  This column is set
-    #: every time a new wheel is added to the version with `add_wheel()`.
+    #: every time a new wheel is added to the version with `ensure_wheel()`.
     ordering: Mapped[int] = mapped_column(default=0)
 
     @property
@@ -275,6 +437,53 @@ class Wheel(MappedAsDataclass, Model):
         if self.errors:
             about["errored"] = True
         return about
+
+    @classmethod
+    def add_from_json(cls, about: dict) -> None:
+        """
+        Add a wheel (possibly with data) from a structure produced by
+        `Wheel.as_json()`
+        """
+        version = Project.ensure(about["pypi"].pop("project")).ensure_version(
+            about["pypi"].pop("version")
+        )
+        whl = version.ensure_wheel(**about["pypi"])
+        if "data" in about and whl.data is None:
+            whl.set_data(about["data"])
+            assert whl.data is not None
+            whl.data.processed = parse_timestamp(about["wheelodex"]["processed"])  # type: ignore[unreachable]
+            whl.data.wheel_inspect_version = about["wheelodex"]["wheel_inspect_version"]
+
+    @classmethod
+    def to_process(cls, max_wheel_size: int | None = None) -> Sequence[Wheel]:
+        """
+        Returns the "queue" of wheels to process: a list of all wheels with
+        neither data nor errors for the latest nonempty (i.e., having wheels)
+        version of each project
+
+        :param int max_wheel_size: If set, only wheels this size or smaller are
+            returned
+        """
+        subq = (
+            db.select(Project.id, db.func.max(Version.ordering).label("max_order"))
+            .join(Version)
+            .join(Wheel)
+            .group_by(Project.id)
+            .subquery()
+        )
+        q = (
+            db.select(Wheel)
+            .join(Version)
+            .join(Project)
+            .join(
+                subq, (Project.id == subq.c.id) & (Version.ordering == subq.c.max_order)
+            )
+            .filter(~Wheel.data.has())
+            .filter(~Wheel.errors.any())
+        )
+        if max_wheel_size is not None:
+            q = q.filter(Wheel.size <= max_wheel_size)
+        return db.session.scalars(q).all()
 
 
 class ProcessingError(MappedAsDataclass, Model):
@@ -373,7 +582,7 @@ class WheelData(MappedAsDataclass, Model):
             f["path"]
             for f in raw_data["dist_info"].get("record", [])
         }
-        project = Project.from_name(raw_data["project"])
+        project = Project.ensure(raw_data["project"])
         return cls(
             raw_data=raw_data,
             processed=datetime.now(timezone.utc),
@@ -381,12 +590,12 @@ class WheelData(MappedAsDataclass, Model):
             entry_points=[
                 EntryPoint(group=grobj, name=e)
                 for group, eps in raw_data["dist_info"].get("entry_points", {}).items()
-                for grobj in [EntryPointGroup.from_name(group)]
+                for grobj in [EntryPointGroup.ensure(group)]
                 for e in eps
             ],
             dependency_rels=[
                 DependencyRelation(
-                    project=Project.from_name(p),
+                    project=Project.ensure(p),
                     source_project_id=project.id,
                 )
                 for p in raw_data["derived"]["dependencies"]
@@ -416,7 +625,7 @@ class EntryPointGroup(MappedAsDataclass, Model):
     description: Mapped[str | None] = mapped_column(sa.Unicode(65535), default=None)
 
     @classmethod
-    def from_name(cls, name: str) -> EntryPointGroup:
+    def ensure(cls, name: str) -> EntryPointGroup:
         """
         Construct an `EntryPointGroup` with the given name and return it.  If
         such a group already exists, return that one instead.
@@ -504,8 +713,8 @@ class OrphanWheel(MappedAsDataclass, Model):
     (It's also possible that the wheel is missing because the file, release, or
     project has been deleted from PyPI and we haven't gotten to that changelog
     entry yet.  If & when we do get to such an entry, `remove_wheel()` will
-    delete the orphan wheel, and `remove_version()` and `remove_project()` will
-    delete the orphan wheel via cascading.)
+    delete the orphan wheel, and `Project.remove_version()` and
+    `Project.remove()` will delete the orphan wheel via cascading.)
 
     This system assumes that the "display name" for a PyPI project's version is
     the same in both the XML-RPC API and the JSON API and that it remains
@@ -527,3 +736,23 @@ class OrphanWheel(MappedAsDataclass, Model):
     def project(self) -> Project:
         """The `Project` to which the wheel belongs"""
         return self.version.project
+
+    @classmethod
+    def register(cls, version: Version, filename: str, uploaded_epoch: int) -> None:
+        """
+        Register an `OrphanWheel` for the given version, with the given
+        filename, uploaded at ``uploaded_epoch`` seconds after the Unix epoch.
+        If an orphan wheel with the given filename has already been registered,
+        update its ``uploaded`` timestamp and do nothing else.
+        """
+        uploaded = datetime.fromtimestamp(uploaded_epoch, timezone.utc)
+        whl = db.session.scalars(
+            db.select(OrphanWheel).filter_by(filename=filename)
+        ).one_or_none()
+        if whl is None:
+            whl = OrphanWheel(version=version, filename=filename, uploaded=uploaded)
+            db.session.add(whl)
+        else:
+            # If they keep uploading the wheel, keep checking the JSON API for
+            # it.
+            whl.uploaded = uploaded

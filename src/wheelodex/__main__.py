@@ -13,15 +13,8 @@ from flask_migrate import stamp
 from sqlalchemy import inspect
 from . import __version__
 from .app import create_app, emit_json_log
-from .dbutil import (
-    add_wheel,
-    add_wheel_from_json,
-    dbcontext,
-    get_serial,
-    purge_old_versions,
-    set_serial,
-)
-from .models import EntryPointGroup, OrphanWheel, Wheel, db
+from .dbutil import dbcontext, purge_old_versions
+from .models import EntryPointGroup, OrphanWheel, PyPISerial, Wheel, db
 from .process import process_queue
 from .pypi_api import PyPIAPI
 from .scan import scan_changelog, scan_pypi
@@ -72,7 +65,7 @@ def initdb(force: bool) -> None:
         click.echo("Initializing database ...")
         with dbcontext():
             db.create_all()
-            set_serial(0)
+            PyPISerial.set(0)
         stamp()
     else:
         click.echo("Database appears to already be initialized; doing nothing")
@@ -89,7 +82,7 @@ def scan_pypi_cmd() -> None:
 def scan_changelog_cmd() -> None:
     """Scan the PyPI changelog for new wheels"""
     with dbcontext():
-        serial = get_serial()
+        serial = PyPISerial.get()
         if serial is None:
             raise click.UsageError("No saved state to update")
         scan_changelog(serial)
@@ -134,7 +127,7 @@ def dump(dump_all: bool, outfile: str) -> None:
     with the serial ID of the last seen PyPI event.
     """
     with dbcontext():
-        outfile %= {"serial": get_serial()}
+        outfile %= {"serial": PyPISerial.get()}
         with click.open_file(outfile, "w", encoding="utf-8") as fp:
             q = db.select(Wheel)
             if not dump_all:
@@ -163,9 +156,9 @@ def load(infile: IO[str], serial: int | None) -> None:
     """
     with dbcontext(), infile:
         if serial is not None:
-            set_serial(serial)
+            PyPISerial.set(serial)
         for line in infile:
-            add_wheel_from_json(json.loads(line))
+            Wheel.add_from_json(json.loads(line))
 
 
 @main.command("purge-old-versions")
@@ -201,8 +194,7 @@ def process_orphan_wheels() -> None:
             )
             if data is not None:
                 log.info("Wheel %s: data found", orphan.filename)
-                add_wheel(
-                    version=orphan.version,
+                orphan.version.ensure_wheel(
                     filename=data["filename"],
                     url=data["url"],
                     size=data["size"],
@@ -264,7 +256,7 @@ def load_entry_points(infile: IO[str] | None) -> None:
         epgs.read_file(infile)
     with dbcontext():
         for name in epgs.sections():
-            group = EntryPointGroup.from_name(name)
+            group = EntryPointGroup.ensure(name)
             if epgs.has_option(name, "summary"):
                 group.summary = epgs.get(name, "summary")
             if epgs.has_option(name, "description"):

@@ -10,8 +10,7 @@ from typing import Any
 import requests
 from wheel_inspect import inspect_wheel
 from .app import emit_json_log
-from .dbutil import iterqueue
-from .models import db
+from .models import Wheel, db
 from .util import USER_AGENT
 
 log = logging.getLogger(__name__)
@@ -19,10 +18,10 @@ log = logging.getLogger(__name__)
 
 def process_queue(max_wheel_size: int | None = None) -> None:
     """
-    Process all of the wheels returned by `iterqueue()` one by one and store
-    the results in the database.  If an error occurs, the traceback is stored
-    as a `ProcessingError` for the wheel.  The database session is committed
-    after each wheel in order to save memory.
+    Process all of the wheels returned by `Wheel.to_process()` one by one and
+    store the results in the database.  If an error occurs, the traceback is
+    stored as a `ProcessingError` for the wheel.  The database session is
+    committed after each wheel in order to save memory.
 
     This function requires a Flask application context with a database
     connection to be in effect.
@@ -39,7 +38,7 @@ def process_queue(max_wheel_size: int | None = None) -> None:
         try:
             # This outer `try` block is so that stats are written to the
             # logfile even when the function is cancelled via Cntrl-C.
-            for whl in iterqueue(max_wheel_size=max_wheel_size):
+            for whl in Wheel.to_process(max_wheel_size=max_wheel_size):
                 fpath = Path(tmpdir, whl.filename)
                 try:
                     log.info("Downloading %s from %s ...", whl.filename, whl.url)

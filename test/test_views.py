@@ -7,8 +7,7 @@ from flask.testing import FlaskClient
 import pytest
 from sqlalchemy import text
 from wheelodex.app import create_app
-from wheelodex.dbutil import add_wheel_from_json
-from wheelodex.models import db
+from wheelodex.models import Wheel, db
 
 
 @pytest.fixture(scope="session")
@@ -19,7 +18,7 @@ def sampledb() -> Iterator[None]:
         db.create_all()
         with (Path(__file__).with_name("data") / "sampledb01.jsonl").open() as fp:
             for line in fp:
-                add_wheel_from_json(json.loads(line))
+                Wheel.add_from_json(json.loads(line))
         db.session.commit()
         yield
 
