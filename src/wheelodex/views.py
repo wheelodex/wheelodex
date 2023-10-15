@@ -28,6 +28,7 @@ from .models import (
     WheelData,
     db,
 )
+from .paginate_rows import paginate_rows
 from .util import glob2like, json_response, like_escape
 
 web = Blueprint("web", __name__)
@@ -224,7 +225,7 @@ def entry_point_groups():
         groups = groups.order_by(db.desc("qty"))
     else:
         groups = groups.order_by(EntryPointGroup.name.asc())
-    groups = db.paginate(groups, per_page=per_page)
+    groups = paginate_rows(groups, per_page=per_page)
     return render_template("entry_point_groups.html", groups=groups, sortby=sortby)
 
 
@@ -238,7 +239,7 @@ def entry_point(group):
     per_page = current_app.config["WHEELODEX_ENTRY_POINTS_PER_PAGE"]
     ### TODO: Use preferred wheel (Alternatively, limit to the latest
     ### data-having version of each project):
-    project_eps = db.paginate(
+    project_eps = paginate_rows(
         db.select(Project, EntryPoint.name)
         .join(Version)
         .join(Wheel)
@@ -316,7 +317,7 @@ def search_files():
                 (db.func.lower(File.path) == db.func.lower(search_term))
                 | (File.path.ilike("%/" + like_escape(search_term), escape="\\"))
             )
-        results = db.paginate(q, per_page=per_page)
+        results = paginate_rows(q, per_page=per_page)
     else:
         results = None
     return render_template(
@@ -348,7 +349,7 @@ def search_modules():
         else:
             q = q.filter(db.func.lower(Module.name) == db.func.lower(search_term))
         ### TODO: Order results by something?
-        results = db.paginate(q, per_page=per_page)
+        results = paginate_rows(q, per_page=per_page)
     else:
         results = None
     return render_template(
@@ -380,7 +381,7 @@ def search_commands():
             q = q.filter(EntryPoint.name.ilike(glob2like(search_term), escape="\\"))
         else:
             q = q.filter(db.func.lower(EntryPoint.name) == db.func.lower(search_term))
-        results = db.paginate(q.order_by(EntryPoint.name.asc()), per_page=per_page)
+        results = paginate_rows(q.order_by(EntryPoint.name.asc()), per_page=per_page)
     else:
         results = None
     return render_template(
