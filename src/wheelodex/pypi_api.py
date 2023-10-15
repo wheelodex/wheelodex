@@ -3,11 +3,11 @@
 from __future__ import annotations
 from collections.abc import Callable
 import logging
-from typing import Any, cast
 from xmlrpc.client import ProtocolError, ServerProxy
 from pypi_simple import ACCEPT_JSON_PREFERRED, PyPISimple
 import requests
 from tenacity import retry, retry_if_exception, wait_exponential
+from .changelog import ChangelogEvent
 from .util import USER_AGENT
 
 log = logging.getLogger(__name__)
@@ -129,8 +129,14 @@ class PyPIAPI:
         retry=retry_if_exception(on_xml_exception("changelog_since_serial")),
         wait=wait_exponential(multiplier=1, max=10),
     )
-    def changelog_since_serial(self, since: int) -> list[list[Any]]:
+    def changelog_since_serial(self, since: int) -> list[ChangelogEvent]:
         """
         Return a list of PyPI changelog entries since the given serial ID
         """
-        return cast("list[list[Any]]", self.client.changelog_since_serial(since))
+        r = self.client.changelog_since_serial(since)
+        assert isinstance(r, list)
+        results = []
+        for event in r:
+            assert isinstance(event, list)
+            results.append(ChangelogEvent.parse(event))
+        return results

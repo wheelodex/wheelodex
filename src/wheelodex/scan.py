@@ -4,6 +4,14 @@ from __future__ import annotations
 from datetime import datetime, timezone
 import logging
 from .app import emit_json_log
+from .changelog import (
+    FileCreated,
+    FileRemoved,
+    ProjectCreated,
+    ProjectRemoved,
+    VersionCreated,
+    VersionRemoved,
+)
 from .dbutil import remove_wheel
 from .models import OrphanWheel, Project, PyPISerial
 from .pypi_api import PyPIAPI
@@ -107,93 +115,81 @@ def scan_changelog(since: int) -> None:
     projects_removed = 0
     versions_added = 0
     versions_removed = 0
-    for proj, rel, ts, action, serial in pypi.changelog_since_serial(since):
-        actwords = action.split()
+    for event in pypi.changelog_since_serial(since):
+        log.debug("Got event from changelog: %r", event)
+        match event:
+            case FileCreated() if event.is_wheel():
+                log.info("Event %s: wheel %s added", event.id, event.filename)
+                # New wheels should more often than not belong to the latest
+                # version of the project, and if they don't, they can be pruned
+                # out later.  There's likely little to nothing to be gained by
+                # comparing `rel` to the latest version in the database at this
+                # point.
+                assert event.version is not None
+                v = Project.ensure(event.project).ensure_version(event.version)
+                data = pypi.asset_data(event.project, event.version, event.filename)
+                if data is not None:
+                    log.info("Asset %s: adding", event.filename)
+                    v.ensure_wheel(
+                        filename=data["filename"],
+                        url=data["url"],
+                        size=data["size"],
+                        md5=data["digests"].get("md5").lower(),
+                        sha256=data["digests"].get("sha256").lower(),
+                        uploaded=data["upload_time_iso_8601"],
+                    )
+                    wheels_added += 1
+                else:
+                    log.info(
+                        "Asset %s not found in JSON API; will check later",
+                        event.filename,
+                    )
+                    OrphanWheel.register(v, event.filename, event.timestamp)
+                    orphans_added += 1
 
-        # As of pypa/warehouse revision 97f28df (2018-09-20), the possible
-        # "action" strings are (found by searching for "JournalEntry" in the
-        # code):
-        # - "add {python_version} file {filename}"
-        # - "remove file {filename}"
-        # - "create" [new project]
-        # - "remove project"
-        # - "new release"
-        # - "remove release"
-        # - "add Owner {username}"
-        # - "add {role_name} {username}"
-        # - "remove {role_name} {username}"
-        # - "change {role_name} {username} to {role_name2}" [?]
-        # - "nuke user"
-        # - "docdestroy"
-        # - "yank release" (added in 69ce3dd on 2020-04-22)
-        # - "unyank release" (added in 69ce3dd on 2020-04-22)
+            case FileRemoved() if event.is_wheel():
+                log.info("Event %s: wheel %s removed", event.id, event.filename)
+                remove_wheel(event.filename)
+                wheels_removed += 1
 
-        if (
-            actwords[0] == "add"
-            and len(actwords) == 4
-            and actwords[2] == "file"
-            and actwords[3].endswith(".whl")
-        ):
-            filename = actwords[3]
-            log.info("Event %d: wheel %s added", serial, filename)
-            # New wheels should more often than not belong to the latest
-            # version of the project, and if they don't, they can be pruned out
-            # later.  There's likely little to nothing to be gained by
-            # comparing `rel` to the latest version in the database at this
-            # point.
-            v = Project.ensure(proj).ensure_version(rel)
-            data = pypi.asset_data(proj, rel, filename)
-            if data is not None:
-                log.info("Asset %s: adding", filename)
-                v.ensure_wheel(
-                    filename=data["filename"],
-                    url=data["url"],
-                    size=data["size"],
-                    md5=data["digests"].get("md5").lower(),
-                    sha256=data["digests"].get("sha256").lower(),
-                    uploaded=data["upload_time_iso_8601"],
+            case ProjectCreated():
+                log.info("Event %s: project %r created", event.id, event.project)
+                Project.ensure(event.project)
+                projects_added += 1
+
+            case ProjectRemoved():
+                log.info("Event %s: project %r removed", event.id, event.project)
+                if (p := Project.get_or_none(event.project)) is not None:
+                    p.remove()
+                projects_removed += 1
+
+            case VersionCreated():
+                assert event.version is not None
+                log.info(
+                    "Event %s: version %r of project %r released",
+                    event.id,
+                    event.version,
+                    event.project,
                 )
-                wheels_added += 1
-            else:
-                log.info("Asset %s not found in JSON API; will check later", filename)
-                OrphanWheel.register(v, filename, ts)
-                orphans_added += 1
+                Project.ensure(event.project).ensure_version(event.version)
+                versions_added += 1
 
-        elif (
-            actwords[:2] == ["remove", "file"]
-            and len(actwords) == 3
-            and actwords[2].endswith(".whl")
-        ):
-            log.info("Event %d: wheel %s removed", serial, actwords[2])
-            remove_wheel(actwords[2])
-            wheels_removed += 1
+            case VersionRemoved():
+                assert event.version is not None
+                log.info(
+                    "Event %s: version %r of project %r removed",
+                    event.id,
+                    event.version,
+                    event.project,
+                )
+                if (p := Project.get_or_none(event.project)) is not None:
+                    p.remove_version(event.version)
+                versions_removed += 1
 
-        elif action == "create":
-            log.info("Event %d: project %r created", serial, proj)
-            Project.ensure(proj)
-            projects_added += 1
+            case _:
+                log.debug("Event %s: %r: ignoring", event.id, event.action)
 
-        elif action == "remove project":
-            log.info("Event %d: project %r removed", serial, proj)
-            if (p := Project.get_or_none(proj)) is not None:
-                p.remove()
-            projects_removed += 1
-
-        elif action == "new release":
-            log.info("Event %d: version %r of project %r released", serial, rel, proj)
-            Project.ensure(proj).ensure_version(rel)
-            versions_added += 1
-
-        elif action == "remove release":
-            log.info("Event %d: version %r of project %r removed", serial, rel, proj)
-            if (p := Project.get_or_none(proj)) is not None:
-                p.remove_version(rel)
-            versions_removed += 1
-
-        else:
-            log.debug("Event %d: %r: ignoring", serial, action)
-
-        PyPISerial.set(serial)
+        PyPISerial.set(event.serial)
 
     end_time = datetime.now(timezone.utc)
     emit_json_log(
