@@ -1,8 +1,9 @@
 from __future__ import annotations
+import json
 import os
 from pathlib import Path
 from typing import Any
-from flask import Flask
+from flask import Flask, current_app
 from flask_migrate import Migrate
 
 DEFAULT_CONFIG = {
@@ -36,3 +37,12 @@ def create_app(**kwargs: Any) -> Flask:
 
     app.register_blueprint(web)
     return app
+
+
+def emit_json_log(logname: str, data: dict) -> None:
+    logdir = current_app.config["WHEELODEX_STATS_LOG_DIR"]
+    if logdir is not None:
+        logfile = Path(logdir, logname)
+        logfile.parent.mkdir(parents=True, exist_ok=True)
+        with logfile.open("a", encoding="utf-8") as fp:
+            print(json.dumps(data), file=fp)

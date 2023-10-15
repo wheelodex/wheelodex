@@ -2,16 +2,14 @@
 
 from __future__ import annotations
 from datetime import datetime, timezone
-import json
 import logging
-from os.path import join
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import traceback
 from typing import Any
-from flask import current_app
 import requests
 from wheel_inspect import inspect_wheel
+from .app import emit_json_log
 from .dbutil import iterqueue
 from .models import db
 from .util import USER_AGENT
@@ -71,24 +69,17 @@ def process_queue(max_wheel_size: int | None = None) -> None:
                 bytes_processed += whl.size
         finally:
             end_time = datetime.now(timezone.utc)
-            log_dir = current_app.config.get("WHEELODEX_STATS_LOG_DIR")
-            if log_dir is not None:
-                with open(
-                    join(log_dir, "process_queue.log"), "a", encoding="utf-8"
-                ) as fp:
-                    print(
-                        json.dumps(
-                            {
-                                "op": "process_queue",
-                                "start": str(start_time),
-                                "end": str(end_time),
-                                "wheels": wheels_processed,
-                                "bytes": bytes_processed,
-                                "errors": errors,
-                            }
-                        ),
-                        file=fp,
-                    )
+            emit_json_log(
+                "process_queue.log",
+                {
+                    "op": "process_queue",
+                    "start": str(start_time),
+                    "end": str(end_time),
+                    "wheels": wheels_processed,
+                    "bytes": bytes_processed,
+                    "errors": errors,
+                },
+            )
 
 
 def process_wheel(path: Path, size: int, md5: str | None, sha256: str | None) -> dict:

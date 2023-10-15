@@ -9,16 +9,14 @@ from __future__ import annotations
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from datetime import datetime, timezone
-import json
 import logging
-from os.path import join
 from typing import cast
-from flask import current_app
 from flask_sqlalchemy.session import Session
 from packaging.utils import canonicalize_name as normalize
 from packaging.utils import canonicalize_version as normversion
 import sqlalchemy as sa
 from sqlalchemy.orm import scoped_session, with_parent
+from .app import emit_json_log
 from .models import (
     DependencyRelation,
     OrphanWheel,
@@ -324,20 +322,15 @@ def purge_old_versions() -> None:
                 db.session.delete(v)
                 purged += 1
     end_time = datetime.now(timezone.utc)
-    log_dir = current_app.config.get("WHEELODEX_STATS_LOG_DIR")
-    if log_dir is not None:
-        with open(join(log_dir, "purge_old_versions.log"), "a", encoding="utf-8") as fp:
-            print(
-                json.dumps(
-                    {
-                        "op": "purge_old_versions",
-                        "start": str(start_time),
-                        "end": str(end_time),
-                        "purged": purged,
-                    }
-                ),
-                file=fp,
-            )
+    emit_json_log(
+        "purge_old_versions.log",
+        {
+            "op": "purge_old_versions",
+            "start": str(start_time),
+            "end": str(end_time),
+            "purged": purged,
+        },
+    )
     log.info("END purge_old_versions")
 
 

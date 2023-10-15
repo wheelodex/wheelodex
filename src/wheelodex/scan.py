@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 from datetime import datetime, timezone
-import json
 import logging
-from os.path import join
-from flask import current_app
+from .app import emit_json_log
 from .dbutil import (
     add_orphan_wheel,
     add_project,
@@ -79,23 +77,18 @@ def scan_pypi() -> None:
                 )
         log.info("%s: %d wheels added", pkg, qty_queued)
     end_time = datetime.now(timezone.utc)
-    log_dir = current_app.config.get("WHEELODEX_STATS_LOG_DIR")
-    if log_dir is not None:
-        with open(join(log_dir, "scan_pypi.log"), "a", encoding="utf-8") as fp:
-            ### TODO: Also log projects and versions added?
-            ### TODO: Distinguish between actually new wheels and wheels that
-            ### were already in the system?
-            print(
-                json.dumps(
-                    {
-                        "op": "scan_pypi",
-                        "start": str(start_time),
-                        "end": str(end_time),
-                        "wheels_added": total_queued,
-                    }
-                ),
-                file=fp,
-            )
+    ### TODO: Also log projects and versions added?
+    ### TODO: Distinguish between actually new wheels and wheels that were
+    ### already in the system?
+    emit_json_log(
+        "scan_pypi.log",
+        {
+            "op": "scan_pypi",
+            "start": str(start_time),
+            "end": str(end_time),
+            "wheels_added": total_queued,
+        },
+    )
     log.info("END scan_pypi")
 
 
@@ -211,24 +204,19 @@ def scan_changelog(since: int) -> None:
         set_serial(serial)
 
     end_time = datetime.now(timezone.utc)
-    log_dir = current_app.config.get("WHEELODEX_STATS_LOG_DIR")
-    if log_dir is not None:
-        with open(join(log_dir, "scan_changelog.log"), "a", encoding="utf-8") as fp:
-            print(
-                json.dumps(
-                    {
-                        "op": "scan_changelog",
-                        "start": str(start_time),
-                        "end": str(end_time),
-                        "projects_added": projects_added,
-                        "projects_removed": projects_removed,
-                        "versions_added": versions_added,
-                        "versions_removed": versions_removed,
-                        "wheels_added": wheels_added,
-                        "wheels_removed": wheels_removed,
-                        "orphans_added": orphans_added,
-                    }
-                ),
-                file=fp,
-            )
+    emit_json_log(
+        "scan_changelog.log",
+        {
+            "op": "scan_changelog",
+            "start": str(start_time),
+            "end": str(end_time),
+            "projects_added": projects_added,
+            "projects_removed": projects_removed,
+            "versions_added": versions_added,
+            "versions_removed": versions_removed,
+            "wheels_added": wheels_added,
+            "wheels_removed": wheels_removed,
+            "orphans_added": orphans_added,
+        },
+    )
     log.info("END scan_changelog")

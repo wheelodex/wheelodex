@@ -4,7 +4,6 @@ from datetime import datetime, timedelta, timezone
 from importlib.resources import as_file, files
 import json
 import logging
-from os.path import join
 from typing import IO
 import click
 from click_loglevel import LogLevel
@@ -13,7 +12,7 @@ from flask.cli import FlaskGroup
 from flask_migrate import stamp
 from sqlalchemy import inspect
 from . import __version__
-from .app import create_app
+from .app import create_app, emit_json_log
 from .dbutil import (
     add_wheel,
     add_wheel_from_json,
@@ -224,24 +223,17 @@ def process_orphan_wheels() -> None:
         )
         log.info("%d orphan wheels expired", expired)
     end_time = datetime.now(timezone.utc)
-    log_dir = str(current_app.config.get("WHEELODEX_STATS_LOG_DIR"))
-    if log_dir is not None:
-        with open(
-            join(log_dir, "process_orphan_wheels.log"), "a", encoding="utf-8"
-        ) as fp:
-            print(
-                json.dumps(
-                    {
-                        "op": "process_orphan_wheels",
-                        "start": str(start_time),
-                        "end": str(end_time),
-                        "unorphaned": unorphaned,
-                        "expired": expired,
-                        "remain": remaining - expired,
-                    }
-                ),
-                file=fp,
-            )
+    emit_json_log(
+        "process_orphan_wheels.log",
+        {
+            "op": "process_orphan_wheels",
+            "start": str(start_time),
+            "end": str(end_time),
+            "unorphaned": unorphaned,
+            "expired": expired,
+            "remain": remaining - expired,
+        },
+    )
     log.info("END process_orphan_wheels")
 
 
