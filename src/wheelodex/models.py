@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from datetime import datetime, timezone
 from itertools import groupby
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Annotated, Any, cast
 from flask_sqlalchemy import SQLAlchemy
 from packaging.utils import canonicalize_name as normalize
 from packaging.utils import canonicalize_version as normversion
@@ -27,6 +27,9 @@ class Base(DeclarativeBase):
     registry = registry(type_annotation_map={datetime: sa.DateTime(timezone=True)})
 
 
+PKey = Annotated[int, mapped_column(primary_key=True)]
+Str2048 = Annotated[str, mapped_column(sa.Unicode(2048))]
+
 db = SQLAlchemy(model_class=Base)
 
 # <https://github.com/pallets-eco/flask-sqlalchemy/issues/1186>
@@ -44,7 +47,7 @@ class PyPISerial(MappedAsDataclass, Model):
 
     __tablename__ = "pypi_serial"
 
-    id: Mapped[int] = mapped_column(init=False, primary_key=True)
+    id: Mapped[PKey] = mapped_column(init=False)
     serial: Mapped[int]
 
     @classmethod
@@ -71,17 +74,17 @@ class Project(MappedAsDataclass, Model):
 
     __tablename__ = "projects"
 
-    id: Mapped[int] = mapped_column(init=False, primary_key=True)
+    id: Mapped[PKey] = mapped_column(init=False)
     #: The project's normalized name
-    name: Mapped[str] = mapped_column(sa.Unicode(2048), unique=True)
+    name: Mapped[Str2048] = mapped_column(unique=True)
     #: The preferred non-normalized form of the project's name
-    display_name: Mapped[str] = mapped_column(sa.Unicode(2048), unique=True)
+    display_name: Mapped[Str2048] = mapped_column(unique=True)
     #: A summary of the project taken from its most recently-analyzed wheel.
     #: (The summary is stored here instead of in `WheelData` because storing it
     #: in `WheelData` would mean that listing projects with their summaries
     #: would involve a complicated query that ends up being noticeably too
     #: slow.)
-    summary: Mapped[str | None] = mapped_column(sa.Unicode(2048), default=None)
+    summary: Mapped[Str2048 | None] = mapped_column(default=None)
     versions: Mapped[list[Version]] = relationship(
         back_populates="project",
         cascade="all, delete-orphan",
@@ -284,16 +287,16 @@ class Version(MappedAsDataclass, Model):
     __tablename__ = "versions"
     __table_args__ = (sa.UniqueConstraint("project_id", "name"),)
 
-    id: Mapped[int] = mapped_column(init=False, primary_key=True)
+    id: Mapped[PKey] = mapped_column(init=False)
     project_id: Mapped[int] = mapped_column(
         sa.ForeignKey("projects.id", ondelete="CASCADE"),
         init=False,
     )
     project: Mapped[Project] = relationship(back_populates="versions")
     #: The normalized version string
-    name: Mapped[str] = mapped_column(sa.Unicode(2048))
+    name: Mapped[Str2048]
     #: The preferred non-normalized version string
-    display_name: Mapped[str] = mapped_column(sa.Unicode(2048))
+    display_name: Mapped[Str2048]
     wheels: Mapped[list[Wheel]] = relationship(
         back_populates="version",
         cascade="all, delete-orphan",
@@ -351,9 +354,9 @@ class Wheel(MappedAsDataclass, Model):
 
     __tablename__ = "wheels"
 
-    id: Mapped[int] = mapped_column(init=False, primary_key=True)
-    filename: Mapped[str] = mapped_column(sa.Unicode(2048), unique=True)
-    url: Mapped[str] = mapped_column(sa.Unicode(2048))
+    id: Mapped[PKey] = mapped_column(init=False)
+    filename: Mapped[Str2048] = mapped_column(unique=True)
+    url: Mapped[Str2048]
     version_id: Mapped[int] = mapped_column(
         sa.ForeignKey("versions.id", ondelete="CASCADE"),
         init=False,
@@ -491,7 +494,7 @@ class ProcessingError(MappedAsDataclass, Model):
 
     __tablename__ = "processing_errors"
 
-    id: Mapped[int] = mapped_column(init=False, primary_key=True)
+    id: Mapped[PKey] = mapped_column(init=False)
     wheel_id: Mapped[int] = mapped_column(
         sa.ForeignKey("wheels.id", ondelete="CASCADE"),
         init=False,
@@ -511,16 +514,12 @@ class DependencyRelation(MappedAsDataclass, Model):
 
     __tablename__ = "dependency_tbl"
 
-    wheel_data_id: Mapped[int] = mapped_column(
-        sa.ForeignKey("wheel_data.id", ondelete="CASCADE"),
-        init=False,
-        primary_key=True,
+    wheel_data_id: Mapped[PKey] = mapped_column(
+        sa.ForeignKey("wheel_data.id", ondelete="CASCADE"), init=False
     )
 
-    project_id: Mapped[int] = mapped_column(
-        sa.ForeignKey("projects.id", ondelete="RESTRICT"),
-        init=False,
-        primary_key=True,
+    project_id: Mapped[PKey] = mapped_column(
+        sa.ForeignKey("projects.id", ondelete="RESTRICT"), init=False
     )
     project: Mapped[Project] = relationship(foreign_keys=[project_id])
 
@@ -536,7 +535,7 @@ class WheelData(MappedAsDataclass, Model):
 
     __tablename__ = "wheel_data"
 
-    id: Mapped[int] = mapped_column(init=False, primary_key=True)
+    id: Mapped[PKey] = mapped_column(init=False)
     wheel_id: Mapped[int] = mapped_column(
         sa.ForeignKey("wheels.id", ondelete="CASCADE"),
         init=False,
@@ -615,11 +614,11 @@ class EntryPointGroup(MappedAsDataclass, Model):
 
     __tablename__ = "entry_point_groups"
 
-    id: Mapped[int] = mapped_column(init=False, primary_key=True)
-    name: Mapped[str] = mapped_column(sa.Unicode(2048), unique=True)
+    id: Mapped[PKey] = mapped_column(init=False)
+    name: Mapped[Str2048] = mapped_column(unique=True)
     #: A brief Markdown description of the group for display in the web
     #: interface
-    summary: Mapped[str | None] = mapped_column(sa.Unicode(2048), default=None)
+    summary: Mapped[Str2048 | None] = mapped_column(default=None)
     #: A longer Markdown description of the group for display in the web
     #: interface
     description: Mapped[str | None] = mapped_column(sa.Unicode(65535), default=None)
@@ -642,7 +641,7 @@ class EntryPoint(MappedAsDataclass, Model):
 
     __tablename__ = "entry_points"
 
-    id: Mapped[int] = mapped_column(init=False, primary_key=True)
+    id: Mapped[PKey] = mapped_column(init=False)
     wheel_data_id: Mapped[int] = mapped_column(
         sa.ForeignKey("wheel_data.id", ondelete="CASCADE"),
         init=False,
@@ -655,7 +654,7 @@ class EntryPoint(MappedAsDataclass, Model):
         init=False,
     )
     group: Mapped[EntryPointGroup] = relationship()
-    name: Mapped[str] = mapped_column(sa.Unicode(2048))
+    name: Mapped[Str2048]
 
 
 class File(MappedAsDataclass, Model):
@@ -664,13 +663,13 @@ class File(MappedAsDataclass, Model):
     __tablename__ = "files"
     __table_args__ = (sa.UniqueConstraint("wheel_data_id", "path"),)
 
-    id: Mapped[int] = mapped_column(init=False, primary_key=True)
+    id: Mapped[PKey] = mapped_column(init=False)
     wheel_data_id: Mapped[int] = mapped_column(
         sa.ForeignKey("wheel_data.id", ondelete="CASCADE"),
         init=False,
     )
     wheel_data: Mapped[WheelData] = relationship(back_populates="files", init=False)
-    path: Mapped[str] = mapped_column(sa.Unicode(2048))
+    path: Mapped[Str2048]
 
 
 class Module(MappedAsDataclass, Model):
@@ -679,13 +678,13 @@ class Module(MappedAsDataclass, Model):
     __tablename__ = "modules"
     __table_args__ = (sa.UniqueConstraint("wheel_data_id", "name"),)
 
-    id: Mapped[int] = mapped_column(init=False, primary_key=True)
+    id: Mapped[PKey] = mapped_column(init=False)
     wheel_data_id: Mapped[int] = mapped_column(
         sa.ForeignKey("wheel_data.id", ondelete="CASCADE"),
         init=False,
     )
     wheel_data: Mapped[WheelData] = relationship(back_populates="modules", init=False)
-    name: Mapped[str] = mapped_column(sa.Unicode(2048))
+    name: Mapped[Str2048]
 
 
 class Keyword(MappedAsDataclass, Model):
@@ -694,13 +693,13 @@ class Keyword(MappedAsDataclass, Model):
     __tablename__ = "keywords"
     __table_args__ = (sa.UniqueConstraint("wheel_data_id", "name"),)
 
-    id: Mapped[int] = mapped_column(init=False, primary_key=True)
+    id: Mapped[PKey] = mapped_column(init=False)
     wheel_data_id: Mapped[int] = mapped_column(
         sa.ForeignKey("wheel_data.id", ondelete="CASCADE"),
         init=False,
     )
     wheel_data: Mapped[WheelData] = relationship(back_populates="keywords", init=False)
-    name: Mapped[str] = mapped_column(sa.Unicode(2048))
+    name: Mapped[Str2048]
 
 
 class OrphanWheel(MappedAsDataclass, Model):
@@ -723,13 +722,13 @@ class OrphanWheel(MappedAsDataclass, Model):
 
     __tablename__ = "orphan_wheels"
 
-    id: Mapped[int] = mapped_column(init=False, primary_key=True)
+    id: Mapped[PKey] = mapped_column(init=False)
     version_id: Mapped[int] = mapped_column(
         sa.ForeignKey("versions.id", ondelete="CASCADE"),
         init=False,
     )
     version: Mapped[Version] = relationship()  # No backref
-    filename: Mapped[str] = mapped_column(sa.Unicode(2048), unique=True)
+    filename: Mapped[Str2048] = mapped_column(unique=True)
     uploaded: Mapped[datetime]
 
     @property
