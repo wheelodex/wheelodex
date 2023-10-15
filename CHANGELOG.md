@@ -15,6 +15,7 @@ In Development
     - Update Flask-SQLAlchemy to ~=3.1
     - Update pypi-simple to 1.x
     - Unpin cmarkgfm version
+    - Replace psycopg2-binary with psycopg
 
 v2023.6.11
 ----------

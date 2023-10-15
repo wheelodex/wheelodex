@@ -1,7 +1,7 @@
 from sqlalchemy import URL
 
 SQLALCHEMY_DATABASE_URI = URL.create(
-    drivername = "postgresql",
+    drivername = "postgresql+psycopg",
     host       = "localhost",
     port       = 5432,
     database   = {{"%r"|format(dbname)}},
