@@ -9,7 +9,6 @@ Create Date: 2018-10-14 16:23:22.552013+00:00
 from __future__ import annotations
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy_utils import JSONType
 
 # revision identifiers, used by Alembic.
 revision = "f43499b4f914"
@@ -74,7 +73,7 @@ wheel_data = sa.Table(
         nullable=False,
         unique=True,
     ),
-    sa.Column("raw_data", JSONType, nullable=False),
+    sa.Column("raw_data", sa.JSON, nullable=False),
     sa.Column("processed", sa.DateTime(timezone=True), nullable=False),
     sa.Column("wheel_inspect_version", sa.Unicode(32), nullable=False),
     sa.Column("summary", sa.Unicode(2048), nullable=True),

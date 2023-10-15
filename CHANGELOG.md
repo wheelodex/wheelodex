@@ -8,6 +8,7 @@ In Development
 - Dependencies:
     - Drop pyRFC3339 dependency
     - Drop requests-download dependency
+    - Drop SQLAlchemy-Utils
     - Update SQLAlchemy to 2.x
     - Update Flask to 3.x
     - Update Flask-Migrate to 4.x

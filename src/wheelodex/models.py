@@ -15,7 +15,6 @@ from sqlalchemy.orm import (
     registry,
     relationship,
 )
-from sqlalchemy_utils import JSONType
 from wheel_inspect import __version__ as wheel_inspect_version
 from . import __version__
 
@@ -335,7 +334,7 @@ class WheelData(MappedAsDataclass, Model):
         unique=True,
     )
     wheel: Mapped[Wheel] = relationship(back_populates="data", init=False)
-    raw_data: Mapped[Any] = mapped_column(JSONType, nullable=False)
+    raw_data: Mapped[Any] = mapped_column(sa.JSON, nullable=False)
     #: The time at which the raw data was extracted from the wheel and added to
     #: the database
     processed: Mapped[datetime]
