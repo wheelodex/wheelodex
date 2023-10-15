@@ -4,13 +4,13 @@ from __future__ import annotations
 from datetime import datetime, timezone
 import json
 import logging
-import os
 from os.path import join
+from pathlib import Path
 from tempfile import TemporaryDirectory
 import traceback
 from typing import Any
 from flask import current_app
-from requests_download import download
+import requests
 from wheel_inspect import inspect_wheel
 from .dbutil import iterqueue
 from .models import db
@@ -36,19 +36,21 @@ def process_queue(max_wheel_size: int | None = None) -> None:
     wheels_processed = 0
     bytes_processed = 0
     errors = 0
-    with TemporaryDirectory() as tmpdir:
+    with TemporaryDirectory() as tmpdir, requests.Session() as s:
+        s.headers["User-Agent"] = USER_AGENT
         try:
             # This outer `try` block is so that stats are written to the
             # logfile even when the function is cancelled via Cntrl-C.
             for whl in iterqueue(max_wheel_size=max_wheel_size):
+                fpath = Path(tmpdir, whl.filename)
                 try:
+                    log.info("Downloading %s from %s ...", whl.filename, whl.url)
+                    download(s, whl.url, fpath)
                     about = process_wheel(
-                        filename=whl.filename,
-                        url=whl.url,
+                        path=fpath,
                         size=whl.size,
                         md5=whl.md5,
                         sha256=whl.sha256,
-                        tmpdir=tmpdir,
                     )
                     whl.set_data(about)
                     # Some errors in inserting data aren't raised until we
@@ -63,6 +65,8 @@ def process_queue(max_wheel_size: int | None = None) -> None:
                     whl.add_error(traceback.format_exc())
                     db.session.commit()
                     errors += 1
+                finally:
+                    fpath.unlink(missing_ok=True)
                 wheels_processed += 1
                 bytes_processed += whl.size
         finally:
@@ -87,27 +91,16 @@ def process_queue(max_wheel_size: int | None = None) -> None:
                     )
 
 
-def process_wheel(
-    filename: str, url: str, size: int, md5: str | None, sha256: str | None, tmpdir: str
-) -> dict:
+def process_wheel(path: Path, size: int, md5: str | None, sha256: str | None) -> dict:
     """
-    Process an individual wheel.  The wheel is downloaded from ``url`` to the
-    directory ``tmpdir``, analyzed with `inspect_wheel()`, and then deleted.
-    The wheel's size and digests are also checked against ``size``, ``md5``,
-    and ``sha256`` (provided by PyPI) to verify download integrity.
+    Process the wheel at ``path``.  The wheel is analyzed with
+    `inspect_wheel()`, and its size & digests are checked against ``size``,
+    ``md5``, and ``sha256`` (provided by PyPI) to verify download integrity.
 
     :return: the results of the call to `inspect_wheel()`
     """
-    fpath = join(tmpdir, filename)
-    log.info("Downloading %s from %s ...", filename, url)
-    # Write "user-agent" in lowercase so it overrides requests_download's
-    # header correctly:
-    download(url, fpath, headers={"user-agent": USER_AGENT})
-    log.info("Inspecting %s ...", filename)
-    try:
-        about: dict[str, Any] = inspect_wheel(fpath)
-    finally:
-        os.remove(fpath)
+    log.info("Inspecting %s ...", path.name)
+    about: dict[str, Any] = inspect_wheel(path)
     if about["file"]["size"] != size:
         log.error(
             "Wheel %s: size mismatch: PyPI reports %d, got %d",
@@ -129,5 +122,13 @@ def process_wheel(
                 f"{alg} hash mismatch: PyPI reports {expected},"
                 f' got {about["file"]["digests"][alg]}'
             )
-    log.info("Finished inspecting %s", filename)
+    log.info("Finished inspecting %s", path.name)
     return about
+
+
+def download(s: requests.Session, url: str, path: Path) -> None:
+    r = s.get(url, stream=True)
+    r.raise_for_status()
+    with path.open("wb") as fp:
+        for chunk in r.iter_content(65535):
+            fp.write(chunk)

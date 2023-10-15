@@ -5,16 +5,14 @@ import platform
 import re
 from packaging.version import Version
 import requests
-import requests_download
 from . import __url__, __version__
 
 #: The User-Agent header used for requests to PyPI's JSON API and when
 #: downloading wheels
-USER_AGENT = "wheelodex/{} ({}) requests/{} requests_download/{} {}/{}".format(
+USER_AGENT = "wheelodex/{} ({}) requests/{} {}/{}".format(
     __version__,
     __url__,
     requests.__version__,
-    requests_download.__version__,
     platform.python_implementation(),
     platform.python_version(),
 )

@@ -7,6 +7,7 @@ In Development
 - Speed up `purge_old_versions()` again
 - Dependencies:
     - Drop pyRFC3339 dependency
+    - Drop requests-download dependency
     - Update SQLAlchemy to 2.x
     - Update Flask to 3.x
     - Update Flask-Migrate to 4.x
