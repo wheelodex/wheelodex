@@ -358,17 +358,16 @@ def rdepends_query(project: Project) -> sa.Select:
     Returns a query object that returns all `Project`\\s that depend on the
     given `Project`, ordered by name.
     """
-    ### TODO: Use preferred wheel?
+    subq = (
+        db.select(Project.id.distinct().label("id"))
+        .join(DependencyRelation, Project.id == DependencyRelation.source_project_id)
+        .where(DependencyRelation.project_id == project.id)
+        .subquery()
+    )
     return cast(
         sa.Select,
         db.select(Project)
-        .filter(
-            db.exists()
-            .where(Project.id == DependencyRelation.source_project_id)
-            .where(DependencyRelation.project_id == project.id)
-            .select()
-            .scalar_subquery()
-        )
+        .join(subq, Project.id == subq.c.id)
         .order_by(Project.name.asc()),
     )
 
@@ -377,14 +376,9 @@ def rdepends_count(project: Project) -> int:
     """
     Returns the number of `Project`\\s that depend on the given `Project`
     """
-    ### TODO: Use preferred wheel?
     r = db.session.scalar(
-        db.select(db.func.count(Project.id)).filter(
-            db.exists()
-            .where(Project.id == DependencyRelation.source_project_id)
-            .where(DependencyRelation.project_id == project.id)
-            .select()
-            .scalar_subquery()
+        db.select(db.func.count(DependencyRelation.source_project_id.distinct())).where(
+            DependencyRelation.project_id == project.id
         )
     )
     assert isinstance(r, int)
