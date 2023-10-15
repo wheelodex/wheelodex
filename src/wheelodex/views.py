@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 import re
-from typing import Tuple, Union
+from typing import TypeAlias
 from flask import (
     Blueprint,
     abort,
@@ -37,7 +37,7 @@ web = Blueprint("web", __name__)
 
 from . import macros  # noqa
 
-ResponseValue = Union["Response", str, Tuple["Response", int]]
+ResponseValue: TypeAlias = Response | str | tuple[Response, int]
 
 
 def resolve_project(project: str) -> Project:

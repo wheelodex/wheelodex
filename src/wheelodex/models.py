@@ -3,7 +3,7 @@
 from __future__ import annotations
 from datetime import datetime, timezone
 from itertools import groupby
-from typing import TYPE_CHECKING, Any, List
+from typing import TYPE_CHECKING, Any
 from flask_sqlalchemy import SQLAlchemy
 from packaging.utils import canonicalize_name as normalize
 import sqlalchemy as sa
@@ -61,7 +61,7 @@ class Project(MappedAsDataclass, Model):
     #: would involve a complicated query that ends up being noticeably too
     #: slow.)
     summary: Mapped[str | None] = mapped_column(sa.Unicode(2048), default=None)
-    versions: Mapped[List[Version]] = relationship(
+    versions: Mapped[list[Version]] = relationship(
         back_populates="project",
         cascade="all, delete-orphan",
         passive_deletes=True,
@@ -172,7 +172,7 @@ class Version(MappedAsDataclass, Model):
     name: Mapped[str] = mapped_column(sa.Unicode(2048))
     #: The preferred non-normalized version string
     display_name: Mapped[str] = mapped_column(sa.Unicode(2048))
-    wheels: Mapped[List[Wheel]] = relationship(
+    wheels: Mapped[list[Wheel]] = relationship(
         back_populates="version",
         cascade="all, delete-orphan",
         passive_deletes=True,
@@ -202,7 +202,7 @@ class Wheel(MappedAsDataclass, Model):
     md5: Mapped[str | None] = mapped_column(sa.Unicode(32))
     sha256: Mapped[str | None] = mapped_column(sa.Unicode(64))
     uploaded: Mapped[datetime]
-    errors: Mapped[List[ProcessingError]] = relationship(
+    errors: Mapped[list[ProcessingError]] = relationship(
         back_populates="wheel",
         cascade="all, delete-orphan",
         passive_deletes=True,
@@ -343,18 +343,18 @@ class WheelData(MappedAsDataclass, Model):
     wheel_inspect_version: Mapped[str] = mapped_column(sa.Unicode(32))
     ### TODO: What are the right `cascade` and `passive_deletes` settings for
     ### this relationship?
-    dependency_rels: Mapped[List[DependencyRelation]] = relationship()
+    dependency_rels: Mapped[list[DependencyRelation]] = relationship()
     valid: Mapped[bool]
-    entry_points: Mapped[List[EntryPoint]] = relationship(
+    entry_points: Mapped[list[EntryPoint]] = relationship(
         back_populates="wheel_data", cascade="all, delete-orphan", passive_deletes=True
     )
-    files: Mapped[List[File]] = relationship(
+    files: Mapped[list[File]] = relationship(
         back_populates="wheel_data", cascade="all, delete-orphan", passive_deletes=True
     )
-    modules: Mapped[List[Module]] = relationship(
+    modules: Mapped[list[Module]] = relationship(
         back_populates="wheel_data", cascade="all, delete-orphan", passive_deletes=True
     )
-    keywords: Mapped[List[Keyword]] = relationship(
+    keywords: Mapped[list[Keyword]] = relationship(
         back_populates="wheel_data", cascade="all, delete-orphan", passive_deletes=True
     )
 

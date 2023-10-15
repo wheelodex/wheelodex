@@ -1,10 +1,10 @@
 from __future__ import annotations
 from configparser import ConfigParser
 from datetime import datetime, timedelta, timezone
+from importlib.resources import as_file, files
 import json
 import logging
 from os.path import join
-import sys
 from typing import IO
 import click
 from click_loglevel import LogLevel
@@ -26,11 +26,6 @@ from .models import EntryPointGroup, OrphanWheel, Wheel, db
 from .process import process_queue
 from .pypi_api import PyPIAPI
 from .scan import scan_changelog, scan_pypi
-
-if sys.version_info >= (3, 9):
-    from importlib.resources import as_file, files
-else:
-    from importlib_resources import as_file, files
 
 log = logging.getLogger(__name__)
 
