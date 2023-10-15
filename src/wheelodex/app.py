@@ -31,7 +31,7 @@ def create_app(**kwargs: Any) -> Flask:
     from .models import db
 
     db.init_app(app)
-    Migrate(app, db, str(Path(__file__).with_name("migrations")))
+    Migrate(app, db, directory=str(Path(__file__).with_name("migrations")))
     from .views import web
 
     app.register_blueprint(web)

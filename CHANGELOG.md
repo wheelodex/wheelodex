@@ -9,6 +9,7 @@ In Development
     - Drop pyRFC3339 dependency
     - Update SQLAlchemy to 2.x
     - Update Flask to 3.x
+    - Update Flask-Migrate to 4.x
     - Update Flask-SQLAlchemy to ~=3.1
     - Update pypi-simple to 1.x
     - Unpin cmarkgfm version
