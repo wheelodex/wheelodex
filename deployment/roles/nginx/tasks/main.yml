@@ -1,4 +1,8 @@
 ---
+- name: Assert server_names is defined and nonempty
+  ansible.builtin.assert:
+    that: 'nginx_server_names is defined and (nginx_server_names|length > 0)'
+
 - name: Install Nginx
   ansible.builtin.apt:
     name: nginx-full
@@ -42,3 +46,29 @@
   with_items:
     - start-maintenance
     - stop-maintenance
+
+- name: Install Certbot
+  community.general.snap:
+    name: certbot
+    classic: true
+    state: present
+
+- name: Link certbot executable
+  ansible.builtin.file:
+    src: /snap/bin/certbot
+    path: /usr/bin/certbot
+    state: link
+
+- name: Get SSL certificates
+  ### TODO: Ensure this does nothing when server_names is unchanged
+  ansible.builtin.command: |
+    certbot run
+        --nginx
+        --rsa-key-size 4096
+        --expand
+        --cert-name {{ nginx_certname | quote }}
+        --email {{ nginx_certbot_email | quote }}
+        --domains {{ nginx_server_names | join(',') | quote }}
+        --non-interactive
+        --agree-tos
+  changed_when: true
