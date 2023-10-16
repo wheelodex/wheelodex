@@ -3,4 +3,4 @@ strict: true
 exclude_paths:
  - host_vars/*/secrets.yml
 
-# vim:ft=yaml:
+# vim:set et ft=yaml sts=2:
