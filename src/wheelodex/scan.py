@@ -49,30 +49,30 @@ def scan_pypi() -> None:
         log.info("Adding wheels for project %r", pkg)
         project = Project.ensure(pkg)
         data = pypi.project_data(pkg)
-        if data is None or not data.get("releases", {}):
+        if data is None or not data.releases:
             log.info("Project has no releases")
             continue
-        versions = list(data["releases"].keys())
+        versions = list(data.releases.keys())
         log.debug("Available versions: %r", versions)
         latest = latest_version(versions)
         assert latest is not None
         log.info("Using latest version: %r", latest)
         qty_queued = 0
         vobj = project.ensure_version(latest)
-        for asset in data["releases"][latest]:
-            if not asset["filename"].endswith(".whl"):
-                log.debug("Asset %s: not a wheel; skipping", asset["filename"])
+        for asset in data.releases[latest]:
+            if not asset.filename.lower().endswith(".whl"):
+                log.debug("Asset %s: not a wheel; skipping", asset.filename)
             else:
-                log.debug("Asset %s: adding", asset["filename"])
+                log.debug("Asset %s: adding", asset.filename)
                 qty_queued += 1
                 total_queued += 1
                 vobj.ensure_wheel(
-                    filename=asset["filename"],
-                    url=asset["url"],
-                    size=asset["size"],
-                    md5=asset["digests"]["md5"].lower(),
-                    sha256=asset["digests"]["sha256"].lower(),
-                    uploaded=asset["upload_time_iso_8601"],
+                    filename=asset.filename,
+                    url=asset.url,
+                    size=asset.size,
+                    md5=asset.digests.md5,
+                    sha256=asset.digests.sha256,
+                    uploaded=asset.upload_time,
                 )
         log.info("%s: %d wheels added", pkg, qty_queued)
     end_time = datetime.now(timezone.utc)
@@ -133,12 +133,12 @@ def scan_changelog(since: int) -> None:
                 if data is not None:
                     log.info("Asset %s: adding", event.filename)
                     v.ensure_wheel(
-                        filename=data["filename"],
-                        url=data["url"],
-                        size=data["size"],
-                        md5=data["digests"].get("md5").lower(),
-                        sha256=data["digests"].get("sha256").lower(),
-                        uploaded=data["upload_time_iso_8601"],
+                        filename=data.filename,
+                        url=data.url,
+                        size=data.size,
+                        md5=data.digests.md5,
+                        sha256=data.digests.sha256,
+                        uploaded=data.upload_time,
                     )
                     wheels_added += 1
                 else:

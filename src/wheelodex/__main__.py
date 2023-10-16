@@ -195,12 +195,12 @@ def process_orphan_wheels() -> None:
             if data is not None:
                 log.info("Wheel %s: data found", orphan.filename)
                 orphan.version.ensure_wheel(
-                    filename=data["filename"],
-                    url=data["url"],
-                    size=data["size"],
-                    md5=data["digests"].get("md5").lower(),
-                    sha256=data["digests"].get("sha256").lower(),
-                    uploaded=str(data["upload_time"]),
+                    filename=data.filename,
+                    url=data.url,
+                    size=data.size,
+                    md5=data.digests.md5,
+                    sha256=data.digests.sha256,
+                    uploaded=data.upload_time,
                 )
                 db.session.delete(orphan)
                 unorphaned += 1

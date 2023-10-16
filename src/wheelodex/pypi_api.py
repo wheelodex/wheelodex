@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 from collections.abc import Callable
+from datetime import datetime
 import logging
+from typing import Annotated
 from xmlrpc.client import ProtocolError, ServerProxy
+from pydantic import AfterValidator, BaseModel, Field
 from pypi_simple import ACCEPT_JSON_PREFERRED, PyPISimple
 import requests
 from tenacity import retry, retry_if_exception, wait_exponential
@@ -95,7 +98,7 @@ class PyPIAPI:
         retry=retry_if_exception(on_http_exception),
         wait=wait_exponential(multiplier=1, max=10),
     )
-    def project_data(self, proj: str) -> dict | None:
+    def project_data(self, proj: str) -> Project | None:
         """
         Fetch the data for the project ``proj`` from PyPI's JSON API and return
         it.  If the API returns a 404 (which happens when the project has no
@@ -106,11 +109,9 @@ class PyPIAPI:
             # Project has no releases
             return None
         r.raise_for_status()
-        data = r.json()
-        assert isinstance(data, dict)
-        return data
+        return Project.model_validate(r.json())
 
-    def asset_data(self, project: str, version: str, filename: str) -> dict | None:
+    def asset_data(self, project: str, version: str, filename: str) -> Asset | None:
         """
         Query the JSON API for the data on the asset with the given filename
         for the given project & version.  If the asset cannot be found, return
@@ -119,9 +120,8 @@ class PyPIAPI:
         data = self.project_data(project)
         if data is None:
             return None
-        for asset in data.get("releases", {}).get(version, []):
-            assert isinstance(asset, dict)
-            if asset["filename"] == filename:
+        for asset in data.releases.get(version, []):
+            if asset.filename == filename:
                 return asset
         return None
 
@@ -140,3 +140,21 @@ class PyPIAPI:
             assert isinstance(event, list)
             results.append(ChangelogEvent.parse(event))
         return results
+
+
+class Digests(BaseModel):
+    md5: Annotated[str, AfterValidator(str.lower)]
+    sha256: Annotated[str, AfterValidator(str.lower)]
+    # blake2b_256: Annotated[str, AfterValidator(str.lower)]
+
+
+class Asset(BaseModel):
+    digests: Digests
+    filename: str
+    size: int
+    upload_time: datetime = Field(alias="upload_time_iso_8601")
+    url: str
+
+
+class Project(BaseModel):
+    releases: dict[str, list[Asset]] = Field(default_factory=dict)

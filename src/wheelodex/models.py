@@ -330,7 +330,7 @@ class Version(MappedAsDataclass, Model):
         size: int,
         md5: str | None,
         sha256: str | None,
-        uploaded: str,
+        uploaded: datetime | str,
     ) -> Wheel:
         """
         Registers a wheel for the `Version` and updates the ``ordering`` values
@@ -342,6 +342,8 @@ class Version(MappedAsDataclass, Model):
             db.select(Wheel).filter_by(filename=filename)
         ).one_or_none()
         if whl is None:
+            if isinstance(uploaded, str):
+                uploaded = parse_timestamp(uploaded)
             whl = Wheel(
                 version=self,
                 filename=filename,
@@ -349,7 +351,7 @@ class Version(MappedAsDataclass, Model):
                 size=size,
                 md5=md5,
                 sha256=sha256,
-                uploaded=parse_timestamp(uploaded),
+                uploaded=uploaded,
             )
             db.session.add(whl)
             for i, w in enumerate(
