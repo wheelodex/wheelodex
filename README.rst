@@ -3,21 +3,21 @@
     :alt: Project Status: Active — The project has reached a stable, usable
           state and is being actively developed.
 
-.. image:: https://github.com/jwodder/wheelodex/workflows/Test/badge.svg?branch=master
-    :target: https://github.com/jwodder/wheelodex/actions?workflow=Test
+.. image:: https://github.com/wheelodex/wheelodex/workflows/Test/badge.svg?branch=master
+    :target: https://github.com/wheelodex/wheelodex/actions?workflow=Test
     :alt: CI Status
 
-.. image:: https://codecov.io/gh/jwodder/wheelodex/branch/master/graph/badge.svg
-    :target: https://codecov.io/gh/jwodder/wheelodex
+.. image:: https://codecov.io/gh/wheelodex/wheelodex/branch/master/graph/badge.svg
+    :target: https://codecov.io/gh/wheelodex/wheelodex
 
-.. image:: https://img.shields.io/github/license/jwodder/wheelodex.svg
+.. image:: https://img.shields.io/github/license/wheelodex/wheelodex.svg
     :target: https://opensource.org/licenses/MIT
     :alt: MIT License
 
 `Site <https://www.wheelodex.org>`_
-| `GitHub <https://github.com/jwodder/wheelodex>`_
-| `Issues <https://github.com/jwodder/wheelodex/issues>`_
-| `Changelog <https://github.com/jwodder/wheelodex/blob/master/CHANGELOG.md>`_
+| `GitHub <https://github.com/wheelodex/wheelodex>`_
+| `Issues <https://github.com/wheelodex/wheelodex/issues>`_
+| `Changelog <https://github.com/wheelodex/wheelodex/blob/master/CHANGELOG.md>`_
 
 Packaged projects for the `Python <https://www.python.org>`_ programming
 language are distributed in two main formats: *sdists* (archives of code and
