@@ -23,8 +23,21 @@ from .util import JsonWheel, JsonWheelMeta, JsonWheelPyPI, version_sort_key
 from .wheel_sort import wheel_sort_key
 
 
+# <https://mike.depalatis.net/blog/sqlalchemy-timestamps.html>
+class DateTime(sa.TypeDecorator):
+    impl = sa.DateTime
+    cache_ok = True
+
+    def process_result_value(self, value: Any, _dialect: sa.Dialect) -> Any:
+        if isinstance(value, datetime) and value.tzinfo is None:
+            # Must have come from SQLite during testing
+            return value.replace(tzinfo=timezone.utc)
+        else:
+            return value
+
+
 class Base(DeclarativeBase):
-    registry = registry(type_annotation_map={datetime: sa.DateTime(timezone=True)})
+    registry = registry(type_annotation_map={datetime: DateTime(timezone=True)})
 
 
 PKey = Annotated[int, mapped_column(primary_key=True)]
