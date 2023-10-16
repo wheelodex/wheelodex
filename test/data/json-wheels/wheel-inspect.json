@@ -1,0 +1,248 @@
+{
+  "data": {
+    "abi": [
+      "none"
+    ],
+    "arch": [
+      "any"
+    ],
+    "buildver": "",
+    "derived": {
+      "dependencies": [
+        "distlib",
+        "headerparser",
+        "packaging",
+        "readme-renderer",
+        "setuptools"
+      ],
+      "description_in_body": true,
+      "description_in_headers": false,
+      "keyword_separator": ",",
+      "keywords": [
+        "packages",
+        "pep427",
+        "wheel"
+      ],
+      "modules": [
+        "wheel_inspect",
+        "wheel_inspect.__main__",
+        "wheel_inspect.inspect",
+        "wheel_inspect.metadata",
+        "wheel_inspect.schema",
+        "wheel_inspect.util",
+        "wheel_inspect.wheel_info"
+      ],
+      "readme_renders": true
+    },
+    "dist_info": {
+      "entry_points": {
+        "console_scripts": {
+          "wheel2json": {
+            "attr": "main",
+            "extras": [],
+            "module": "wheel_inspect.__main__"
+          }
+        }
+      },
+      "metadata": {
+        "author": "John Thorvald Wodder II",
+        "author_email": "wheel-inspect@varonathe.org",
+        "classifier": [
+          "Development Status :: 4 - Beta",
+          "Programming Language :: Python :: 3 :: Only",
+          "Programming Language :: Python :: 3",
+          "Programming Language :: Python :: 3.4",
+          "Programming Language :: Python :: 3.5",
+          "Programming Language :: Python :: 3.6",
+          "Programming Language :: Python :: 3.7",
+          "Programming Language :: Python :: Implementation :: CPython",
+          "Programming Language :: Python :: Implementation :: PyPy",
+          "License :: OSI Approved :: MIT License",
+          "Intended Audience :: Developers",
+          "Topic :: Software Development :: Libraries :: Python Modules",
+          "Topic :: System :: Software Distribution"
+        ],
+        "description": {
+          "length": 9939
+        },
+        "home_page": "https://github.com/jwodder/wheel-inspect",
+        "keywords": "packages,pep427,wheel",
+        "license": "MIT",
+        "metadata_version": "2.1",
+        "name": "wheel-inspect",
+        "platform": [],
+        "requires_dist": [
+          {
+            "extras": [],
+            "marker": null,
+            "name": "distlib",
+            "specifier": "~=0.2.7",
+            "url": null
+          },
+          {
+            "extras": [],
+            "marker": null,
+            "name": "headerparser",
+            "specifier": "~=0.2.0",
+            "url": null
+          },
+          {
+            "extras": [],
+            "marker": null,
+            "name": "packaging",
+            "specifier": ">=17.1",
+            "url": null
+          },
+          {
+            "extras": [],
+            "marker": null,
+            "name": "readme-renderer",
+            "specifier": "~=21.0",
+            "url": null
+          },
+          {
+            "extras": [],
+            "marker": null,
+            "name": "setuptools",
+            "specifier": ">=36",
+            "url": null
+          }
+        ],
+        "requires_python": "~=3.4",
+        "summary": "Extract information from wheels",
+        "version": "1.0.0"
+      },
+      "record": [
+        {
+          "digests": {
+            "sha256": "7_yYHhB_1YXYoEUiqbJwMskxJWFsPH8Viu7dfPThEWc"
+          },
+          "path": "wheel_inspect/__init__.py",
+          "size": 761
+        },
+        {
+          "digests": {
+            "sha256": "3_DrJ4Tr-ie5TCQtmmTnS82eHTMmVDY1mOeSP_hJ_Ho"
+          },
+          "path": "wheel_inspect/__main__.py",
+          "size": 247
+        },
+        {
+          "digests": {
+            "sha256": "LCgjTkHaGxyzSKeY_pEDSWQFNQi7PRby6lh6H0OSVAQ"
+          },
+          "path": "wheel_inspect/inspect.py",
+          "size": 4816
+        },
+        {
+          "digests": {
+            "sha256": "3u83eQ0RBdR-AEOxqsPyMkc663G2Un9Hd6tqhO2eu6k"
+          },
+          "path": "wheel_inspect/metadata.py",
+          "size": 1946
+        },
+        {
+          "digests": {
+            "sha256": "8VOeroNaM34lIqdjnCiaCwtNEVwi_wFDTtYaL7dEXDQ"
+          },
+          "path": "wheel_inspect/schema.py",
+          "size": 12158
+        },
+        {
+          "digests": {
+            "sha256": "iaxC3qenCrPMRjrqdTwj1Hfy-OPo-y-WVLaPWEDeSFs"
+          },
+          "path": "wheel_inspect/util.py",
+          "size": 1352
+        },
+        {
+          "digests": {
+            "sha256": "wNTKsMw_TVe3RbIpj8tjwRE0Q_rUeoRUF66KKpqBp2c"
+          },
+          "path": "wheel_inspect/wheel_info.py",
+          "size": 1010
+        },
+        {
+          "digests": {
+            "sha256": "-X7Ry_-tNPLAGkZasQc2KOBW_Ohnx52rgDZfo8cxw10"
+          },
+          "path": "wheel_inspect-1.0.0.dist-info/LICENSE",
+          "size": 1095
+        },
+        {
+          "digests": {
+            "sha256": "k1xCP7TeQgiGk8QnAR8hAlQLHJsdKk2FpHOk8Nx3Ug0"
+          },
+          "path": "wheel_inspect-1.0.0.dist-info/METADATA",
+          "size": 11139
+        },
+        {
+          "digests": {
+            "sha256": "-ZFxwj8mZJPIVcZGLrsQ8UGRcxVAOExzPLVBGR7u7bE"
+          },
+          "path": "wheel_inspect-1.0.0.dist-info/WHEEL",
+          "size": 92
+        },
+        {
+          "digests": {
+            "sha256": "fqJPsljFaWRzPdYMreNAf0zg8GSQE0Tgh8_XOzL85lo"
+          },
+          "path": "wheel_inspect-1.0.0.dist-info/entry_points.txt",
+          "size": 60
+        },
+        {
+          "digests": {
+            "sha256": "Cz2n0fdOaOfDcl0g6x4t_DEWzWZYYRcFASrgxW0v_WE"
+          },
+          "path": "wheel_inspect-1.0.0.dist-info/top_level.txt",
+          "size": 14
+        },
+        {
+          "digests": {},
+          "path": "wheel_inspect-1.0.0.dist-info/RECORD",
+          "size": null
+        }
+      ],
+      "top_level": [
+        "wheel_inspect"
+      ],
+      "wheel": {
+        "generator": "bdist_wheel (0.32.1)",
+        "root_is_purelib": true,
+        "tag": [
+          "py3-none-any"
+        ],
+        "wheel_version": "1.0"
+      }
+    },
+    "file": {
+      "digests": {
+        "md5": "c5052833c9eab2ee97b7514a74533231",
+        "sha256": "541ad37964b7f54f471d67d619f29146f2a46c534365dcd18337251716014b09"
+      },
+      "size": 11886
+    },
+    "filename": "wheel_inspect-1.0.0-py3-none-any.whl",
+    "project": "wheel_inspect",
+    "pyver": [
+      "py3"
+    ],
+    "valid": true,
+    "version": "1.0.0"
+  },
+  "errored": false,
+  "pypi": {
+    "filename": "wheel_inspect-1.0.0-py3-none-any.whl",
+    "md5": "c5052833c9eab2ee97b7514a74533231",
+    "project": "wheel-inspect",
+    "sha256": "541ad37964b7f54f471d67d619f29146f2a46c534365dcd18337251716014b09",
+    "size": 11886,
+    "uploaded": "2018-10-12T20:20:58Z",
+    "url": "https://files.pythonhosted.org/packages/dd/2a/e6b3e44ed036f08e84c99704bffdc9cb6042812721080f4fe07370c09929/wheel_inspect-1.0.0-py3-none-any.whl",
+    "version": "1.0.0"
+  },
+  "wheelodex": {
+    "processed": "2018-10-12T20:37:51.618477Z",
+    "wheel_inspect_version": "1.0.0"
+  }
+}

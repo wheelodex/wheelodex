@@ -466,7 +466,7 @@ class Wheel(MappedAsDataclass, Model):
             meta = None
         r = JsonWheel(
             pypi=pypi, data=data, wheelodex=meta, errored=bool(self.errors)
-        ).model_dump()
+        ).model_dump(mode="json")
         assert isinstance(r, dict)
         return r
 

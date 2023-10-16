@@ -1,0 +1,368 @@
+{
+  "data": {
+    "abi": [
+      "none"
+    ],
+    "arch": [
+      "any"
+    ],
+    "buildver": "",
+    "derived": {
+      "dependencies": [
+        "PySocks",
+        "certifi",
+        "chardet",
+        "cryptography",
+        "idna",
+        "pyOpenSSL",
+        "urllib3",
+        "win-inet-pton"
+      ],
+      "description_in_body": true,
+      "description_in_headers": false,
+      "keyword_separator": null,
+      "keywords": [],
+      "modules": [
+        "requests",
+        "requests.__version__",
+        "requests._internal_utils",
+        "requests.adapters",
+        "requests.api",
+        "requests.auth",
+        "requests.certs",
+        "requests.compat",
+        "requests.cookies",
+        "requests.exceptions",
+        "requests.help",
+        "requests.hooks",
+        "requests.models",
+        "requests.packages",
+        "requests.sessions",
+        "requests.status_codes",
+        "requests.structures",
+        "requests.utils"
+      ],
+      "readme_renders": false
+    },
+    "dist_info": {
+      "metadata": {
+        "author": "Kenneth Reitz",
+        "author_email": "me@kennethreitz.org",
+        "classifier": [
+          "Development Status :: 5 - Production/Stable",
+          "Intended Audience :: Developers",
+          "Natural Language :: English",
+          "License :: OSI Approved :: Apache Software License",
+          "Programming Language :: Python",
+          "Programming Language :: Python :: 2",
+          "Programming Language :: Python :: 2.7",
+          "Programming Language :: Python :: 3",
+          "Programming Language :: Python :: 3.4",
+          "Programming Language :: Python :: 3.5",
+          "Programming Language :: Python :: 3.6",
+          "Programming Language :: Python :: Implementation :: CPython",
+          "Programming Language :: Python :: Implementation :: PyPy"
+        ],
+        "description": {
+          "length": 50430
+        },
+        "description_content_type": "text/x-rst",
+        "home_page": "http://python-requests.org",
+        "license": "Apache 2.0",
+        "metadata_version": "2.0",
+        "name": "requests",
+        "platform": [],
+        "provides_extra": [
+          "security",
+          "socks",
+          "socks"
+        ],
+        "requires_dist": [
+          {
+            "extras": [],
+            "marker": null,
+            "name": "chardet",
+            "specifier": "<3.1.0,>=3.0.2",
+            "url": null
+          },
+          {
+            "extras": [],
+            "marker": null,
+            "name": "idna",
+            "specifier": "<2.8,>=2.5",
+            "url": null
+          },
+          {
+            "extras": [],
+            "marker": null,
+            "name": "urllib3",
+            "specifier": "<1.24,>=1.21.1",
+            "url": null
+          },
+          {
+            "extras": [],
+            "marker": null,
+            "name": "certifi",
+            "specifier": ">=2017.4.17",
+            "url": null
+          },
+          {
+            "extras": [],
+            "marker": "extra == \"security\"",
+            "name": "pyOpenSSL",
+            "specifier": ">=0.14",
+            "url": null
+          },
+          {
+            "extras": [],
+            "marker": "extra == \"security\"",
+            "name": "cryptography",
+            "specifier": ">=1.3.4",
+            "url": null
+          },
+          {
+            "extras": [],
+            "marker": "extra == \"security\"",
+            "name": "idna",
+            "specifier": ">=2.0.0",
+            "url": null
+          },
+          {
+            "extras": [],
+            "marker": "extra == \"socks\"",
+            "name": "PySocks",
+            "specifier": "!=1.5.7,>=1.5.6",
+            "url": null
+          },
+          {
+            "extras": [],
+            "marker": "sys_platform == \"win32\" and (python_version == \"2.7\" or python_version == \"2.6\") and extra == \"socks\"",
+            "name": "win-inet-pton",
+            "specifier": "",
+            "url": null
+          }
+        ],
+        "requires_python": ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*",
+        "summary": "Python HTTP for Humans.",
+        "version": "2.19.1"
+      },
+      "record": [
+        {
+          "digests": {
+            "sha256": "CfBVrS2i2DRqW4l_YWg0amv2aE40uzKipJOhl5f_ym4"
+          },
+          "path": "requests/__init__.py",
+          "size": 4056
+        },
+        {
+          "digests": {
+            "sha256": "rJ2xgNOLhjspGkNPfgXTBctqqvsf2uJMFTaE0rlVtbI"
+          },
+          "path": "requests/__version__.py",
+          "size": 436
+        },
+        {
+          "digests": {
+            "sha256": "Zx3PnEUccyfsB-ie11nZVAW8qClJy0gx1qNME7rgT18"
+          },
+          "path": "requests/_internal_utils.py",
+          "size": 1096
+        },
+        {
+          "digests": {
+            "sha256": "i3hSRejv346malcOuw46ivOBDxCyip0SBuMy3sylvmA"
+          },
+          "path": "requests/adapters.py",
+          "size": 21236
+        },
+        {
+          "digests": {
+            "sha256": "zub9ENcEUT2m9gwgBgqH5RIRDfrx2kwRpZ7L6hX3mcw"
+          },
+          "path": "requests/api.py",
+          "size": 6261
+        },
+        {
+          "digests": {
+            "sha256": "oRSQkBYcLkTEssudkzoR1UW1Glb1ts3p1RWusgHf1YU"
+          },
+          "path": "requests/auth.py",
+          "size": 10208
+        },
+        {
+          "digests": {
+            "sha256": "dOB5rV2DZ13dEhq9BUa_4hd5kAqg59e_zUZB00faYz8"
+          },
+          "path": "requests/certs.py",
+          "size": 453
+        },
+        {
+          "digests": {
+            "sha256": "aY4WEIpX7kYXzD4h4RhcO5QwkurS79Ssg5m0fWEflMc"
+          },
+          "path": "requests/compat.py",
+          "size": 1723
+        },
+        {
+          "digests": {
+            "sha256": "olUaLeNci_z1K-Bn5PeEKllSspmQqN9-s8Ug7CasaPE"
+          },
+          "path": "requests/cookies.py",
+          "size": 18346
+        },
+        {
+          "digests": {
+            "sha256": "Q8YeWWxiHHXhkEynLpMgC_6_r_ZTYw2aITs9wCSAZNY"
+          },
+          "path": "requests/exceptions.py",
+          "size": 3185
+        },
+        {
+          "digests": {
+            "sha256": "vKOUvN6TMonwqumMjRaG9BgsYw7-Ei6aMWY71vtHCx8"
+          },
+          "path": "requests/help.py",
+          "size": 3606
+        },
+        {
+          "digests": {
+            "sha256": "HXAHoC1FNTFRZX6-lNdvPM7Tst4kvGwYTN-AOKRxoRU"
+          },
+          "path": "requests/hooks.py",
+          "size": 767
+        },
+        {
+          "digests": {
+            "sha256": "Eus9H6VuYZ3hkvFqpK6chs5HsU4Uhubm2k7015AeRII"
+          },
+          "path": "requests/models.py",
+          "size": 34095
+        },
+        {
+          "digests": {
+            "sha256": "Q2rF0L5mc3wQAvc6q_lAVtPTDOaOeFgD-7kWSQLkjEQ"
+          },
+          "path": "requests/packages.py",
+          "size": 542
+        },
+        {
+          "digests": {
+            "sha256": "71MK2HCadovka1vAx9dyDFWAuw69KgRPRBpd0HWSEAo"
+          },
+          "path": "requests/sessions.py",
+          "size": 27829
+        },
+        {
+          "digests": {
+            "sha256": "pgw-xlnxO5zHQWn3fKps2cxwQehKzPxEbdhIrMQe6Ec"
+          },
+          "path": "requests/status_codes.py",
+          "size": 4128
+        },
+        {
+          "digests": {
+            "sha256": "zoP8qly2Jak5e89HwpqjN1z2diztI-_gaqts1raJJBc"
+          },
+          "path": "requests/structures.py",
+          "size": 2981
+        },
+        {
+          "digests": {
+            "sha256": "3OxbbLUQFVdm84fdBD9nduXvhw6hIzj59mhvBomKuJI"
+          },
+          "path": "requests/utils.py",
+          "size": 30156
+        },
+        {
+          "digests": {
+            "sha256": "n_VLfuLN3E966vObL5yznSnEemZi9-mN_NYciEbtu1U"
+          },
+          "path": "requests-2.19.1.dist-info/DESCRIPTION.rst",
+          "size": 50439
+        },
+        {
+          "digests": {
+            "sha256": "gqhp_k6WdEmVbSalRq3HYqys4CiFLOgboWw8Wx12sVs"
+          },
+          "path": "requests-2.19.1.dist-info/LICENSE.txt",
+          "size": 581
+        },
+        {
+          "digests": {
+            "sha256": "xyt8lFsqw5Ub6FgGyQi_zaONQ6uCh8ULkonZeblqHzg"
+          },
+          "path": "requests-2.19.1.dist-info/METADATA",
+          "size": 52012
+        },
+        {
+          "digests": {},
+          "path": "requests-2.19.1.dist-info/RECORD",
+          "size": null
+        },
+        {
+          "digests": {
+            "sha256": "kdsN-5OJAZIiHN-iO4Rhl82KyS0bDWf4uBwMbkNafr8"
+          },
+          "path": "requests-2.19.1.dist-info/WHEEL",
+          "size": 110
+        },
+        {
+          "digests": {
+            "sha256": "aoLNiq-pX6UqPnwJr037D19kMMoHnl8qHmS1HFmI-zw"
+          },
+          "path": "requests-2.19.1.dist-info/metadata.json",
+          "size": 1768
+        },
+        {
+          "digests": {
+            "sha256": "fMSVmHfb5rbGOo6xv-O_tUX6j-WyixssE-SnwcDRxNQ"
+          },
+          "path": "requests-2.19.1.dist-info/top_level.txt",
+          "size": 9
+        }
+      ],
+      "top_level": [
+        "requests"
+      ],
+      "wheel": {
+        "generator": "bdist_wheel (0.30.0)",
+        "root_is_purelib": true,
+        "tag": [
+          "py2-none-any",
+          "py3-none-any"
+        ],
+        "wheel_version": "1.0"
+      }
+    },
+    "file": {
+      "digests": {
+        "md5": "81af0806ab8cb000f46139970c81ad56",
+        "sha256": "63b52e3c866428a224f97cab011de738c36aec0185aa91cfacd418b5d58911d1"
+      },
+      "size": 91979
+    },
+    "filename": "requests-2.19.1-py2.py3-none-any.whl",
+    "project": "requests",
+    "pyver": [
+      "py2",
+      "py3"
+    ],
+    "valid": true,
+    "version": "2.19.1"
+  },
+  "errored": false,
+  "pypi": {
+    "filename": "requests-2.19.1-py2.py3-none-any.whl",
+    "md5": "81af0806ab8cb000f46139970c81ad56",
+    "project": "requests",
+    "sha256": "63b52e3c866428a224f97cab011de738c36aec0185aa91cfacd418b5d58911d1",
+    "size": 91979,
+    "uploaded": "2018-06-14T13:40:38Z",
+    "url": "https://files.pythonhosted.org/packages/65/47/7e02164a2a3db50ed6d8a6ab1d6d60b69c4c3fdf57a284257925dfc12bda/requests-2.19.1-py2.py3-none-any.whl",
+    "version": "2.19.1"
+  },
+  "wheelodex": {
+    "processed": "2018-10-05T03:07:43.328469Z",
+    "wheel_inspect_version": "0.6.0.dev1"
+  }
+}

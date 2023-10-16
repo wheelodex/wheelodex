@@ -9,6 +9,8 @@ from sqlalchemy import text
 from wheelodex.app import create_app
 from wheelodex.models import Project, Wheel, db
 
+DATA_DIR = Path(__file__).with_name("data")
+
 
 @pytest.fixture(scope="session")
 def sampledb() -> Iterator[None]:
@@ -16,9 +18,9 @@ def sampledb() -> Iterator[None]:
         # See <https://docs.sqlalchemy.org/en/latest/dialects/sqlite.html#foreign-key-support>:
         db.session.execute(text("PRAGMA foreign_keys=ON"))
         db.create_all()
-        with (Path(__file__).with_name("data") / "sampledb01.jsonl").open() as fp:
-            for line in fp:
-                Wheel.add_from_json(json.loads(line))
+        for p in (DATA_DIR / "json-wheels").iterdir():
+            with p.open(encoding="utf-8") as fp:
+                Wheel.add_from_json(json.load(fp))
         Project.ensure("no-wheels")
         db.session.commit()
         yield
@@ -165,8 +167,11 @@ def test_project_json_200(client: FlaskClient) -> None:
 
 
 def test_project_data_json_200(client: FlaskClient) -> None:
+    with (DATA_DIR / "json-wheels" / "wheel-inspect.json").open(encoding="utf-8") as fp:
+        expected = json.load(fp)
     rv = client.get("/json/projects/wheel-inspect/data")
     assert rv.status_code == 200
+    assert rv.get_json() == expected
 
 
 def test_project_data_json_no_wheels(client: FlaskClient) -> None:
@@ -181,5 +186,8 @@ def test_project_rdepends_json_200(client: FlaskClient) -> None:
 
 
 def test_wheel_json_200(client: FlaskClient) -> None:
+    with (DATA_DIR / "json-wheels" / "wheel-inspect.json").open(encoding="utf-8") as fp:
+        expected = json.load(fp)
     rv = client.get("/json/wheels/wheel_inspect-1.0.0-py3-none-any.whl.json")
     assert rv.status_code == 200
+    assert rv.get_json() == expected
