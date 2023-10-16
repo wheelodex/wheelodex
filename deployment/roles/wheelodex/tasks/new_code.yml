@@ -23,7 +23,7 @@
   ansible.builtin.file:
     path: "{{ wheelodex_venv_path }}"
     state: absent
-  when: purge_venv|bool
+  when: wheelodex_purge_venv|bool
 
 - name: Create virtualenv and install wheel
   ansible.builtin.pip:
