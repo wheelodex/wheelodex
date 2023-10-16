@@ -12,7 +12,7 @@
   register: pipstat
 
 - name: Install pip
-  when: not pipstat.stat.exists or upgrade_pip
+  when: not pipstat.stat.exists or wheelodex_upgrade_pip
   block:
     - name: Download get-pip.py
       ansible.builtin.get_url:

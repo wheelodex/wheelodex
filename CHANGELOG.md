@@ -1,5 +1,5 @@
-In Development
---------------
+v2023.10.16
+-----------
 - Always open text files in UTF-8
 - Support Python 3.12
 - Drop support for Python 3.7, 3.8, and 3.9

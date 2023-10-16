@@ -60,7 +60,7 @@
     state: link
 
 - name: Get SSL certificates
-  ### TODO: Ensure this does nothing when server_names is unchanged
+  ### TODO: Ensure this does nothing when nginx_server_names is unchanged
   ansible.builtin.command: |
     certbot run
         --nginx
