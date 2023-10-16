@@ -207,7 +207,7 @@ def process_orphan_wheels() -> None:
             else:
                 log.info("Wheel %s: data not found", orphan.filename)
                 remaining += 1
-        expired = db.session.execute(
+        expired = db.session.scalar(
             db.delete(OrphanWheel).where(
                 OrphanWheel.uploaded
                 < datetime.now(timezone.utc) - timedelta(seconds=max_age)

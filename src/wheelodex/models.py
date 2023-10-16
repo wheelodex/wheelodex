@@ -217,12 +217,12 @@ class Project(MappedAsDataclass, Model):
 
     def update_has_wheels(self) -> None:
         """Update the value of the `Project`'s ``has_wheels`` attribute"""
-        self.has_wheels = db.session.execute(
+        self.has_wheels = db.session.scalar(
             db.exists()
             .where(Version.project_id == self.id)
             .where(Wheel.version_id == Version.id)
             .select()
-        ).scalar()
+        )
 
     def rdepends_query(self) -> sa.Select:
         """
