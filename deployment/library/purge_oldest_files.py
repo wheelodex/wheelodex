@@ -1,6 +1,6 @@
 #!/usr/bin/python3
-import traceback
 from pathlib import Path
+import traceback
 from ansible.module_utils.basic import AnsibleModule
 
 DOCUMENTATION = r"""
@@ -43,6 +43,7 @@ def main():
     except Exception:
         module.fail_json(msg=traceback.format_exc())
     module.exit_json(changed=changed)
+
 
 if __name__ == "__main__":
     main()

@@ -49,7 +49,7 @@
 
 - name: Create config file
   ansible.builtin.template:
-    src: config.py
+    src: config.py.j2
     dest: "{{ wheelodex_config_file }}"
     owner: "{{ wheelodex_user }}"
     mode: "0644"
