@@ -9,25 +9,25 @@ from datetime import datetime, timezone
 class ChangelogEvent:
     project: str
     version: str | None
-    timestamp: int
+    timestamp: datetime
     action: str
     serial: int
 
     @property
     def id(self) -> str:
-        ts = datetime.fromtimestamp(self.timestamp, timezone.utc)
-        return f"{self.serial} @ {ts}"
+        return f"{self.serial} @ {self.timestamp}"
 
     @classmethod
     def parse(cls, event: list) -> ChangelogEvent:
         if len(event) != 5:
             raise ValueError(f"Expected 5 fields in changelog event; got {len(event)}")
-        project, version, timestamp, action, serial = event
+        project, version, ts, action, serial = event
         assert isinstance(project, str)
         assert version is None or isinstance(version, str)
-        assert isinstance(timestamp, int)
+        assert isinstance(ts, int)
         assert isinstance(action, str)
         assert isinstance(serial, int)
+        timestamp = datetime.fromtimestamp(ts, timezone.utc)
 
         # As of pypa/warehouse revision c6d9dd32b (2023-10-15), the possible
         # "action" strings are (found by searching for "JournalEntry" in the

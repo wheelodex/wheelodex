@@ -760,14 +760,13 @@ class OrphanWheel(MappedAsDataclass, Model):
         return self.version.project
 
     @classmethod
-    def register(cls, version: Version, filename: str, uploaded_epoch: int) -> None:
+    def register(cls, version: Version, filename: str, uploaded: datetime) -> None:
         """
         Register an `OrphanWheel` for the given version, with the given
-        filename, uploaded at ``uploaded_epoch`` seconds after the Unix epoch.
-        If an orphan wheel with the given filename has already been registered,
-        update its ``uploaded`` timestamp and do nothing else.
+        filename, uploaded at ``uploaded``.  If an orphan wheel with the given
+        filename has already been registered, update its ``uploaded`` timestamp
+        and do nothing else.
         """
-        uploaded = datetime.fromtimestamp(uploaded_epoch, timezone.utc)
         whl = db.session.scalars(
             db.select(OrphanWheel).filter_by(filename=filename)
         ).one_or_none()

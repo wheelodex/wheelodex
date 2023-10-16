@@ -1,6 +1,6 @@
 from __future__ import annotations
 from collections.abc import Iterable, Iterator, Sequence
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import TypedDict, TypeVar
 import pytest
 from sqlalchemy import text
@@ -39,6 +39,10 @@ def sort_wheels(ws: Iterable[Wheel]) -> list[Wheel]:
 
 def get_all(cls: type[T]) -> Sequence[T]:
     return db.session.scalars(db.select(cls)).all()
+
+
+def unixts(ts: int) -> datetime:
+    return datetime.fromtimestamp(ts, timezone.utc)
 
 
 class WheelArgs(TypedDict):
@@ -427,7 +431,7 @@ def test_purge_old_versions_latest_has_orphans_only_next_has_wheels() -> None:
     v1 = p.ensure_version("1.0")
     v1.ensure_wheel(**FOOBAR_1_WHEEL)
     v2 = p.ensure_version("2.0")
-    OrphanWheel.register(v2, "FooBar-2.0-py3-none-any.whl", 1537974774)
+    OrphanWheel.register(v2, "FooBar-2.0-py3-none-any.whl", unixts(1537974774))
     purge_old_versions()
     assert sort_versions(get_all(Version)) == [v1, v2]
 
@@ -435,7 +439,7 @@ def test_purge_old_versions_latest_has_orphans_only_next_has_wheels() -> None:
 def test_purge_old_versions_latest_has_wheels_next_has_orphans() -> None:
     p = Project.ensure("foobar")
     v1 = p.ensure_version("1.0")
-    OrphanWheel.register(v1, "FooBar-1.0-py3-none-any.whl", 1537974774)
+    OrphanWheel.register(v1, "FooBar-1.0-py3-none-any.whl", unixts(1537974774))
     v2 = p.ensure_version("2.0")
     v2.ensure_wheel(**FOOBAR_2_WHEEL)
     purge_old_versions()
@@ -597,7 +601,7 @@ def test_orphan_wheel_register() -> None:
     assert get_all(OrphanWheel) == []
     p = Project.ensure("FooBar")
     v1 = p.ensure_version("1.0")
-    OrphanWheel.register(v1, "FooBar-1.0-py3-none-any.whl", 1537974774)
+    OrphanWheel.register(v1, "FooBar-1.0-py3-none-any.whl", unixts(1537974774))
     orphans = get_all(OrphanWheel)
     assert len(orphans) == 1
     assert orphans[0].version == v1
@@ -612,8 +616,8 @@ def test_orphan_wheel_register_duplicate() -> None:
     assert get_all(OrphanWheel) == []
     p = Project.ensure("FooBar")
     v1 = p.ensure_version("1.0")
-    OrphanWheel.register(v1, "FooBar-1.0-py3-none-any.whl", 1537974774)
-    OrphanWheel.register(v1, "FooBar-1.0-py3-none-any.whl", 1555868651)
+    OrphanWheel.register(v1, "FooBar-1.0-py3-none-any.whl", unixts(1537974774))
+    OrphanWheel.register(v1, "FooBar-1.0-py3-none-any.whl", unixts(1555868651))
     orphans = get_all(OrphanWheel)
     assert len(orphans) == 1
     assert orphans[0].version == v1
