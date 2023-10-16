@@ -78,7 +78,6 @@ def downgrade() -> None:
     )
 
 
-# Importing this from ..util doesn't work for some reason
 def parse_timestamp(s: str) -> datetime:
     """Parse an ISO 8601 timestamp, assuming anything naïve is in UTC"""
     if s.endswith("Z"):

@@ -7,7 +7,8 @@ In Development
 - Speed up `purge_old_versions()` again
 - `purge_old_versions()`: Delete a project's latest version if has neither
   wheels nor orphan wheels
-- Use pydantic to validate responses from PyPI's JSON API
+- Use pydantic to validate responses from PyPI's JSON API and wheel information
+  loaded from JSON
 - Dependencies:
     - Drop pyRFC3339 dependency
     - Drop requests-download dependency

@@ -1,9 +1,11 @@
 from __future__ import annotations
 from collections.abc import Iterable
-from datetime import datetime, timezone
+from datetime import datetime
 import platform
 import re
+from typing import Any
 from packaging.version import Version
+from pydantic import BaseModel
 import requests
 from . import __url__, __version__
 
@@ -16,6 +18,29 @@ USER_AGENT = "wheelodex/{} ({}) requests/{} {}/{}".format(
     platform.python_implementation(),
     platform.python_version(),
 )
+
+
+class JsonWheelPyPI(BaseModel):
+    filename: str
+    url: str
+    project: str
+    version: str
+    size: int
+    md5: str | None
+    sha256: str | None
+    uploaded: datetime
+
+
+class JsonWheelMeta(BaseModel):
+    processed: datetime
+    wheel_inspect_version: str
+
+
+class JsonWheel(BaseModel):
+    pypi: JsonWheelPyPI
+    data: Any = None
+    wheelodex: JsonWheelMeta | None = None
+    errored: bool = False
 
 
 def latest_version(versions: Iterable[str]) -> str | None:
@@ -63,13 +88,3 @@ def glob2like(s: str) -> str:
             return "\\" + x
 
     return re.sub(r"(\x5C.|[?*%_])", subber, s)
-
-
-def parse_timestamp(s: str) -> datetime:
-    """Parse an ISO 8601 timestamp, assuming anything naïve is in UTC"""
-    if s.endswith("Z"):
-        s = s[:-1] + "+00:00"
-    dt = datetime.fromisoformat(s)
-    if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc)
-    return dt

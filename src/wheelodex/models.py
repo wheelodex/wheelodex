@@ -19,7 +19,7 @@ from sqlalchemy.orm import (
 )
 from wheel_inspect import __version__ as wheel_inspect_version
 from . import __version__
-from .util import parse_timestamp, version_sort_key
+from .util import JsonWheel, JsonWheelMeta, JsonWheelPyPI, version_sort_key
 from .wheel_sort import wheel_sort_key
 
 
@@ -330,7 +330,7 @@ class Version(MappedAsDataclass, Model):
         size: int,
         md5: str | None,
         sha256: str | None,
-        uploaded: datetime | str,
+        uploaded: datetime,
     ) -> Wheel:
         """
         Registers a wheel for the `Version` and updates the ``ordering`` values
@@ -342,8 +342,6 @@ class Version(MappedAsDataclass, Model):
             db.select(Wheel).filter_by(filename=filename)
         ).one_or_none()
         if whl is None:
-            if isinstance(uploaded, str):
-                uploaded = parse_timestamp(uploaded)
             whl = Wheel(
                 version=self,
                 filename=filename,
@@ -428,49 +426,59 @@ class Wheel(MappedAsDataclass, Model):
             )
         )
 
-    def as_json(self) -> dict[str, Any]:
+    def as_json(self) -> dict:
         """
         Returns a JSONable representation (i.e., a `dict` composed entirely of
         primitive types that can be directly serialized to JSON) of the wheel
         and its data, if any
         """
-        about: dict[str, Any] = {
-            "pypi": {
-                "filename": self.filename,
-                "url": self.url,
-                "project": self.project.display_name,
-                "version": self.version.display_name,
-                "size": self.size,
-                "md5": self.md5,
-                "sha256": self.sha256,
-                "uploaded": self.uploaded.isoformat(),
-            },
-        }
+        pypi = JsonWheelPyPI(
+            filename=self.filename,
+            url=self.url,
+            project=self.project.display_name,
+            version=self.version.display_name,
+            size=self.size,
+            md5=self.md5,
+            sha256=self.sha256,
+            uploaded=self.uploaded,
+        )
         if self.data is not None:
-            about["data"] = self.data.raw_data
-            about["wheelodex"] = {
-                "processed": self.data.processed.isoformat(),
-                "wheel_inspect_version": self.data.wheel_inspect_version,
-            }
-        if self.errors:
-            about["errored"] = True
-        return about
+            data = self.data.raw_data
+            meta = JsonWheelMeta(
+                processed=self.data.processed,
+                wheel_inspect_version=self.data.wheel_inspect_version,
+            )
+        else:
+            data = None
+            meta = None
+        r = JsonWheel(
+            pypi=pypi, data=data, wheelodex=meta, errored=bool(self.errors)
+        ).model_dump()
+        assert isinstance(r, dict)
+        return r
 
     @classmethod
-    def add_from_json(cls, about: dict) -> None:
+    def add_from_json(cls, data: dict) -> None:
         """
         Add a wheel (possibly with data) from a structure produced by
         `Wheel.as_json()`
         """
-        version = Project.ensure(about["pypi"].pop("project")).ensure_version(
-            about["pypi"].pop("version")
+        about = JsonWheel.model_validate(data)
+        version = Project.ensure(about.pypi.project).ensure_version(about.pypi.version)
+        whl = version.ensure_wheel(
+            filename=about.pypi.filename,
+            url=about.pypi.url,
+            size=about.pypi.size,
+            md5=about.pypi.md5,
+            sha256=about.pypi.sha256,
+            uploaded=about.pypi.uploaded,
         )
-        whl = version.ensure_wheel(**about["pypi"])
-        if "data" in about and whl.data is None:
-            whl.set_data(about["data"])
+        if about.data is not None and whl.data is None:
+            whl.set_data(about.data)
             assert whl.data is not None
-            whl.data.processed = parse_timestamp(about["wheelodex"]["processed"])  # type: ignore[unreachable]
-            whl.data.wheel_inspect_version = about["wheelodex"]["wheel_inspect_version"]
+            assert about.wheelodex is not None  # type: ignore[unreachable]
+            whl.data.processed = about.wheelodex.processed
+            whl.data.wheel_inspect_version = about.wheelodex.wheel_inspect_version
 
     @classmethod
     def to_process(cls, max_wheel_size: int | None = None) -> Sequence[Wheel]:

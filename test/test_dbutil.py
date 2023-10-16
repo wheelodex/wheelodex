@@ -8,7 +8,6 @@ from sqlalchemy.orm import DeclarativeBase
 from wheelodex.app import create_app
 from wheelodex.dbutil import purge_old_versions, remove_wheel
 from wheelodex.models import OrphanWheel, Project, Version, Wheel, db
-from wheelodex.util import parse_timestamp
 
 T = TypeVar("T", bound=DeclarativeBase)
 
@@ -48,7 +47,7 @@ class WheelArgs(TypedDict):
     size: int
     md5: str
     sha256: str
-    uploaded: str
+    uploaded: datetime
 
 
 FOOBAR_1_WHEEL: WheelArgs = {
@@ -57,7 +56,7 @@ FOOBAR_1_WHEEL: WheelArgs = {
     "size": 65535,
     "md5": "1234567890abcdef1234567890abcdef",
     "sha256": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
-    "uploaded": "2018-09-26T15:12:54.123456Z",
+    "uploaded": datetime.fromisoformat("2018-09-26T15:12:54.123456+00:00"),
 }
 
 FOOBAR_1_DATA = {
@@ -78,7 +77,7 @@ FOOBAR_1_WHEEL2: WheelArgs = {
     "size": 65500,
     "md5": "1234567890abcdef1234567890abcdef",
     "sha256": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
-    "uploaded": "2018-10-03T11:27:17.234567Z",
+    "uploaded": datetime.fromisoformat("2018-10-03T11:27:17.234567+00:00"),
 }
 
 FOOBAR_2_WHEEL: WheelArgs = {
@@ -87,7 +86,7 @@ FOOBAR_2_WHEEL: WheelArgs = {
     "size": 69105,
     "md5": "1234567890abcdef1234567890abcdef",
     "sha256": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
-    "uploaded": "2018-09-26T15:14:33.345678Z",
+    "uploaded": datetime.fromisoformat("2018-09-26T15:14:33.345678+00:00"),
 }
 
 FOOBAR_2_DATA = {
@@ -108,7 +107,7 @@ QUUX_1_5_WHEEL: WheelArgs = {
     "size": 2048,
     "md5": "1234567890abcdef1234567890abcdef",
     "sha256": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
-    "uploaded": "2018-09-27T11:29:39.456789Z",
+    "uploaded": datetime.fromisoformat("2018-09-27T11:29:39.456789+00:00"),
 }
 
 
@@ -145,7 +144,7 @@ def test_ensure_wheel_extant() -> None:
         size=69105,
         md5="1234567890abcdef1234567890abcdef",
         sha256="1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
-        uploaded="2018-09-26T15:14:33.987654Z",
+        uploaded=datetime.fromisoformat("2018-09-26T15:14:33.987654+00:00"),
     )
     (whl,) = get_all(Wheel)
     assert v1.wheels == [whl1]
@@ -153,7 +152,7 @@ def test_ensure_wheel_extant() -> None:
     assert whl.size == FOOBAR_1_WHEEL["size"]
     assert whl.md5 == FOOBAR_1_WHEEL["md5"]
     assert whl.sha256 == FOOBAR_1_WHEEL["sha256"]
-    assert whl.uploaded == parse_timestamp(FOOBAR_1_WHEEL["uploaded"])
+    assert whl.uploaded == FOOBAR_1_WHEEL["uploaded"]
 
 
 def test_remove_wheel() -> None:
