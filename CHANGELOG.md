@@ -5,6 +5,8 @@ In Development
 - Drop support for Python 3.7, 3.8, and 3.9
 - Add type annotations
 - Speed up `purge_old_versions()` again
+- `purge_old_versions()`: Delete a project's latest version if has neither
+  wheels nor orphan wheels
 - Dependencies:
     - Drop pyRFC3339 dependency
     - Drop requests-download dependency

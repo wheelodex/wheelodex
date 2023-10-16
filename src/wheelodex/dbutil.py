@@ -48,9 +48,9 @@ def remove_wheel(filename: str) -> None:
 
 def purge_old_versions() -> None:
     """
-    For each project, keep (a) the latest version, (b) the latest version with
-    wheels registered, and (c) the latest version with wheel data, and delete
-    all other versions.
+    For each project with more than one version, keep (a) the latest version if
+    it has orphan wheels, (b) the latest version with wheels registered, and
+    (c) the latest version with wheel data, and delete all other versions.
     """
     log.info("BEGIN purge_old_versions")
     start_time = datetime.now(timezone.utc)
@@ -61,31 +61,34 @@ def purge_old_versions() -> None:
         .group_by(Project)
         .having(db.func.count(Version.id) > 1)
     ):
-        latest = latest_wheel = latest_data = None
-        for v, vwheels, vdata in db.session.execute(
+        seen_latest = False
+        latest_wheel = latest_data = None
+        for v, vwheels, vdata, vorphan in db.session.execute(
             # This queries the versions of project `p`, along with the number
-            # of wheels each version has and the number of wheels with data
-            # each has:
+            # of wheels, number of wheels with data, and number of orphan
+            # wheels each version has:
             db.select(
                 Version,
                 db.func.count(Wheel.id),
                 db.func.count(WheelData.id),
+                db.func.count(OrphanWheel.id),
             )
             .join_from(Version, Wheel, isouter=True)
             .join_from(Wheel, WheelData, isouter=True)
+            .join_from(Version, OrphanWheel, isouter=True)
             .where(with_parent(p, Project.versions))
             .group_by(Version)
             .order_by(Version.ordering.desc())
         ):
             keep = False
-            if latest is None:
+            if not seen_latest and vorphan:
                 log.debug(
-                    "Project %s: keeping latest version: %s",
+                    "Project %s: keeping latest version as it has orphan wheels: %s",
                     p.display_name,
                     v.display_name,
                 )
-                latest = v
                 keep = True
+            seen_latest = True
             if vwheels and latest_wheel is None:
                 log.debug(
                     "Project %s: keeping latest version with wheels: %s",

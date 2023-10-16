@@ -299,18 +299,18 @@ def test_purge_old_versions_one_version() -> None:
 def test_purge_old_versions_two_versions() -> None:
     p = Project.ensure("foobar")
     p.ensure_version("1.0")
-    v2 = p.ensure_version("2.0")
+    p.ensure_version("2.0")
     purge_old_versions()
-    assert get_all(Version) == [v2]
+    assert get_all(Version) == []
 
 
 def test_purge_old_versions_latest_plus_wheel() -> None:
     p = Project.ensure("foobar")
     v1 = p.ensure_version("1.0")
     v1.ensure_wheel(**FOOBAR_1_WHEEL)
-    v2 = p.ensure_version("2.0")
+    p.ensure_version("2.0")
     purge_old_versions()
-    assert sort_versions(get_all(Version)) == [v1, v2]
+    assert sort_versions(get_all(Version)) == [v1]
 
 
 def test_purge_old_versions_latest_plus_wheel_plus_mid() -> None:
@@ -318,9 +318,9 @@ def test_purge_old_versions_latest_plus_wheel_plus_mid() -> None:
     v1 = p.ensure_version("1.0")
     v1.ensure_wheel(**FOOBAR_1_WHEEL)
     p.ensure_version("1.5")
-    v2 = p.ensure_version("2.0")
+    p.ensure_version("2.0")
     purge_old_versions()
-    assert sort_versions(get_all(Version)) == [v1, v2]
+    assert sort_versions(get_all(Version)) == [v1]
 
 
 def test_purge_old_versions_latest_has_wheel_plus_one() -> None:
@@ -356,9 +356,9 @@ def test_purge_old_versions_latest_plus_data() -> None:
     v1 = p.ensure_version("1.0")
     whl1 = v1.ensure_wheel(**FOOBAR_1_WHEEL)
     whl1.set_data(FOOBAR_1_DATA)
-    v2 = p.ensure_version("2.0")
+    p.ensure_version("2.0")
     purge_old_versions()
-    assert sort_versions(get_all(Version)) == [v1, v2]
+    assert sort_versions(get_all(Version)) == [v1]
 
 
 def test_purge_old_versions_latest_plus_data_plus_mid() -> None:
@@ -367,9 +367,9 @@ def test_purge_old_versions_latest_plus_data_plus_mid() -> None:
     whl1 = v1.ensure_wheel(**FOOBAR_1_WHEEL)
     whl1.set_data(FOOBAR_1_DATA)
     p.ensure_version("1.5")
-    v2 = p.ensure_version("2.0")
+    p.ensure_version("2.0")
     purge_old_versions()
-    assert sort_versions(get_all(Version)) == [v1, v2]
+    assert sort_versions(get_all(Version)) == [v1]
 
 
 def test_purge_old_versions_latest_plus_wheel_plus_data() -> None:
@@ -379,9 +379,9 @@ def test_purge_old_versions_latest_plus_wheel_plus_data() -> None:
     whl1.set_data(FOOBAR_1_DATA)
     v2 = p.ensure_version("2.0")
     v2.ensure_wheel(**FOOBAR_2_WHEEL)
-    v3 = p.ensure_version("3.0")
+    p.ensure_version("3.0")
     purge_old_versions()
-    assert sort_versions(get_all(Version)) == [v1, v2, v3]
+    assert sort_versions(get_all(Version)) == [v1, v2]
 
 
 def test_purge_old_versions_latest_plus_wheel_plus_data_plus_mid() -> None:
@@ -393,9 +393,9 @@ def test_purge_old_versions_latest_plus_wheel_plus_data_plus_mid() -> None:
     v2 = p.ensure_version("2.0")
     v2.ensure_wheel(**FOOBAR_2_WHEEL)
     p.ensure_version("2.5")
-    v3 = p.ensure_version("3.0")
+    p.ensure_version("3.0")
     purge_old_versions()
-    assert sort_versions(get_all(Version)) == [v1, v2, v3]
+    assert sort_versions(get_all(Version)) == [v1, v2]
 
 
 def test_purge_old_versions_latest_has_data_plus_data() -> None:
@@ -419,6 +419,26 @@ def test_purge_old_versions_latest_has_data_plus_data_plus_mid() -> None:
     v2 = p.ensure_version("2.0")
     whl2 = v2.ensure_wheel(**FOOBAR_2_WHEEL)
     whl2.set_data(FOOBAR_2_DATA)
+    purge_old_versions()
+    assert sort_versions(get_all(Version)) == [v2]
+
+
+def test_purge_old_versions_latest_has_orphans_only_next_has_wheels() -> None:
+    p = Project.ensure("foobar")
+    v1 = p.ensure_version("1.0")
+    v1.ensure_wheel(**FOOBAR_1_WHEEL)
+    v2 = p.ensure_version("2.0")
+    OrphanWheel.register(v2, "FooBar-2.0-py3-none-any.whl", 1537974774)
+    purge_old_versions()
+    assert sort_versions(get_all(Version)) == [v1, v2]
+
+
+def test_purge_old_versions_latest_has_wheels_next_has_orphans() -> None:
+    p = Project.ensure("foobar")
+    v1 = p.ensure_version("1.0")
+    OrphanWheel.register(v1, "FooBar-1.0-py3-none-any.whl", 1537974774)
+    v2 = p.ensure_version("2.0")
+    v2.ensure_wheel(**FOOBAR_2_WHEEL)
     purge_old_versions()
     assert sort_versions(get_all(Version)) == [v2]
 
