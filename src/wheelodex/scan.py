@@ -115,8 +115,10 @@ def scan_changelog(since: int) -> None:
     projects_removed = 0
     versions_added = 0
     versions_removed = 0
+    ps = PyPISerial.ensure(since)
     for event in pypi.changelog_since_serial(since):
         log.debug("Got event from changelog: %r", event)
+        ps.serial = max(ps.serial, event.serial)
         match event:
             case FileCreated() if event.is_wheel():
                 log.info("Event %s: wheel %s added", event.id, event.filename)
@@ -188,8 +190,6 @@ def scan_changelog(since: int) -> None:
 
             case _:
                 log.debug("Event %s: %r: ignoring", event.id, event.action)
-
-        PyPISerial.set(event.serial)
 
     end_time = datetime.now(timezone.utc)
     emit_json_log(

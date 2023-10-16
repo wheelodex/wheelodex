@@ -51,6 +51,19 @@ class PyPISerial(MappedAsDataclass, Model):
     serial: Mapped[int]
 
     @classmethod
+    def ensure(cls, default: int) -> PyPISerial:
+        """
+        If there is a serial ID in the database, return it as a `PyPISerial`
+        instance.  Otherwise, store the given ``default`` value as the current
+        serial ID, and return it as a `PyPISerial` instance.
+        """
+        ps = db.session.scalars(db.select(cls)).one_or_none()
+        if ps is None:
+            ps = cls(serial=default)
+            db.session.add(ps)
+        return ps
+
+    @classmethod
     def get(cls) -> int | None:
         """Returns the serial ID of the last seen PyPI event"""
         ps = db.session.scalars(db.select(cls)).one_or_none()
