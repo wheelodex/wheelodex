@@ -1,6 +1,7 @@
 ---
 - name: Assert server_names is defined and nonempty
-  assert: that='server_names is defined and (server_names|length > 0)'
+  ansible.builtin.assert:
+    that: 'server_names is defined and (server_names|length > 0)'
 
 - name: Install Certbot
   community.general.snap:
@@ -9,22 +10,21 @@
     state: present
 
 - name: Link certbot executable
-  file:
+  ansible.builtin.file:
     src: /snap/bin/certbot
     path: /usr/bin/certbot
     state: link
 
 - name: Get SSL certificates
   ### TODO: Ensure this does nothing when server_names is unchanged
-  command: |
+  ansible.builtin.command: |
     certbot run
         --nginx
         --rsa-key-size 4096
         --expand
-        --cert-name {{ certname|quote }}
-        --email {{ certbot_email|quote }}
-        --domains {{ server_names|join(',')|quote }}
+        --cert-name {{ nginx_certname | quote }}
+        --email {{ nginx_certbot_email | quote }}
+        --domains {{ nginx_server_names | join(',') | quote }}
         --non-interactive
         --agree-tos
-
-# Cert autorenewal is done by a cronjob installed by the certbot package
+  changed_when: true

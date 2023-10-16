@@ -1,11 +1,11 @@
 #!/bin/bash
-FROM_ADDR={{errmail_from_addr|quote}}
-TO_ADDR={{errmail_to_addr|quote}}
+FROM_ADDR={{wheelodex_errmail_from_addr|quote}}
+TO_ADDR={{wheelodex_errmail_to_addr|quote}}
 
 ### TODO: Store the username & password somewhere secure instead of in this file
 
 curl -sS \
-    --user {{mailgun_smtp_username|quote}}:{{mailgun_smtp_password|quote}} \
+    --user {{wheelodex_mailgun_smtp_username|quote}}:{{wheelodex_mailgun_smtp_password|quote}} \
     --mail-from "$FROM_ADDR" \
     --mail-rcpt "$TO_ADDR" \
     --ssl-reqd \

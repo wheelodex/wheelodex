@@ -5,21 +5,21 @@ ansible_user: admin
 # implicitly, and setting it explicitly messes with tasks with `become_user:`.
 ansible_python_interpreter: /usr/bin/python3
 
-config_options:
-    WHEELODEX_MAX_WHEEL_SIZE: 5242880  # 5 MiB
-    WHEELODEX_STATS_LOG_DIR: "{{wheelodex_log_path}}"
+wheelodex_config_options:
+  WHEELODEX_MAX_WHEEL_SIZE: 5242880 # 5 MiB
+  WHEELODEX_STATS_LOG_DIR: "{{ wheelodex_log_path }}"
 
-server_names:
-    - www.wheelodex.org
-    - wheelodex.org
+wheelodex_server_names:
+  - www.wheelodex.org
+  - wheelodex.org
 
 # 2:00, 10:00, 18:00
-register_wheels_per_day: 3
-register_wheels_start: 2
+wheelodex_register_wheels_per_day: 3
+wheelodex_register_wheels_start: 2
 
 # 6:00
-process_wheels_per_day: 1
-process_wheels_start: 6
+wheelodex_process_wheels_per_day: 1
+wheelodex_process_wheels_start: 6
 
-uwsgi_processes: 4
-uwsgi_threads: 2
+wheelodex_uwsgi_processes: 4
+wheelodex_uwsgi_threads: 2

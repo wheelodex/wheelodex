@@ -6,5 +6,5 @@ OnFailure=mail-systemd-failure@%n.service
 Type=oneshot
 ExecStart=/usr/local/bin/wheelodex process-queue
 ExecStart=/usr/local/bin/wheelodex purge-old-versions
-User={{user}}
-Group={{user}}
+User={{wheelodex_user}}
+Group={{wheelodex_user}}

@@ -1,9 +1,10 @@
 ---
-- name: apt-get update
-  apt: update_cache=true
+- name: Apt-get update
+  ansible.builtin.apt:
+    update_cache: true
 
 - name: Install core packages
-  apt:
+  ansible.builtin.apt:
     name:
       - build-essential
       - python3-dev
@@ -12,56 +13,61 @@
     update_cache: false
 
 - name: Create swap space
-  command: fallocate -l {{ ansible_memtotal_mb * 2 }}M /swapfile
+  ansible.builtin.command: fallocate -l {{ ansible_memtotal_mb * 2 }}M /swapfile
   args:
     creates: /swapfile
   register: created_swap
 
-- block:
-    - name: Create swapfile
-      file: path=/swapfile mode=0600
-
-    - name: Make swapfile swappy
-      command: mkswap /swapfile
-
-    - name: Add swapfile to fstab
-      lineinfile: dest=/etc/fstab line="/swapfile none swap sw 0 0"
-
-    - name: Enable swapfile
-      command: swapon /swapfile
+- name: Create swapfile  # noqa: no-handler
   when: created_swap is changed
+  block:
+    - name: Set swapfile mode
+      ansible.builtin.file:
+        path: /swapfile
+        mode: "0600"
+    - name: Make swapfile swappy
+      ansible.builtin.command: mkswap /swapfile
+      changed_when: true
+    - name: Add swapfile to fstab
+      ansible.builtin.lineinfile:
+        dest: /etc/fstab
+        line: "/swapfile none swap sw 0 0"
+    - name: Enable swapfile
+      ansible.builtin.command: swapon /swapfile
+      changed_when: true
 
 - name: Set timezone to UTC
-  timezone: name=Etc/UTC
+  community.general.timezone:
+    name: Etc/UTC
 
 - name: Enable unattended upgrades
-  debconf:
+  ansible.builtin.debconf:
     name: unattended-upgrades
     question: unattended-upgrades/enable_auto_updates
+    answer: "true"
     vtype: boolean
-    value: 'true'
-  register: unattup
-
-- name: Enable new unattended-upgrades settings
-  command: dpkg-reconfigure -f noninteractive unattended-upgrades
-  when: unattup is changed
+  notify:
+    - Enable new unattended-upgrades settings
 
 - name: Configure APT and unattended-upgrades
-  copy:
+  ansible.builtin.copy:
     src: apt.conf
     dest: /etc/apt/apt.conf.d/99local
+    mode: "0644"
 
 - name: Create journald.conf.d
-  file:
+  ansible.builtin.file:
     path: /etc/systemd/journald.conf.d
     state: directory
     owner: root
     group: root
+    mode: "0755"
 
 - name: Configure journald
-  copy:
+  ansible.builtin.copy:
     src: journald.conf
     dest: /etc/systemd/journald.conf.d/99local.conf
     backup: true
+    mode: "0644"
   notify:
     - Restart journald

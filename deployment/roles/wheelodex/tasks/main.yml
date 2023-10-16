@@ -1,108 +1,125 @@
 ---
 - name: Create dedicated Wheelodex user
-  user:
-    name: "{{ user }}"
-    home: "/home/{{ user }}"
+  ansible.builtin.user:
+    name: "{{ wheelodex_user }}"
+    home: /home/{{ wheelodex_user }}
     create_home: true
     shell: /bin/bash
 
 - name: Check if pip is installed for user
-  stat:
-    path: "/home/{{ user }}/.local/bin/pip3"
+  ansible.builtin.stat:
+    path: /home/{{ wheelodex_user }}/.local/bin/pip3
   register: pipstat
 
-- block:
+- name: Install pip
+  when: not pipstat.stat.exists or upgrade_pip
+  block:
     - name: Download get-pip.py
-      get_url:
+      ansible.builtin.get_url:
         url: https://bootstrap.pypa.io/get-pip.py
         dest: /tmp/get-pip.py
+        mode: "0644"
         force: true
+      changed_when: true
 
-    - name: Install pip
-      command: python3 /tmp/get-pip.py --user --upgrade
-      become_user: "{{ user }}"
-  when: not pipstat.stat.exists or upgrade_pip
+    - name: Run get-pip.py
+      ansible.builtin.command: python3 /tmp/get-pip.py --user --upgrade
+      args:
+        creates: /home/{{ wheelodex_user }}/.local/bin/pip3
+      become: true
+      become_user: "{{ wheelodex_user }}"
 
 - name: Install virtualenv for user
-  pip:
+  ansible.builtin.pip:
     name: virtualenv
     extra_args: --user
     executable: ~/.local/bin/pip3
-    state: "{{ upgrade_pip|ternary('latest', 'present') }}"
-  become_user: "{{ user }}"
+    state: "{{ wheelodex_upgrade_pip | ternary('latest', 'present') }}"
+  become: true
+  become_user: "{{ wheelodex_user }}"
 
 - name: Create WSGI file
-  copy:
+  ansible.builtin.copy:
     src: wsgi.py
-    dest: "{{ wsgi_file }}"
-    owner: "{{ user }}"
+    dest: "{{ wheelodex_wsgi_file }}"
+    owner: "{{ wheelodex_user }}"
+    mode: "0644"
   notify:
     - Restart uWSGI
 
 - name: Create config file
-  template:
+  ansible.builtin.template:
     src: config.py
-    dest: "{{ config_file }}"
-    owner: "{{ user }}"
+    dest: "{{ wheelodex_config_file }}"
+    owner: "{{ wheelodex_user }}"
+    mode: "0644"
   notify:
     - Restart uWSGI
 
 - name: Create wheelodex wrapper script
-  template:
+  ansible.builtin.template:
     src: wheelodex.sh
     dest: /usr/local/bin/wheelodex
-    mode: 0755
-    owner: "{{ user }}"
+    mode: "0755"
+    owner: "{{ wheelodex_user }}"
 
 - name: Create log directory
-  file:
+  ansible.builtin.file:
     path: "{{ wheelodex_log_path }}"
     state: directory
-    owner: "{{ user }}"
-    mode: 0755
+    owner: "{{ wheelodex_user }}"
+    mode: "0755"
 
 - name: Configure log rotation
-  template:
+  ansible.builtin.template:
     src: logrotate
     dest: /etc/logrotate.d/wheelodex
     # The logrotate manpage doesn't mention that you need to chown root, but
     # it's very necessary.
     owner: root
     group: root
+    mode: "0644"
 
-- include: new_code.yml
-  when: wheel_src is defined
+- name: Install new version of Wheelodex
+  ansible.builtin.import_tasks: new_code.yml
+  when: wheelodex_wheel is defined
 
 - name: Install systemd failure notification script
-  template:
+  ansible.builtin.template:
     src: mail-systemd-failure.sh
     dest: /usr/local/bin/mail-systemd-failure
-    mode: 0755
+    mode: "0755"
 
 - name: Configure systemd jobs
-  template:
+  ansible.builtin.template:
     src: "{{ item }}"
-    dest: "/etc/systemd/system/{{ item }}"
+    dest: /etc/systemd/system/{{ item }}
+    mode: "0644"
   with_items:
     - mail-systemd-failure@.service
     - process-wheels.service
     - process-wheels.timer
     - register-wheels.service
     - register-wheels.timer
-  register: systemd_cfg
-
-- name: Reload systemd
-  systemd: daemon_reload=true
-  when: systemd_cfg is changed
+  notify:
+    - Reload systemd
 
 - name: Enable process-wheels timer
-  systemd: name=process-wheels.timer  enabled=true
+  ansible.builtin.systemd:
+    name: process-wheels.timer
+    enabled: true
 
 - name: Enable register-wheels timer
-  systemd: name=register-wheels.timer enabled=true
+  ansible.builtin.systemd:
+    name: register-wheels.timer
+    enabled: true
 
 - name: Start process-wheels timer
-  systemd: name=process-wheels.timer  state=started
+  ansible.builtin.systemd:
+    name: process-wheels.timer
+    state: started
 
 - name: Start register-wheels timer
-  systemd: name=register-wheels.timer state=started
+  ansible.builtin.systemd:
+    name: register-wheels.timer
+    state: started

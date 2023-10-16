@@ -1,6 +1,6 @@
 ---
 - name: Install uWSGI
-  apt:
+  ansible.builtin.apt:
     name:
       - uwsgi
       - uwsgi-plugin-python3
@@ -8,14 +8,15 @@
     update_cache: false
 
 - name: Configure uWSGI
-  template:
+  ansible.builtin.template:
     src: wheelodex.ini
     dest: /etc/uwsgi/apps-available/wheelodex.ini
+    mode: "0644"
   notify:
     - Restart uWSGI
 
 - name: Enable uWSGI app configuration
-  file:
+  ansible.builtin.file:
     src: /etc/uwsgi/apps-available/wheelodex.ini
     path: /etc/uwsgi/apps-enabled/wheelodex.ini
     state: link

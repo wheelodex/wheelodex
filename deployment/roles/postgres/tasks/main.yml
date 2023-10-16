@@ -1,41 +1,39 @@
 ---
 - name: Install PostgreSQL
-  apt:
+  ansible.builtin.apt:
     name:
       - postgresql
-      - python3-packaging  # Needed by postgres_version
-      - python3-psycopg2  # Needed by Ansible's postgresql_* modules
+      # Needed by Ansible's postgresql modules:
+      - libpq-dev
+      - python3-psycopg2
     state: present
     update_cache: false
 
 - name: Create database user
-  postgresql_user:
-    name: "{{ dbuser }}"
-    password: "{{ dbpass }}"
+  community.postgresql.postgresql_user:
+    name: "{{ postgres_dbuser }}"
+    password: "{{ postgres_dbpass }}"
     encrypted: true
     state: present
     role_attr_flags: NOSUPERUSER,NOCREATEDB,CREATEROLE,LOGIN
+  become: true
   become_user: postgres
 
 - name: Create database
-  postgresql_db:
-    name: "{{ dbname }}"
-    owner: "{{ dbuser }}"
+  community.postgresql.postgresql_db:
+    name: "{{ postgres_dbname }}"
+    owner: "{{ postgres_dbuser }}"
     encoding: UNICODE
     lc_collate: C
     lc_ctype: C
     template: template0
     state: present
+  become: true
   become_user: postgres
 
-- name: Determine PostgreSQL version
-  postgres_version:
-
 - name: Log slow queries
-  lineinfile:
-    dest: /etc/postgresql/{{ postgres_version }}/main/postgresql.conf
-    regexp: '^[\s#]*log_min_duration_statement\s*='
-    line: "log_min_duration_statement = 1000"
-    backup: true
-  notify:
-    - Restart PostgreSQL
+  community.postgresql.postgresql_set:
+    name: log_min_duration_statement
+    value: "1000"
+  become: true
+  become_user: postgres

@@ -1,6 +1,6 @@
 ---
 - name: Install fail2ban and ufw
-  apt:
+  ansible.builtin.apt:
     name:
       - fail2ban
       - ufw
@@ -8,9 +8,10 @@
     update_cache: false
 
 - name: Configure fail2ban
-  copy:
-    src: "fail2ban/{{ item }}"
-    dest: "/etc/fail2ban/{{ item }}"
+  ansible.builtin.copy:
+    src: fail2ban/{{ item }}
+    dest: /etc/fail2ban/{{ item }}
+    mode: "0644"
     backup: true
   with_items:
     - fail2ban.d/dbpurgeage.local
@@ -24,30 +25,39 @@
 #   ufw: state=reset
 
 - name: Deny all incoming connections
-  ufw: policy=deny proto=any direction=incoming
+  community.general.ufw:
+    policy: deny
+    proto: any
+    direction: incoming
 
 - name: Allow incoming SSH and HTTP(S) connections
-  ufw: rule=allow to_ip=any to_port={{ item }} proto=any direction=in
+  community.general.ufw:
+    rule: allow
+    to_ip: any
+    to_port: "{{ item }}"
+    proto: any
+    direction: in
   with_items:
     - "22"
     - "80"
     - "443"
 
 - name: Enable ufw
-  ufw: state=enabled
+  community.general.ufw:
+    state: enabled
 
 - name: Forbid root login over SSH
-  lineinfile:
+  ansible.builtin.lineinfile:
     dest: /etc/ssh/sshd_config
-    regexp: '^#?PermitRootLogin\s+'
-    line: 'PermitRootLogin no'
+    regexp: ^#?PermitRootLogin\s+
+    line: PermitRootLogin no
   notify:
     - Restart SSHd
 
 - name: Disable password login over SSH
-  lineinfile:
+  ansible.builtin.lineinfile:
     dest: /etc/ssh/sshd_config
-    regexp: '^#?PasswordAuthentication\s+'
-    line: 'PasswordAuthentication no'
+    regexp: ^#?PasswordAuthentication\s+
+    line: PasswordAuthentication no
   notify:
     - Restart SSHd

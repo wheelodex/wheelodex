@@ -1,33 +1,39 @@
 ---
-user: wheelodex
+wheelodex_user: wheelodex
 
-dbname: wheelodex
-dbuser: wheelodex
-# dbpass:  # required; no default
+wheelodex_dbname: wheelodex
+wheelodex_dbuser: wheelodex
+# wheelodex_dbpass:  # required; no default
 
-venv_path: "/home/{{ user }}/virtualenv"
-config_file: "/home/{{ user }}/config.py"
-wsgi_file: "/home/{{ user }}/wsgi.py"
+wheelodex_venv_path: /home/{{ wheelodex_user }}/virtualenv
+wheelodex_config_file: /home/{{ wheelodex_user }}/config.py
+wheelodex_wsgi_file: /home/{{ wheelodex_user }}/wsgi.py
 
-wheelodex_log_path: "/home/{{ user }}/logs"
+wheelodex_log_path: /home/{{ wheelodex_user }}/logs
 
-upgrade_pip: false
-purge_venv: false
+wheelodex_upgrade_pip: false
+wheelodex_purge_venv: false
 
-# wheel_src:  # required; no default
-extras: '[postgres]'
+# wheelodex_wheel:  # optional; no default
+wheelodex_extras: "[postgres]"
 
-config_options: {}
+wheelodex_config_options: {}
+# wheelodex_errmail_from_addr:  # required; no default
+# wheelodex_errmail_to_addr:  # required; no default
+# wheelodex_mailgun_smtp_username:  # required; no default
+# wheelodex_mailgun_smtp_password:  # required; no default
 
-# errmail_from_addr:  # required; no default
-# errmail_to_addr:  # required; no default
-# mailgun_smtp_username:  # required; no default
-# mailgun_smtp_password:  # required; no default
+wheelodex_register_wheels_per_day: 3
+wheelodex_register_wheels_start: 0
 
-register_wheels_per_day: 3
-register_wheels_start: 0
+wheelodex_process_wheels_per_day: 1
+wheelodex_process_wheels_start: 6
 
-process_wheels_per_day: 1
-process_wheels_start: 6
+wheelodex_dbdump_path: /var/backups/wheelodex/postgres
 
-dbdump_path: /var/backups/wheelodex/postgres
+wheelodex_certname: wheelodex
+# wheelodex_certbot_email:  # required; no default
+# wheelodex_server_names:  # required; no default
+wheelodex_uwsgi_socket: /tmp/wheelodex.sock
+wheelodex_uwsgi_processes: 4
+wheelodex_uwsgi_threads: 2

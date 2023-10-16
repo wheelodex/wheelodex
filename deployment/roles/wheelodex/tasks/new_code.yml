@@ -1,76 +1,93 @@
 ---
 - name: Put site in maintenance mode
-  command: /usr/local/bin/start-maintenance
+  ansible.builtin.command: /usr/local/bin/start-maintenance
+  args:
+    creates: /var/www/html/active_maintenance.html
 
 - name: Create temporary directory
-  tempfile:
+  ansible.builtin.tempfile:
     state: directory
-  become_user: "{{ user }}"
-  register: tmpdir
+  become: true
+  become_user: "{{ wheelodex_user }}"
+  register: wheelodex_tmpdir
 
 - name: Copy wheel
-  copy:
-    src: "{{ wheel_src }}"
-    dest: "{{ tmpdir.path }}/"
-  become_user: "{{ user }}"
+  ansible.builtin.copy:
+    src: "{{ wheelodex_wheel }}"
+    dest: "{{ wheelodex_tmpdir.path }}/"
+    mode: "0644"
+  become: true
+  become_user: "{{ wheelodex_user }}"
 
 - name: Purge virtualenv
-  file:
-    path: "{{ venv_path }}"
+  ansible.builtin.file:
+    path: "{{ wheelodex_venv_path }}"
     state: absent
-  when: "purge_venv|bool"
+  when: purge_venv|bool
 
 - name: Create virtualenv and install wheel
-  pip:
-    name: "{{ tmpdir.path }}/{{ wheel_src|basename }}{{ extras }}"
-    virtualenv: "{{ venv_path }}"
+  ansible.builtin.pip:
+    name: "{{ wheelodex_tmpdir.path }}/{{ wheelodex_wheel | basename }}{{ wheelodex_extras }}"
+    virtualenv: "{{ wheelodex_venv_path }}"
     virtualenv_command: ~/.local/bin/virtualenv
     virtualenv_python: python3
-  become_user: "{{ user }}"
+  become: true
+  become_user: "{{ wheelodex_user }}"
   changed_when: true
   notify:
     - Restart uWSGI
 
 - name: Delete temporary directory
-  file:
-    path: "{{ tmpdir.path }}"
+  ansible.builtin.file:
+    path: "{{ wheelodex_tmpdir.path }}"
     state: absent
-  become_user: "{{ user }}"
+  become: true
+  become_user: "{{ wheelodex_user }}"
 
 - name: Create database dump directory
-  file:
-    path: "{{ dbdump_path }}"
+  ansible.builtin.file:
+    path: "{{ wheelodex_dbdump_path }}"
     state: directory
+    mode: "0755"
 
 - name: Back up database
-  shell: >
+  ansible.builtin.shell: >
     set -o pipefail; pg_dump --clean --if-exists --no-password \
-            -h localhost -U {{ dbuser|quote }} {{ dbname|quote }} |
-    gzip > {{ dbdump_path|quote }}/wheelodex-{{ "%Y-%m-%dT%H:%M:%S"|strftime }}.sql.gz
+            -h localhost -U {{ wheelodex_dbuser | quote }} {{ wheelodex_dbname | quote }} |
+    gzip > {{ wheelodex_dbdump_path | quote }}/wheelodex-{{ "%Y-%m-%dT%H:%M:%S" | strftime }}.sql.gz
   args:
     executable: /bin/bash
+  changed_when: true
   environment:
-    PGPASSWORD: "{{ dbpass }}"
+    PGPASSWORD: "{{ wheelodex_dbpass }}"
 
 - name: Delete old database backups
   purge_oldest_files:
-    path: "{{ dbdump_path }}"
+    path: "{{ wheelodex_dbdump_path }}"
     keep: 10
 
 - name: Ensure database is initialized
-  command: /usr/local/bin/wheelodex initdb
-  become_user: "{{ user }}"
+  ansible.builtin.command: /usr/local/bin/wheelodex initdb
+  changed_when: true
+  become: true
+  become_user: "{{ wheelodex_user }}"
 
 - name: Run database migrations
-  command: /usr/local/bin/wheelodex db upgrade
-  become_user: "{{ user }}"
+  ansible.builtin.command: /usr/local/bin/wheelodex db upgrade
+  changed_when: true
+  become: true
+  become_user: "{{ wheelodex_user }}"
 
 - name: Load entry point descriptions
-  command: /usr/local/bin/wheelodex load-entry-points
-  become_user: "{{ user }}"
+  ansible.builtin.command: /usr/local/bin/wheelodex load-entry-points
+  changed_when: true
+  become: true
+  become_user: "{{ wheelodex_user }}"
 
 - name: Restart uWSGI
-  meta: flush_handlers
+  ansible.builtin.meta: flush_handlers
 
 - name: Take site out of maintenance mode
-  command: /usr/local/bin/stop-maintenance
+  ansible.builtin.command: /usr/local/bin/stop-maintenance
+  args:
+    removes: /var/www/html/active_maintenance.html

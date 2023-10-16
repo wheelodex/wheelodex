@@ -1,0 +1,21 @@
+---
+dependencies:
+  - role: nginx
+    vars:
+      nginx_certname: "{{ wheelodex_certname }}"
+      nginx_certbot_email: "{{ wheelodex_certbot_email }}"
+      nginx_server_names: "{{ wheelodex_server_names }}"
+      nginx_uwsgi_socket: "{{ wheelodex_uwsgi_socket }}"
+  - role: uwsgi
+    vars:
+      uwsgi_socket: "{{ wheelodex_uwsgi_socket }}"
+      uwsgi_processes: "{{ wheelodex_uwsgi_processes }}"
+      uwsgi_threads: "{{ wheelodex_uwsgi_threads }}"
+      uwsgi_venv_path: "{{ wheelodex_venv_path }}"
+      uwsgi_config_file: "{{ wheelodex_config_file }}"
+      uwsgi_wsgi_file: "{{ wheelodex_wsgi_file }}"
+  - role: postgres
+    vars:
+      postgres_dbname: "{{ wheelodex_dbname }}"
+      postgres_dbuser: "{{ wheelodex_dbuser }}"
+      postgres_dbpass: "{{ wheelodex_dbpass }}"

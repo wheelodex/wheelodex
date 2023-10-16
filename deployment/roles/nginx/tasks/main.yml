@@ -1,13 +1,20 @@
 ---
+- name: Install Nginx
+  ansible.builtin.apt:
+    name: nginx-full
+    state: present
+    update_cache: false
+
 - name: Configure Nginx
-  template:
+  ansible.builtin.template:
     src: wheelodex.conf
     dest: /etc/nginx/sites-available/wheelodex.conf
+    mode: "0644"
   notify:
     - Restart Nginx
 
 - name: Enable Nginx site configuration
-  file:
+  ansible.builtin.file:
     src: /etc/nginx/sites-available/wheelodex.conf
     path: /etc/nginx/sites-enabled/wheelodex.conf
     state: link
@@ -15,20 +22,23 @@
     - Restart Nginx
 
 - name: Disable default Nginx site configuration
-  file: path=/etc/nginx/sites-enabled/default state=absent
+  ansible.builtin.file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
   notify:
     - Restart Nginx
 
-- name: 'Create "Down for Maintenance" page'
-  copy:
+- name: Create "Down for Maintenance" page
+  ansible.builtin.copy:
     src: maintenance.html
     dest: /var/www/html/maintenance.html
+    mode: "0644"
 
 - name: Create scripts for starting & stopping maintenance mode
-  copy:
+  ansible.builtin.copy:
     src: "{{ item }}.sh"
-    dest: "/usr/local/bin/{{ item }}"
-    mode: 0755
+    dest: /usr/local/bin/{{ item }}
+    mode: "0755"
   with_items:
     - start-maintenance
     - stop-maintenance

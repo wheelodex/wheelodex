@@ -1,0 +1,24 @@
+---
+argument_specs:
+  main:
+    options:
+      uwsgi_socket:
+        type: str
+        required: true
+      uwsgi_processes:
+        type: int
+        required: false
+        default: 4
+      uwsgi_threads:
+        type: int
+        required: false
+        default: 2
+      uwsgi_venv_path:
+        type: str
+        required: true
+      uwsgi_config_file:
+        type: str
+        required: true
+      uwsgi_wsgi_file:
+        type: str
+        required: true

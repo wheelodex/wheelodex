@@ -1,0 +1,17 @@
+---
+argument_specs:
+  main:
+    options:
+      nginx_certname:
+        type: str
+        required: true
+      nginx_certbot_email:
+        type: str
+        required: true
+      nginx_server_names:
+        type: list
+        elements: str
+        required: true
+      nginx_uwsgi_socket:
+        type: str
+        required: true

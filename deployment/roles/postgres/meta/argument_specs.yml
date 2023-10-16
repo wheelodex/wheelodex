@@ -1,0 +1,13 @@
+---
+argument_specs:
+  main:
+    options:
+      postgres_dbname:
+        type: str
+        required: true
+      postgres_dbuser:
+        type: str
+        required: true
+      postgres_dbpass:
+        type: str
+        required: true
