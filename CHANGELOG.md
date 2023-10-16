@@ -9,6 +9,7 @@ In Development
   wheels nor orphan wheels
 - Use pydantic to validate responses from PyPI's JSON API and wheel information
   loaded from JSON
+- Update deployment playbook for Ansible 8.5
 - Dependencies:
     - Drop pyRFC3339 dependency
     - Drop requests-download dependency
