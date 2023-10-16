@@ -7,7 +7,7 @@ from flask.testing import FlaskClient
 import pytest
 from sqlalchemy import text
 from wheelodex.app import create_app
-from wheelodex.models import Wheel, db
+from wheelodex.models import Project, Wheel, db
 
 
 @pytest.fixture(scope="session")
@@ -19,6 +19,7 @@ def sampledb() -> Iterator[None]:
         with (Path(__file__).with_name("data") / "sampledb01.jsonl").open() as fp:
             for line in fp:
                 Wheel.add_from_json(json.loads(line))
+        Project.ensure("no-wheels")
         db.session.commit()
         yield
 
@@ -166,6 +167,12 @@ def test_project_json_200(client: FlaskClient) -> None:
 def test_project_data_json_200(client: FlaskClient) -> None:
     rv = client.get("/json/projects/wheel-inspect/data")
     assert rv.status_code == 200
+
+
+def test_project_data_json_no_wheels(client: FlaskClient) -> None:
+    rv = client.get("/json/projects/no-wheels/data")
+    assert rv.status_code == 404
+    assert rv.get_json() == {"message": "No wheels found for project"}
 
 
 def test_project_rdepends_json_200(client: FlaskClient) -> None:
