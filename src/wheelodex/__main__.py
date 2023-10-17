@@ -25,7 +25,11 @@ log = logging.getLogger(__name__)
 # FlaskGroup causes all commands to be run inside an application context,
 # thereby letting `db` do database operations.  This does require that
 # `ctx.obj` be left untouched, though.
-@click.group(cls=FlaskGroup, create_app=create_app)
+@click.group(
+    cls=FlaskGroup,
+    create_app=create_app,
+    context_settings={"help_option_names": ["-h", "--help"]},
+)
 @click.version_option(
     __version__,
     "-V",
