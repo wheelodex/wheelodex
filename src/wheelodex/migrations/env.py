@@ -1,9 +1,10 @@
 from __future__ import with_statement
+from collections.abc import Iterable
 import logging
 from logging.config import fileConfig
 from alembic import context
 from alembic.migration import MigrationContext
-from alembic.operations.ops import MigrateOperation
+from alembic.operations import MigrationScript
 from flask import current_app
 from sqlalchemy import URL
 
@@ -61,14 +62,14 @@ def run_migrations_online() -> None:
     # when there are no changes to the schema
     # <http://alembic.zzzcomputing.com/en/latest/cookbook.html>
     def process_revision_directives(
-        context: MigrationContext,  # noqa: U100
-        revision: tuple[str, str],  # noqa: U100
-        directives: list[MigrateOperation],
+        _context: MigrationContext,
+        _revision: str | Iterable[str | None] | Iterable[str],
+        directives: list[MigrationScript],
     ) -> None:
         if getattr(config.cmd_opts, "autogenerate", False):
             script = directives[0]
             # <https://github.com/sqlalchemy/alembic/issues/1325>
-            if script.upgrade_ops.is_empty():  # type: ignore[attr-defined]
+            if script.upgrade_ops.is_empty():
                 directives[:] = []
                 logger.info("No changes in schema detected.")
 
