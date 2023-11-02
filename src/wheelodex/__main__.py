@@ -1,7 +1,7 @@
 from __future__ import annotations
 from configparser import ConfigParser
 from datetime import datetime, timedelta, timezone
-from importlib.resources import as_file, files
+from importlib.resources import files
 import json
 import logging
 from typing import IO
@@ -253,9 +253,10 @@ def load_entry_points(infile: IO[str] | None) -> None:
     """
     epgs = ConfigParser(interpolation=None)
     if infile is None:
-        with as_file(files("wheelodex") / "data" / "entry_points.ini") as ep_path:
-            with ep_path.open(encoding="utf-8") as fp:
-                epgs.read_file(fp)
+        with (files("wheelodex") / "data" / "entry_points.ini").open(
+            encoding="utf-8"
+        ) as fp:
+            epgs.read_file(fp)
     else:
         epgs.read_file(infile)
     with dbcontext():
