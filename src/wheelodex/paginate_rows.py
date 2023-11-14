@@ -23,8 +23,9 @@ class RowPagination:
             abort(404)
         self.per_page = per_page
         query_offset = (self.page - 1) * self.per_page
-        select = select.limit(self.per_page).offset(query_offset)
-        self.items = db.session.execute(select).all()
+        self.items = db.session.execute(
+            select.limit(self.per_page).offset(query_offset)
+        ).all()
         if not self.items and self.page != 1:
             abort(404)
         sub = select.options(lazyload("*")).order_by(None).subquery()
