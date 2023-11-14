@@ -1,5 +1,5 @@
-In Development
---------------
+v2023.11.14
+-----------
 - Fixed broken pagination of certain queries
 - Moved to wheelodex organization
 
