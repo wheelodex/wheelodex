@@ -1,3 +1,7 @@
+In Development
+--------------
+- Migrated from setuptools to hatch
+
 v2023.11.14
 -----------
 - Fixed broken pagination of certain queries

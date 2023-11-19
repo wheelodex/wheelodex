@@ -1,8 +1,107 @@
 [build-system]
-requires = [
-    "setuptools >= 46.4.0",
-    "versioningit",
-]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling", "versioningit"]
+build-backend = "hatchling.build"
 
-[tool.versioningit]
+[project]
+name = "wheelodex"
+dynamic = ["version"]
+description = "An index of wheels"
+readme = "README.rst"
+requires-python = ">=3.10"
+license = "MIT"
+license-files = { paths = ["LICENSE"] }
+authors = [
+    { name = "John Thorvald Wodder II", email = "wheelodex@varonathe.org" }
+]
+
+keywords = [
+    "packages",
+    "pep427",
+    "pypi",
+    "wheel",
+]
+
+classifiers = [
+    "Private :: Keep Off PyPI",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "License :: OSI Approved :: MIT License",
+    "Environment :: Web Environment",
+    "Framework :: Flask",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: System :: Software Distribution",
+    "Typing :: Typed",
+]
+
+dependencies = [
+    "alembic[tz]         >= 1.12.1, < 2.0",
+    "click               >= 8.0",
+    "click-loglevel      ~= 0.5",
+    "cmarkgfm",
+    "Flask               ~= 3.0",
+    "Flask-Migrate       ~= 4.0",
+    "Flask-SQLAlchemy    ~= 3.1",
+    "packaging           >= 17.1",
+    "pydantic            ~= 2.0",
+    "pypi-simple         ~= 1.0",
+    "requests            ~= 2.20",
+    "SQLAlchemy          ~= 2.0",
+    "tenacity            ~= 8.0",
+    "wheel-filename      ~= 1.1",
+    "wheel-inspect       ~= 1.7",
+]
+
+[project.optional-dependencies]
+postgres = ["psycopg[binary]"]
+
+[project.scripts]
+wheelodex = "wheelodex.__main__:main"
+
+[project.urls]
+"Site" = "https://www.wheelodex.org"
+"Source Code" = "https://github.com/wheelodex/wheelodex"
+"Bug Tracker" = "https://github.com/wheelodex/wheelodex/issues"
+
+[tool.hatch.version]
+source = "versioningit"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/docs",
+    "/src",
+    "/test",
+    "CHANGELOG.*",
+    "CONTRIBUTORS.*",
+    "tox.ini",
+]
+
+[tool.hatch.envs.default]
+python = "3"
+
+[tool.mypy]
+allow_incomplete_defs = false
+allow_untyped_defs = false
+ignore_missing_imports = false
+# <https://github.com/python/mypy/issues/7773>:
+no_implicit_optional = true
+implicit_reexport = false
+local_partial_types = true
+pretty = true
+show_error_codes = true
+show_traceback = true
+strict_equality = true
+warn_redundant_casts = true
+warn_return_any = true
+warn_unreachable = true
+
+[[tool.mypy.overrides]]
+module = [
+    "cmarkgfm.*",
+    "wheel_inspect.*",
+]
+ignore_missing_imports = true
