@@ -68,8 +68,7 @@ def run_migrations_online() -> None:
     ) -> None:
         if getattr(config.cmd_opts, "autogenerate", False):
             script = directives[0]
-            # <https://github.com/sqlalchemy/alembic/issues/1325>
-            if script.upgrade_ops.is_empty():
+            if script.upgrade_ops is None or script.upgrade_ops.is_empty():
                 directives[:] = []
                 logger.info("No changes in schema detected.")
 
@@ -78,7 +77,7 @@ def run_migrations_online() -> None:
             connection=connection,
             target_metadata=target_db.metadata,
             process_revision_directives=process_revision_directives,
-            **current_app.extensions["migrate"].configure_args
+            **current_app.extensions["migrate"].configure_args,
         )
         with context.begin_transaction():
             context.run_migrations()
