@@ -59,7 +59,7 @@ def test_rdepends_leaders_200(client: FlaskClient) -> None:
 def test_project_list_200(client: FlaskClient) -> None:
     rv = client.get("/projects/")
     assert rv.status_code == 200
-    assert "wheel-inspect" in rv.get_data(True)
+    assert "wheel-inspect" in rv.text
 
 
 def test_project_200(client: FlaskClient) -> None:
@@ -110,19 +110,19 @@ def test_rdepends_200(client: FlaskClient) -> None:
 def test_entry_point_groups_200(client: FlaskClient) -> None:
     rv = client.get("/entry-points/")
     assert rv.status_code == 200
-    assert "console_scripts" in rv.get_data(True)
+    assert "console_scripts" in rv.text
 
 
 def test_entry_point_groups_sortby_qty_200(client: FlaskClient) -> None:
     rv = client.get("/entry-points/", query_string={"sortby": "qty"})
     assert rv.status_code == 200
-    assert "console_scripts" in rv.get_data(True)
+    assert "console_scripts" in rv.text
 
 
 def test_entry_point_200(client: FlaskClient) -> None:
     rv = client.get("/entry-points/console_scripts/")
     assert rv.status_code == 200
-    data = rv.get_data(True)
+    data = rv.text
     assert "wheel-inspect" in data
     assert "wheel2json" in data
 
@@ -130,26 +130,26 @@ def test_entry_point_200(client: FlaskClient) -> None:
 def test_search_projects_200(client: FlaskClient) -> None:
     rv = client.get("/search/projects/", query_string={"q": "wheel-*"})
     assert rv.status_code == 200
-    assert "wheel-inspect" in rv.get_data(True)
+    assert "wheel-inspect" in rv.text
 
 
 @pytest.mark.skip(reason="SQLite does not support array_agg")
 def test_search_files_200(client: FlaskClient) -> None:
     rv = client.get("/search/files/", query_string={"q": "wheel_*"})
     assert rv.status_code == 200
-    assert "wheel_inspect" in rv.get_data(True)
+    assert "wheel_inspect" in rv.text
 
 
 def test_search_modules_200(client: FlaskClient) -> None:
     rv = client.get("/search/modules/", query_string={"q": "wheel_*"})
     assert rv.status_code == 200
-    assert "wheel_inspect" in rv.get_data(True)
+    assert "wheel_inspect" in rv.text
 
 
 def test_search_commands_200(client: FlaskClient) -> None:
     rv = client.get("/search/commands/", query_string={"q": "wheel*"})
     assert rv.status_code == 200
-    assert "wheel2json" in rv.get_data(True)
+    assert "wheel2json" in rv.text
 
 
 def test_project_json_200(client: FlaskClient) -> None:
