@@ -432,20 +432,24 @@ def project_rdepends_json(project: str) -> ResponseValue:
             ],
             "total": rdeps.total,
             "links": {
-                "next": url_for(
-                    ".project_rdepends_json",
-                    project=p.name,
-                    page=rdeps.next_num,
-                )
-                if rdeps.has_next
-                else None,
-                "prev": url_for(
-                    ".project_rdepends_json",
-                    project=p.name,
-                    page=rdeps.prev_num,
-                )
-                if rdeps.has_prev
-                else None,
+                "next": (
+                    url_for(
+                        ".project_rdepends_json",
+                        project=p.name,
+                        page=rdeps.next_num,
+                    )
+                    if rdeps.has_next
+                    else None
+                ),
+                "prev": (
+                    url_for(
+                        ".project_rdepends_json",
+                        project=p.name,
+                        page=rdeps.prev_num,
+                    )
+                    if rdeps.has_prev
+                    else None
+                ),
             },
         }
     )
