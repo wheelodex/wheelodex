@@ -51,7 +51,7 @@ dependencies = [
     "pypi-simple         ~= 1.0",
     "requests            ~= 2.20",
     "SQLAlchemy          ~= 2.0",
-    "tenacity            ~= 8.0",
+    "tenacity            ~= 9.0",
     "wheel-filename      ~= 1.1",
     "wheel-inspect       ~= 1.7",
 ]
