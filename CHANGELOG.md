@@ -1,6 +1,7 @@
 In Development
 --------------
 - Migrated from setuptools to hatch
+- Support Python 3.13
 
 v2023.11.14
 -----------
