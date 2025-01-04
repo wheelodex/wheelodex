@@ -6,37 +6,12 @@
     create_home: true
     shell: /bin/bash
 
-- name: Check if pip is installed for user
-  ansible.builtin.stat:
-    path: /home/{{ wheelodex_user }}/.local/bin/pip3
-  register: pipstat
-
-- name: Install pip
-  when: not pipstat.stat.exists or wheelodex_upgrade_pip
-  block:
-    - name: Download get-pip.py
-      ansible.builtin.get_url:
-        url: https://bootstrap.pypa.io/get-pip.py
-        dest: /tmp/get-pip.py
-        mode: "0644"
-        force: true
-      changed_when: true
-
-    - name: Run get-pip.py
-      ansible.builtin.command: python3 /tmp/get-pip.py --user --upgrade
-      args:
-        creates: /home/{{ wheelodex_user }}/.local/bin/pip3
-      become: true
-      become_user: "{{ wheelodex_user }}"
-
-- name: Install virtualenv for user
-  ansible.builtin.pip:
-    name: virtualenv
-    extra_args: --user
-    executable: ~/.local/bin/pip3
-    state: "{{ wheelodex_upgrade_pip | ternary('latest', 'present') }}"
-  become: true
-  become_user: "{{ wheelodex_user }}"
+- name: Install pip and virtualenv
+  ansible.builtin.apt:
+    name:
+      - python3-pip
+      - python3-virtualenv
+    state: present
 
 - name: Create WSGI file
   ansible.builtin.copy:

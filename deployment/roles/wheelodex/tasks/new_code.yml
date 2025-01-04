@@ -29,8 +29,6 @@
   ansible.builtin.pip:
     name: "{{ wheelodex_tmpdir.path }}/{{ wheelodex_wheel | basename }}{{ wheelodex_extras }}"
     virtualenv: "{{ wheelodex_venv_path }}"
-    virtualenv_command: ~/.local/bin/virtualenv
-    virtualenv_python: python3
   become: true
   become_user: "{{ wheelodex_user }}"
   changed_when: true

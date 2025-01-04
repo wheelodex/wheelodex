@@ -23,7 +23,6 @@ Variables
 | `wheelodex_user` | `wheelodex` | Dedicated user account that will be used to store & run Wheelodex |
 | `wheelodex_venv_path` | `/home/{{user}}/virtualenv` | Path at which to create the virtualenv in which `wheelodex` will be installed |
 | `wheelodex_purge_venv` | `false` | Whether to delete and recreate the virtualenv from scratch |
-| `wheelodex_upgrade_pip` | `false` | Whether to upgrade the dedicated user's versions of `pip` and `virtualenv` |
 | `wheelodex_config_file` | `/home/{{user}}/config.py` | Path at which to place Wheelodex's config file |
 | `wheelodex_wsgi_file` | `/home/{{user}}/wsgi.py` | Path at which to place Wheelodex's WSGI file |
 | `wheelodex_log_path` | `/home/{{user}}/logs` | Directory in which to store Wheelodex's statistics logs |
