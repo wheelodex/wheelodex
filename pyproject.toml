@@ -9,7 +9,7 @@ description = "An index of wheels"
 readme = "README.rst"
 requires-python = ">=3.10"
 license = "MIT"
-license-files = { paths = ["LICENSE"] }
+license-files = ["LICENSE"]
 authors = [
     { name = "John Thorvald Wodder II", email = "wheelodex@varonathe.org" }
 ]
@@ -30,7 +30,6 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: Implementation :: CPython",
-    "License :: OSI Approved :: MIT License",
     "Environment :: Web Environment",
     "Framework :: Flask",
     "Intended Audience :: Developers",
