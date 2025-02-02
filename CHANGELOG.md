@@ -1,5 +1,5 @@
-In Development
---------------
+v2025.2.2
+---------
 - Migrated from setuptools to hatch
 - Support Python 3.13
 - Deployment: Install pip & virtualenv via apt for compatibility with
