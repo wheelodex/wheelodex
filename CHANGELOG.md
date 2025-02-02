@@ -4,6 +4,7 @@ In Development
 - Support Python 3.13
 - Deployment: Install pip & virtualenv via apt for compatibility with
   externally-managed Python environments
+- Deployment: Configure sshd via .d directory
 
 v2023.11.14
 -----------

@@ -46,18 +46,9 @@
   community.general.ufw:
     state: enabled
 
-- name: Forbid root login over SSH
-  ansible.builtin.lineinfile:
-    dest: /etc/ssh/sshd_config
-    regexp: ^#?PermitRootLogin\s+
-    line: PermitRootLogin no
-  notify:
-    - Restart SSHd
-
-- name: Disable password login over SSH
-  ansible.builtin.lineinfile:
-    dest: /etc/ssh/sshd_config
-    regexp: ^#?PasswordAuthentication\s+
-    line: PasswordAuthentication no
+- name: Configure SSH
+  copy:
+    src: sshd.conf
+    dest: /etc/ssh/sshd_config.d/99local.conf
   notify:
     - Restart SSHd
