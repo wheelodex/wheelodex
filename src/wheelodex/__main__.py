@@ -30,12 +30,7 @@ log = logging.getLogger(__name__)
     create_app=create_app,
     context_settings={"help_option_names": ["-h", "--help"]},
 )
-@click.version_option(
-    __version__,
-    "-V",
-    "--version",
-    message="%(prog)s %(version)s",
-)
+@click.version_option(__version__, "-V", message="%(prog)s %(version)s")
 @click.option(
     "-l",
     "--log-level",
