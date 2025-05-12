@@ -1,3 +1,7 @@
+In Development
+--------------
+- Serve a `robots.txt` file disallowing access to almost all pages
+
 v2025.2.2
 ---------
 - Migrated from setuptools to hatch

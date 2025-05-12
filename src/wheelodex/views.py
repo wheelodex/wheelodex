@@ -1,4 +1,4 @@
-""" Flask views """
+"""Flask views"""
 
 from __future__ import annotations
 import re
@@ -8,6 +8,7 @@ from flask import (
     abort,
     current_app,
     jsonify,
+    make_response,
     redirect,
     render_template,
     request,
@@ -65,6 +66,22 @@ def index() -> ResponseValue:
         ),
         whl_qty=db.session.scalar(db.select(db.func.count(Wheel.id))),
         # data_qty=db.session.scalar(db.select(db.func.count(WheelData.id))),
+    )
+
+
+@web.route("/robots.txt")
+def robots_txt() -> ResponseValue:
+    return make_response(
+        (
+            "User-agent: *\n"
+            "Disallow: /entry-points/\n"
+            "Disallow: /json/\n"
+            "Disallow: /projects/\n"
+            "Disallow: /rdepends-leaders/\n"
+            "Disallow: /recent/\n"
+            "Disallow: /search/\n"
+        ),
+        {"Content-Type": "text/plain; charset=utf-8"},
     )
 
 

@@ -36,6 +36,12 @@ def test_index_200(client: FlaskClient) -> None:
     assert rv.status_code == 200
 
 
+def test_robots_txt(client: FlaskClient) -> None:
+    rv = client.get("/robots.txt")
+    assert rv.status_code == 200
+    assert rv.headers["Content-Type"] == "text/plain; charset=utf-8"
+
+
 def test_about_200(client: FlaskClient) -> None:
     rv = client.get("/about/")
     assert rv.status_code == 200
