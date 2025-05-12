@@ -1,6 +1,7 @@
 In Development
 --------------
 - Serve a `robots.txt` file disallowing access to almost all pages
+- Deployment: Only run `register-wheels` twice a day, down from three times
 
 v2025.2.2
 ---------
