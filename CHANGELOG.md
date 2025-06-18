@@ -1,3 +1,7 @@
+In Development
+--------------
+- Emit "BEGIN" and "END" log messages for `process-queue`
+
 v2025.5.12
 ----------
 - Serve a `robots.txt` file disallowing access to almost all pages

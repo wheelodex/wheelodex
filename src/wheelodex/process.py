@@ -1,4 +1,4 @@
-""" Functions for downloading & analyzing wheels """
+"""Functions for downloading & analyzing wheels"""
 
 from __future__ import annotations
 from datetime import datetime, timezone
@@ -29,6 +29,7 @@ def process_queue(max_wheel_size: int | None = None) -> None:
     :param int max_wheel_size: If set, only wheels this size or smaller are
         analyzed
     """
+    log.info("BEGIN process_queue")
     start_time = datetime.now(timezone.utc)
     wheels_processed = 0
     bytes_processed = 0
@@ -79,6 +80,7 @@ def process_queue(max_wheel_size: int | None = None) -> None:
                     "errors": errors,
                 },
             )
+            log.info("END process_queue")
 
 
 def process_wheel(path: Path, size: int, md5: str | None, sha256: str | None) -> dict:
