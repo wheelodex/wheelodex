@@ -1,6 +1,11 @@
 In Development
 --------------
 - Emit "BEGIN" and "END" log messages for `process-queue`
+- Adjust stats log entries:
+    - Emit entries for failed tasks
+    - Add a `"success"` field for whether the task succeeded
+    - Add a `"duration"` field
+    - `purge-old-versions`: Add a `"multiversion_kept"` field
 
 v2025.5.12
 ----------

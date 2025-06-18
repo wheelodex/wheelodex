@@ -37,8 +37,6 @@ def process_queue(max_wheel_size: int | None = None) -> None:
     with TemporaryDirectory() as tmpdir, requests.Session() as s:
         s.headers["User-Agent"] = USER_AGENT
         try:
-            # This outer `try` block is so that stats are written to the
-            # logfile even when the function is cancelled via Cntrl-C.
             for whl in Wheel.to_process(max_wheel_size=max_wheel_size):
                 fpath = Path(tmpdir, whl.filename)
                 try:
@@ -67,6 +65,11 @@ def process_queue(max_wheel_size: int | None = None) -> None:
                     fpath.unlink(missing_ok=True)
                 wheels_processed += 1
                 bytes_processed += whl.size
+        except Exception:
+            ok = False
+            raise
+        else:
+            ok = True
         finally:
             end_time = datetime.now(timezone.utc)
             emit_json_log(
@@ -75,9 +78,11 @@ def process_queue(max_wheel_size: int | None = None) -> None:
                     "op": "process_queue",
                     "start": str(start_time),
                     "end": str(end_time),
+                    "duration": str(end_time - start_time),
                     "wheels": wheels_processed,
                     "bytes": bytes_processed,
                     "errors": errors,
+                    "success": ok,
                 },
             )
             log.info("END process_queue")

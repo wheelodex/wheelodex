@@ -182,50 +182,60 @@ def process_orphan_wheels() -> None:
     start_time = datetime.now(timezone.utc)
     unorphaned = 0
     remaining = 0
+    expired = None
     pypi = PyPIAPI()
     max_age = int(current_app.config["WHEELODEX_MAX_ORPHAN_AGE_SECONDS"])
-    with dbcontext():
-        for orphan in db.session.scalars(db.select(OrphanWheel)):
-            data = pypi.asset_data(
-                orphan.project.name,
-                orphan.version.display_name,
-                orphan.filename,
-            )
-            if data is not None:
-                log.info("Wheel %s: data found", orphan.filename)
-                orphan.version.ensure_wheel(
-                    filename=data.filename,
-                    url=data.url,
-                    size=data.size,
-                    md5=data.digests.md5,
-                    sha256=data.digests.sha256,
-                    uploaded=data.upload_time,
+    try:
+        with dbcontext():
+            for orphan in db.session.scalars(db.select(OrphanWheel)):
+                data = pypi.asset_data(
+                    orphan.project.name,
+                    orphan.version.display_name,
+                    orphan.filename,
                 )
-                db.session.delete(orphan)
-                unorphaned += 1
-            else:
-                log.info("Wheel %s: data not found", orphan.filename)
-                remaining += 1
-        expired = db.session.execute(
-            db.delete(OrphanWheel).where(
-                OrphanWheel.uploaded
-                < datetime.now(timezone.utc) - timedelta(seconds=max_age)
-            )
-        ).rowcount
-        log.info("%d orphan wheels expired", expired)
-    end_time = datetime.now(timezone.utc)
-    emit_json_log(
-        "process_orphan_wheels.log",
-        {
-            "op": "process_orphan_wheels",
-            "start": str(start_time),
-            "end": str(end_time),
-            "unorphaned": unorphaned,
-            "expired": expired,
-            "remain": remaining - expired,
-        },
-    )
-    log.info("END process_orphan_wheels")
+                if data is not None:
+                    log.info("Wheel %s: data found", orphan.filename)
+                    orphan.version.ensure_wheel(
+                        filename=data.filename,
+                        url=data.url,
+                        size=data.size,
+                        md5=data.digests.md5,
+                        sha256=data.digests.sha256,
+                        uploaded=data.upload_time,
+                    )
+                    db.session.delete(orphan)
+                    unorphaned += 1
+                else:
+                    log.info("Wheel %s: data not found", orphan.filename)
+                    remaining += 1
+            expired = db.session.execute(
+                db.delete(OrphanWheel).where(
+                    OrphanWheel.uploaded
+                    < datetime.now(timezone.utc) - timedelta(seconds=max_age)
+                )
+            ).rowcount
+            log.info("%d orphan wheels expired", expired)
+    except Exception:
+        ok = False
+        raise
+    else:
+        ok = True
+    finally:
+        end_time = datetime.now(timezone.utc)
+        emit_json_log(
+            "process_orphan_wheels.log",
+            {
+                "op": "process_orphan_wheels",
+                "start": str(start_time),
+                "end": str(end_time),
+                "duration": str(end_time - start_time),
+                "unorphaned": unorphaned,
+                "expired": expired,
+                "remain": remaining - (expired if expired is not None else 0),
+                "success": ok,
+            },
+        )
+        log.info("END process_orphan_wheels")
 
 
 @main.command()
