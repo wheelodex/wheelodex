@@ -55,6 +55,7 @@ def purge_old_versions() -> None:
     log.info("BEGIN purge_old_versions")
     start_time = datetime.now(timezone.utc)
     purged = 0
+    kept = 0
     try:
         for p in db.session.scalars(
             db.select(Project)
@@ -107,7 +108,9 @@ def purge_old_versions() -> None:
                     )
                     latest_data = v
                     keep = True
-                if not keep:
+                if keep:
+                    kept += 1
+                else:
                     log.info(
                         "Project %s: deleting version %s",
                         p.display_name,
@@ -130,6 +133,7 @@ def purge_old_versions() -> None:
                 "end": str(end_time),
                 "duration": str(end_time - start_time),
                 "purged": purged,
+                "multiversion_kept": kept,
                 "success": ok,
             },
         )
