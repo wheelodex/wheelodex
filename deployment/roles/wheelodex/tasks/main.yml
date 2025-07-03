@@ -2,6 +2,7 @@
 - name: Create dedicated Wheelodex user
   ansible.builtin.user:
     name: "{{ wheelodex_user }}"
+    groups: systemd-journal
     home: /home/{{ wheelodex_user }}
     create_home: true
     shell: /bin/bash
@@ -71,7 +72,6 @@
     dest: /etc/systemd/system/{{ item }}
     mode: "0644"
   with_items:
-    - mail-systemd-failure@.service
     - process-wheels.service
     - process-wheels.timer
     - register-wheels.service

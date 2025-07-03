@@ -1,10 +1,10 @@
 [Unit]
 Description=Analyze wheels
-OnFailure=mail-systemd-failure@%n.service
 
 [Service]
 Type=oneshot
 ExecStart=/usr/local/bin/wheelodex process-queue
 ExecStart=/usr/local/bin/wheelodex purge-old-versions
+ExecStopPost=/bin/sh -c 'if [ "$$SERVICE_RESULT" != success ]; then /usr/local/bin/mail-systemd-failure %n; fi'
 User={{wheelodex_user}}
 Group={{wheelodex_user}}
