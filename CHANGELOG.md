@@ -6,6 +6,7 @@ In Development
     - Add a `"success"` field for whether the task succeeded
     - Add a `"duration"` field
     - `purge-old-versions`: Add a `"multiversion_kept"` field
+- Send more journal lines in failure e-mails
 
 v2025.5.12
 ----------

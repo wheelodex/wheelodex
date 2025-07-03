@@ -15,5 +15,5 @@ To: $TO_ADDR
 From: $FROM_ADDR
 Subject: Systemd task $1 on $HOSTNAME failed
 
-$(systemctl status --full "$1")
+$(journalctl -n 100 _SYSTEMD_INVOCATION_ID="$INVOCATION_ID" + INVOCATION_ID="$INVOCATION_ID")
 EOT
