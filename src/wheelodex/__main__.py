@@ -10,7 +10,7 @@ from click_loglevel import LogLevel
 from flask import current_app
 from flask.cli import FlaskGroup
 from flask_migrate import stamp
-from sqlalchemy import inspect
+from sqlalchemy import CursorResult, inspect
 from . import __version__
 from .app import create_app, emit_json_log
 from .dbutil import dbcontext, purge_old_versions
@@ -208,12 +208,14 @@ def process_orphan_wheels() -> None:
                 else:
                     log.info("Wheel %s: data not found", orphan.filename)
                     remaining += 1
-            expired = db.session.execute(
+            r = db.session.execute(
                 db.delete(OrphanWheel).where(
                     OrphanWheel.uploaded
                     < datetime.now(timezone.utc) - timedelta(seconds=max_age)
                 )
-            ).rowcount
+            )
+            assert isinstance(r, CursorResult)
+            expired = r.rowcount
             log.info("%d orphan wheels expired", expired)
     except Exception:
         ok = False
