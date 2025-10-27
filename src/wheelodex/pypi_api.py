@@ -1,4 +1,4 @@
-""" PyPI API client """
+"""PyPI API client"""
 
 from __future__ import annotations
 from collections.abc import Callable

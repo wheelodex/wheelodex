@@ -1,4 +1,4 @@
-""" An index of wheels """
+"""An index of wheels"""
 
 from importlib.metadata import version
 

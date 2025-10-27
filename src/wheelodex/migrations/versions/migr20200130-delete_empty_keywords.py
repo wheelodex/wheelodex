@@ -29,7 +29,7 @@ keywords = sa.Table(
 def sql_strip(col: sa.Column) -> sa.Function:
     # This produces `TRIM(col, chars)`, which works in PostgreSQL and SQLite
     # but not MySQL:
-    return sa.func.trim(col, " \t\n\r\x0B\f")
+    return sa.func.trim(col, " \t\n\r\x0b\f")
     # MySQL requires the SQL syntax `TRIM(chars FROM col)` (note the reversed
     # order of operands), which also works in PostgreSQL but not SQLite.  I
     # can't figure out how to express this in SQLALchemy without using

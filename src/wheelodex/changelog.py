@@ -1,4 +1,4 @@
-""" Parsing PyPI XML-RPC changelog events """
+"""Parsing PyPI XML-RPC changelog events"""
 
 from __future__ import annotations
 from dataclasses import dataclass
