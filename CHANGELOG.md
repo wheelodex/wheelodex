@@ -7,6 +7,7 @@ In Development
     - Add a `"duration"` field
     - `purge-old-versions`: Add a `"multiversion_kept"` field
 - Send more journal lines in failure e-mails
+- Support Python 3.14
 
 v2025.5.12
 ----------
