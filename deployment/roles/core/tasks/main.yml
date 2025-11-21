@@ -16,10 +16,10 @@
   ansible.builtin.command: fallocate -l {{ ansible_memtotal_mb * 2 }}M /swapfile
   args:
     creates: /swapfile
-  register: created_swap
+  register: core_created_swap
 
 - name: Create swapfile  # noqa: no-handler
-  when: created_swap is changed
+  when: core_created_swap is changed
   block:
     - name: Set swapfile mode
       ansible.builtin.file:
