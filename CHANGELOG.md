@@ -1,3 +1,8 @@
+In Development
+--------------
+- Deployment:
+    - Configure systemd's journaling to only retain the last 60 days of logs
+
 v2025.11.21
 -----------
 - Emit "BEGIN" and "END" log messages for `process-queue`
