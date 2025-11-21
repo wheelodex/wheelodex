@@ -47,8 +47,9 @@
     state: enabled
 
 - name: Configure SSH
-  copy:
+  ansible.builtin.copy:
     src: sshd.conf
     dest: /etc/ssh/sshd_config.d/99local.conf
+    mode: "0644"
   notify:
     - Restart SSHd
