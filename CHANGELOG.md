@@ -1,5 +1,5 @@
-In Development
---------------
+v2025.11.21
+-----------
 - Emit "BEGIN" and "END" log messages for `process-queue`
 - Adjust stats log entries:
     - Emit entries for failed tasks
