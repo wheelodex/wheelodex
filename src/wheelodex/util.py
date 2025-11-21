@@ -26,8 +26,8 @@ class JsonWheelPyPI(BaseModel):
     project: str
     version: str
     size: int
-    md5: str | None
-    sha256: str | None
+    md5: str
+    sha256: str
     uploaded: datetime
 
 
