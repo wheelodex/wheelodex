@@ -9,6 +9,8 @@ In Development
 - Send more journal lines in failure e-mails
 - Support Python 3.14
 - Add links to <https://inspector.pypi.io> to the top of wheel info pages
+- Add a footer to the bottom of all pages containing a link to the Wheelodex
+  repository and the current Wheelodex version
 
 v2025.5.12
 ----------
