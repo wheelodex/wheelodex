@@ -1,0 +1,32 @@
+name: Ansible Lint
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+  schedule:
+    - cron: '0 6 * * *'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Install ansible-lint
+        run: python -m pip install --upgrade ansible-lint
+
+      - name: Run ansible-lint
+        run: ansible-lint
+        working-directory: deployment
+        env:
+          # Workaround for <https://github.com/ansible/ansible-lint/issues/4782>
+          ANSIBLE_LIBRARY: library
+
+# vim:set et sts=2:
