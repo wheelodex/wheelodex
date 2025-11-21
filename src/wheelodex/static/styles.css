@@ -32,8 +32,16 @@ th {text-align: justify; }
 td {vertical-align: top; }
 
 blockquote {font-style: italic; text-align: justify; }
-hr {width: 450px; height: 2px; text-align: center; }
+
+hr {
+    width: 66%;
+    margin-top: 1em;
+    margin-bottom: 1em;
+    border-width: 1px 0 0 0;
+}
+
 img {margin: 0px; vertical-align: middle; }
+
 fieldset {padding: 5px; }
 
 a:link    {color: #0000ff; text-decoration: underline; }
@@ -131,4 +139,15 @@ td.nil {
 
 .timestamp {
     white-space: nowrap;
+}
+
+footer {
+    display: block;
+    clear: both;
+    font-size: smaller;
+    padding-top: 1em;
+}
+
+footer hr {
+    width: 33%;
 }

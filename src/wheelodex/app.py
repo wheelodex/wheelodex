@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any
 from flask import Flask, current_app
 from flask_migrate import Migrate
+from . import __version__
 
 DEFAULT_CONFIG = {
     "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
@@ -36,6 +37,7 @@ def create_app(**kwargs: Any) -> Flask:
     from .views import web
 
     app.register_blueprint(web)
+    app.jinja_env.globals["wheelodex_version"] = __version__
     return app
 
 
