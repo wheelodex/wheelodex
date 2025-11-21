@@ -32,8 +32,8 @@
   become_user: postgres
 
 - name: Log slow queries
-  community.postgresql.postgresql_set:
-    name: log_min_duration_statement
+  community.postgresql.postgresql_alter_system:
+    param: log_min_duration_statement
     value: "1000"
   become: true
   become_user: postgres
