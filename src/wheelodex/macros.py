@@ -5,6 +5,7 @@ from collections.abc import Iterable, Iterator
 import heapq
 import re
 from typing import TypeVar
+from urllib.parse import urlparse
 from cmarkgfm import markdown_to_html
 from flask import url_for
 from markupsafe import Markup
@@ -159,3 +160,14 @@ def markdown_inline(src: str) -> Markup:
 @web.app_template_filter()
 def nsmallest(iterable: Iterable[T], n: int) -> list[T]:
     return heapq.nsmallest(n, iterable)
+
+
+@web.app_template_filter()
+def download2inspector(url: str, project: str, version: str) -> str:
+    """
+    Convert a wheel's download URL to the corresponding inspector.pypi.io
+    URL
+    """
+    urlbits = urlparse(url)
+    path = urlbits.path.lstrip("/")
+    return f"https://inspector.pypi.io/project/{project}/{version}/{path}/"
