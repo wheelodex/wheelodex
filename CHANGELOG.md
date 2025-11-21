@@ -8,6 +8,7 @@ In Development
     - `purge-old-versions`: Add a `"multiversion_kept"` field
 - Send more journal lines in failure e-mails
 - Support Python 3.14
+- Add links to <https://inspector.pypi.io> to the top of wheel info pages
 
 v2025.5.12
 ----------

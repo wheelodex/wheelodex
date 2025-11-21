@@ -86,6 +86,10 @@
         <td><b>Uploaded:</b></td>
         <td class="timestamp">{{whl.uploaded.strftime("%Y-%m-%d %H:%M:%S %z")}}</td>
     </tr>
+    <tr>
+        <td><b>Inspector:</b></td>
+        <td><a href="{{whl.url|download2inspector(whl.project.name, whl.version.name)}}">[link]</a></td>
+    </tr>
 </table>
 
 {% if whl.data != None %}
