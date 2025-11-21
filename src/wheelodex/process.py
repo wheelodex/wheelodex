@@ -88,7 +88,7 @@ def process_queue(max_wheel_size: int | None = None) -> None:
             log.info("END process_queue")
 
 
-def process_wheel(path: Path, size: int, md5: str | None, sha256: str | None) -> dict:
+def process_wheel(path: Path, size: int, md5: str, sha256: str) -> dict:
     """
     Process the wheel at ``path``.  The wheel is analyzed with
     `inspect_wheel()`, and its size & digests are checked against ``size``,
@@ -108,7 +108,7 @@ def process_wheel(path: Path, size: int, md5: str | None, sha256: str | None) ->
             f'Size mismatch: PyPI reports {size}, got {about["file"]["size"]}'
         )
     for alg, expected in [("md5", md5), ("sha256", sha256)]:
-        if expected is not None and expected != about["file"]["digests"][alg]:
+        if expected != about["file"]["digests"][alg]:
             log.error(
                 "Wheel %s: %s hash mismatch: PyPI reports %s, got %s",
                 alg,

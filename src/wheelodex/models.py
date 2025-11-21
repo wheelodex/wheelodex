@@ -341,8 +341,8 @@ class Version(MappedAsDataclass, Model):
         filename: str,
         url: str,
         size: int,
-        md5: str | None,
-        sha256: str | None,
+        md5: str,
+        sha256: str,
         uploaded: datetime,
     ) -> Wheel:
         """
@@ -389,8 +389,8 @@ class Wheel(MappedAsDataclass, Model):
     )
     version: Mapped[Version] = relationship(back_populates="wheels")
     size: Mapped[int]
-    md5: Mapped[str | None] = mapped_column(sa.Unicode(32))
-    sha256: Mapped[str | None] = mapped_column(sa.Unicode(64))
+    md5: Mapped[str] = mapped_column(sa.Unicode(32))
+    sha256: Mapped[str] = mapped_column(sa.Unicode(64))
     uploaded: Mapped[datetime]
     errors: Mapped[list[ProcessingError]] = relationship(
         back_populates="wheel",
