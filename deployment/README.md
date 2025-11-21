@@ -19,6 +19,7 @@ Variables
 | `wheelodex_dbname` | `wheelodex` | PostgreSQL database to create & use for Wheelodex |
 | `wheelodex_dbuser` | `wheelodex` | PostgreSQL user account that will own the database and that Wheelodex will connect to PostgreSQL as |
 | `wheelodex_dbpass` | —  | **Required**; password for the PostgreSQL user account |
+| `wheelodex_backup_db` | `true` | Whether to create a backup of the PostgreSQL database |
 | `wheelodex_dbdump_path` | `/var/backups/wheelodex/postgres` | The directory in which to create backups of the PostgreSQL database |
 | `wheelodex_user` | `wheelodex` | Dedicated user account that will be used to store & run Wheelodex |
 | `wheelodex_venv_path` | `/home/{{user}}/virtualenv` | Path at which to create the virtualenv in which `wheelodex` will be installed |
