@@ -12,6 +12,7 @@ In Development
 - Add a footer to the bottom of all pages containing a link to the Wheelodex
   repository and the current Wheelodex version
 - Add a "Random Project" link to the index page
+- Deployment playbook: Add `wheelodex_backup_db` variable
 - Internal changes:
     - The `md5` and `sha256` columns of the `Wheel` table are no longer
       nullable

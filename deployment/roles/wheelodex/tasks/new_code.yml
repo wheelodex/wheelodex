@@ -47,6 +47,7 @@
     path: "{{ wheelodex_dbdump_path }}"
     state: directory
     mode: "0755"
+  when: wheelodex_backup_db|bool
 
 - name: Back up database
   ansible.builtin.shell: >
@@ -55,6 +56,7 @@
     gzip > {{ wheelodex_dbdump_path | quote }}/wheelodex-{{ "%Y-%m-%dT%H:%M:%S" | strftime }}.sql.gz
   args:
     executable: /bin/bash
+  when: wheelodex_backup_db|bool
   changed_when: true
   environment:
     PGPASSWORD: "{{ wheelodex_dbpass }}"
@@ -63,6 +65,7 @@
   purge_oldest_files:
     path: "{{ wheelodex_dbdump_path }}"
     keep: 10
+  when: wheelodex_backup_db|bool
 
 - name: Ensure database is initialized
   ansible.builtin.command: /usr/local/bin/wheelodex initdb
