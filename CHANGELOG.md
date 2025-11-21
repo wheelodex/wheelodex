@@ -11,6 +11,7 @@ In Development
 - Add links to <https://inspector.pypi.io> to the top of wheel info pages
 - Add a footer to the bottom of all pages containing a link to the Wheelodex
   repository and the current Wheelodex version
+- Add a "Random Project" link to the index page
 - Internal changes:
     - The `md5` and `sha256` columns of the `Wheel` table are no longer
       nullable

@@ -99,6 +99,18 @@ def json_api() -> ResponseValue:
     return render_template("json_api.html", example_wheel=example_wheel)
 
 
+@web.route("/random/")
+def random_project() -> ResponseValue:
+    """Redirect to a random project with wheels"""
+    project = db.session.scalar(
+        db.select(Project.name)
+        .filter(Project.has_wheels)
+        .order_by(db.func.random())
+        .limit(1)
+    )
+    return redirect(url_for(".project", project=project), code=302)
+
+
 @web.route("/recent/")
 def recent_wheels() -> ResponseValue:
     """A list of recently-analyzed wheels"""
