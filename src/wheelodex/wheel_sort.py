@@ -5,7 +5,7 @@ from enum import IntEnum
 from functools import total_ordering
 import re
 from typing import Any, ClassVar
-from wheel_filename import parse_wheel_filename
+from wheel_filename import WheelFilename
 
 PYTHON_PREFERENCES = defaultdict(
     lambda: -1,
@@ -178,16 +178,11 @@ def wheel_sort_key(filename: str) -> WheelSortKey:
     """
 
     try:
-        whlname = parse_wheel_filename(filename)
+        whlname = WheelFilename.parse(filename)
     except ValueError:
         return WheelSortKey.unparseable(filename)
 
-    if whlname.build is None:
-        build_rank = (-1, "")
-    elif m := re.fullmatch(r"(?P<buildno>\d+)(?P<buildstr>[^-]*)", whlname.build):
-        build_rank = (int(m["buildno"]), m["buildstr"])
-    else:
-        return WheelSortKey.unparseable(filename)
+    build_rank = whlname.build_tuple or (-1, "")
 
     pyver_rank: list[tuple[int, VersionNoDot]] = []
     for py in whlname.python_tags:
