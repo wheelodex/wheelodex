@@ -53,7 +53,7 @@ dependencies = [
     "requests            ~= 2.20",
     "SQLAlchemy          ~= 2.0",
     "tenacity            ~= 9.0",
-    "wheel-filename      ~= 1.1",
+    "wheel-filename      ~= 2.1",
     "wheel-inspect       ~= 1.7",
 ]
 
