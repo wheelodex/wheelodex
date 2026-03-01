@@ -8,7 +8,7 @@ connection to be in effect.
 from __future__ import annotations
 from collections.abc import Iterator
 from contextlib import contextmanager
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import logging
 from flask_sqlalchemy.session import Session
 from sqlalchemy.orm import scoped_session, with_parent
@@ -53,15 +53,17 @@ def purge_old_versions() -> None:
     (c) the latest version with wheel data, and delete all other versions.
     """
     log.info("BEGIN purge_old_versions")
-    start_time = datetime.now(timezone.utc)
+    start_time = last_commit = datetime.now(timezone.utc)
     purged = 0
     kept = 0
     try:
-        for p in db.session.scalars(
-            db.select(Project)
-            .join(Version)
-            .group_by(Project)
-            .having(db.func.count(Version.id) > 1)
+        for p in list(
+            db.session.scalars(
+                db.select(Project)
+                .join(Version)
+                .group_by(Project)
+                .having(db.func.count(Version.id) > 1)
+            )
         ):
             seen_latest = False
             latest_wheel = latest_data = None
@@ -118,6 +120,10 @@ def purge_old_versions() -> None:
                     )
                     db.session.delete(v)
                     purged += 1
+            if datetime.now(timezone.utc) - last_commit >= timedelta(hours=1):
+                log.info("Committing ...")
+                db.session.commit()
+                last_commit = datetime.now(timezone.utc)
     except Exception:
         ok = False
         raise
