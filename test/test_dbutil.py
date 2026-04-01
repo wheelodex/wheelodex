@@ -268,7 +268,7 @@ def test_latest_version() -> None:
     assert p.latest_version is None
     v1 = p.ensure_version("1.0")
     assert p.latest_version == v1
-    v2 = p.ensure_version("2.0")
+    v2 = p.ensure_version("2.0")  # type: ignore[unreachable]
     assert p.latest_version == v2
     p.ensure_version("2.1.dev1")
     assert p.latest_version == v2
