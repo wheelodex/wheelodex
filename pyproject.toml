@@ -41,7 +41,7 @@ classifiers = [
 
 dependencies = [
     "alembic[tz]         >= 1.12.1, < 2.0",
-    "click               >= 8.0",
+    "click               >= 8.3.2",
     "click-loglevel      ~= 0.5",
     "cmarkgfm",
     "Flask               ~= 3.0",
