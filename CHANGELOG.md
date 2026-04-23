@@ -1,5 +1,5 @@
-In Development
---------------
+v2026.4.23
+----------
 - Deployment:
     - Configure systemd's journaling to only retain the last 60 days of logs
     - Use [Anubis](https://anubis.techaro.lol) to protect against AI bots
