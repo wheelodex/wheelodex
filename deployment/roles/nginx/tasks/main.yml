@@ -32,6 +32,12 @@
   notify:
     - Restart Nginx
 
+- name: Create robots.txt file
+  ansible.builtin.copy:
+    src: robots.txt
+    dest: /var/www/html/robots.txt
+    mode: "0644"
+
 - name: Create "Down for Maintenance" page
   ansible.builtin.copy:
     src: maintenance.html

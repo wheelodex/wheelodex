@@ -3,6 +3,7 @@ In Development
 - Deployment:
     - Configure systemd's journaling to only retain the last 60 days of logs
 - `purge-old-versions`: Commit once an hour
+- Serve `robots.txt` statically rather than via the Flask app
 - Dependencies:
     - Update wheel-filename to 2.1+
 
