@@ -78,3 +78,40 @@
         --non-interactive
         --agree-tos
   changed_when: true
+
+- name: Determine latest release of Anubis
+  ansible.builtin.uri:
+    url: https://api.github.com/repos/TecharoHQ/anubis/releases/latest
+    return_content: true
+  register: nginx_anubis_latest
+
+- name: Install Anubis
+  ansible.builtin.apt:
+    deb: >-
+      https://github.com/TecharoHQ/anubis/releases/download
+      /{{ nginx_anubis_latest.json.tag_name }}
+      /anubis_{{ nginx_anubis_latest.json.tag_name }}_{{ ansible_machine }}.deb
+  notify:
+    - Restart Anubis
+
+- name: Configure Anubis environment
+  ansible.builtin.copy:
+    src: anubis.env
+    dest: /etc/anubis/wheelodex.env
+    mode: "0644"
+  notify:
+    - Restart Anubis
+
+- name: Configure Anubis policies
+  ansible.builtin.copy:
+    src: botPolicies.yaml
+    dest: /etc/anubis/wheelodex.botPolicies.yaml
+    mode: "0644"
+  notify:
+    - Restart Anubis
+
+- name: Ensure Anubis is enabled & running
+  ansible.builtin.service:
+    name: anubis@wheelodex
+    enabled: true
+    state: started

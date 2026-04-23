@@ -3,3 +3,8 @@
   ansible.builtin.service:
     name: nginx
     state: restarted
+
+- name: Restart Anubis
+  ansible.builtin.service:
+    name: anubis@wheelodex
+    state: restarted
