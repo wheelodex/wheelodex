@@ -7,7 +7,6 @@ from flask import (
     Blueprint,
     abort,
     current_app,
-    jsonify,
     redirect,
     render_template,
     request,
@@ -72,14 +71,6 @@ def index() -> ResponseValue:
 def about() -> ResponseValue:
     """The "About" page"""
     return render_template("about.html")
-
-
-@web.route("/json-api/")
-def json_api() -> ResponseValue:
-    """The "JSON API" page"""
-    p = db.session.scalars(db.select(Project).filter_by(name="requests")).one_or_none()
-    example_wheel = p and p.best_wheel
-    return render_template("json_api.html", example_wheel=example_wheel)
 
 
 @web.route("/random/")
@@ -390,85 +381,3 @@ def search_commands() -> ResponseValue:
         search_term=search_term,
         results=results,
     )
-
-
-@web.route("/json/projects/<project>")
-def project_json(project: str) -> ResponseValue:
-    """
-    A JSON view of the names of all known wheels (with links) for the given
-    project and whether they have data, organized by version
-    """
-    p = resolve_project(project)
-    response = {}
-    for v, wheels in p.versions_wheels_grid():
-        lst = []
-        for w, d in wheels:
-            lst.append(
-                {
-                    "filename": w.filename,
-                    "has_data": d,
-                    "href": url_for(".wheel_json", wheel=w.filename),
-                }
-            )
-        response[v] = lst
-    return jsonify(response)
-
-
-@web.route("/json/projects/<project>/data")
-def project_data_json(project: str) -> ResponseValue:
-    """A JSON view of the data for a given project's best wheel"""
-    ### TODO: Should this use preferred_wheel instead?  The URL does say
-    ### "data"...
-    p = resolve_project(project)
-    whl = p.best_wheel
-    if whl is not None:
-        return jsonify(whl.as_json())
-    else:
-        return (jsonify({"message": "No wheels found for project"}), 404)
-
-
-@web.route("/json/projects/<project>/rdepends")
-def project_rdepends_json(project: str) -> ResponseValue:
-    """A JSON view of the reverse dependencies for a project"""
-    p = resolve_project(project)
-    per_page = current_app.config["WHEELODEX_RDEPENDS_PER_PAGE"]
-    rdeps = db.paginate(p.rdepends_query(), per_page=per_page)
-    return jsonify(
-        {
-            "items": [
-                {
-                    "name": proj.display_name,
-                    "href": url_for(".project_json", project=proj.name),
-                }
-                for proj in rdeps.items
-            ],
-            "total": rdeps.total,
-            "links": {
-                "next": (
-                    url_for(
-                        ".project_rdepends_json",
-                        project=p.name,
-                        page=rdeps.next_num,
-                    )
-                    if rdeps.has_next
-                    else None
-                ),
-                "prev": (
-                    url_for(
-                        ".project_rdepends_json",
-                        project=p.name,
-                        page=rdeps.prev_num,
-                    )
-                    if rdeps.has_prev
-                    else None
-                ),
-            },
-        }
-    )
-
-
-@web.route("/json/wheels/<wheel>.json")
-def wheel_json(wheel: str) -> ResponseValue:
-    """A JSON view of the data for a given wheel"""
-    whl = db.first_or_404(db.select(Wheel).filter_by(filename=wheel))
-    return jsonify(whl.as_json())

@@ -8,6 +8,9 @@ In Development
 - Serve `robots.txt` statically rather than via the Flask app
 - Dependencies:
     - Update wheel-filename to 2.1+
+- Eliminate JSON API
+    - There seemed to be few or no non-bot users, and the API likely wouldn't
+      work with Anubis.
 
 v2025.11.21
 -----------
