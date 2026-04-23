@@ -82,13 +82,6 @@
   notify:
     - Restart Anubis
 
-- name: Create directory for nginx socket
-  ansible.builtin.file:
-    path: /run/nginx
-    state: directory
-    owner: www-data
-    mode: "0755"
-
 - name: Ensure Anubis is enabled & running
   ansible.builtin.service:
     name: anubis@wheelodex
