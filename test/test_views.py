@@ -41,11 +41,6 @@ def test_about_200(client: FlaskClient) -> None:
     assert rv.status_code == 200
 
 
-def test_json_api_200(client: FlaskClient) -> None:
-    rv = client.get("/json-api/")
-    assert rv.status_code == 200
-
-
 def test_recent_wheels_200(client: FlaskClient) -> None:
     rv = client.get("/recent/")
     assert rv.status_code == 200
@@ -150,44 +145,3 @@ def test_search_commands_200(client: FlaskClient) -> None:
     rv = client.get("/search/commands/", query_string={"q": "wheel*"})
     assert rv.status_code == 200
     assert "wheel2json" in rv.text
-
-
-def test_project_json_200(client: FlaskClient) -> None:
-    rv = client.get("/json/projects/wheel-inspect")
-    assert rv.status_code == 200
-    assert rv.get_json() == {
-        "1.0.0": [
-            {
-                "filename": "wheel_inspect-1.0.0-py3-none-any.whl",
-                "has_data": True,
-                "href": "/json/wheels/wheel_inspect-1.0.0-py3-none-any.whl.json",
-            }
-        ]
-    }
-
-
-def test_project_data_json_200(client: FlaskClient) -> None:
-    with (DATA_DIR / "json-wheels" / "wheel-inspect.json").open(encoding="utf-8") as fp:
-        expected = json.load(fp)
-    rv = client.get("/json/projects/wheel-inspect/data")
-    assert rv.status_code == 200
-    assert rv.get_json() == expected
-
-
-def test_project_data_json_no_wheels(client: FlaskClient) -> None:
-    rv = client.get("/json/projects/no-wheels/data")
-    assert rv.status_code == 404
-    assert rv.get_json() == {"message": "No wheels found for project"}
-
-
-def test_project_rdepends_json_200(client: FlaskClient) -> None:
-    rv = client.get("/json/projects/wheel-inspect/rdepends")
-    assert rv.status_code == 200
-
-
-def test_wheel_json_200(client: FlaskClient) -> None:
-    with (DATA_DIR / "json-wheels" / "wheel-inspect.json").open(encoding="utf-8") as fp:
-        expected = json.load(fp)
-    rv = client.get("/json/wheels/wheel_inspect-1.0.0-py3-none-any.whl.json")
-    assert rv.status_code == 200
-    assert rv.get_json() == expected
