@@ -1,10 +1,16 @@
 ---
-- name: Restart Nginx
-  ansible.builtin.service:
-    name: nginx
-    state: restarted
+# The Anubis handler should be listed before Nginx, as Anubis seemingly needs
+# to be restarted first in order for things to work properly, and "handlers are
+# executed in the order they are defined in the `handlers` section" [^1].
+#
+# [1]: https://docs.ansible.com/projects/ansible-core/devel/playbook_guide/playbooks_handlers.html
 
 - name: Restart Anubis
   ansible.builtin.service:
     name: anubis@wheelodex
+    state: restarted
+
+- name: Restart Nginx
+  ansible.builtin.service:
+    name: nginx
     state: restarted
