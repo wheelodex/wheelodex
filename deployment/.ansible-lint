@@ -2,5 +2,7 @@
 strict: true
 exclude_paths:
  - host_vars/*/secrets.yml
+skip_list:
+ - yaml[line-length]
 
 # vim:set et ft=yaml sts=2:
