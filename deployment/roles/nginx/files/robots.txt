@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /entry-points/
+Disallow: /json/
+Disallow: /projects/
+Disallow: /rdepends-leaders/
+Disallow: /recent/
+Disallow: /search/
