@@ -98,3 +98,12 @@
   ansible.builtin.systemd:
     name: register-wheels.timer
     state: started
+
+- name: Ensure wheelodex services aren't restarted on package upgrades
+  ansible.builtin.copy:
+    dest: /etc/needrestart/conf.d/wheelodex.conf
+    content:
+      # Prevent wheelodex services from being restarted on package upgrades
+      # <https://discourse.ubuntu.com/t/44671>
+      $nrconf{override_rc}{qr(^(process-wheels|register-wheels)\.service$)} = 0;
+    mode: "0644"

@@ -4,6 +4,7 @@ In Development
     - Configure systemd's journaling to only retain the last 60 days of logs
     - Use [Anubis](https://anubis.techaro.lol) to protect against AI bots
       hammering the server into unusability
+    - Ensure wheelodex services aren't restarted on package upgrades
 - `purge-old-versions`: Commit once an hour
 - Serve `robots.txt` statically rather than via the Flask app
 - Dependencies:
