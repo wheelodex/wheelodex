@@ -88,6 +88,16 @@
     enabled: true
     state: started
 
+# If Nginx is not running when certbot runs, certbot will leave behind a
+# running Nginx process that is not managed by systemd, leading to problems
+# when we then try to start Nginx via systemd.  See
+# <https://github.com/certbot/certbot/issues/5486#issuecomment-1934756252> for
+# more information.
+- name: Ensure Nginx is running
+  ansible.builtin.service:
+    name: nginx
+    state: started
+
 - name: Install Certbot
   community.general.snap:
     name: certbot
