@@ -1,0 +1,9 @@
+[Unit]
+Description=Process unanalyzed wheels
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/wheelodex process-queue
+ExecStopPost=/bin/sh -c 'if [ "$$SERVICE_RESULT" != success ]; then /usr/local/bin/mail-systemd-failure %n; fi'
+User={{wheelodex_user}}
+Group={{wheelodex_user}}
