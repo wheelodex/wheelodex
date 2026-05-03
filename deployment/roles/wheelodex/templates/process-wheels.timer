@@ -1,9 +1,0 @@
-[Unit]
-Description=Run process-wheels periodically
-
-[Timer]
-Unit=process-wheels.service
-OnCalendar={{wheelodex_process_wheels_per_day|mkcron(wheelodex_process_wheels_start)}}
-
-[Install]
-WantedBy=timers.target

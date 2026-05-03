@@ -7,7 +7,7 @@ On the local/control machine:
 
 On the remote/managed machine:
 
-- Ubuntu Jammy or higher
+- Ubuntu Noble or higher
 - Python 3 at `/usr/bin/python3`
 
 
@@ -40,10 +40,6 @@ Variables
 | `wheelodex_errmail_to_addr` | — | **Required**; e-mail address to which to send e-mails about failed scheduled tasks |
 | `wheelodex_mailgun_smtp_username` | — | **Required**; Mailgun SMTP username |
 | `wheelodex_mailgun_smtp_password` | — | **Required**; Mailgun SMTP password |
-| `wheelodex_register_wheels_per_day` | `3` | How many times per day to run the `register-wheels` service |
-| `wheelodex_register_wheels_start` | `0` | The hour of the first run of the day of the `register-wheels` service |
-| `wheelodex_process_wheels_per_day` | `1` | How many times per day to run the `process-wheels` service |
-| `wheelodex_process_wheels_start` | `6` | The hour of the first run of the day of the `process-wheels` service |
 
 Setup Steps that this Playbook does not Cover
 ---------------------------------------------

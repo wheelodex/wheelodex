@@ -1,3 +1,9 @@
+In Development
+--------------
+- Deployment:
+    - Trigger Wheelodex systemd services via a Python script that runs every 30
+      minutes and runs up to one service at a time as appropriate
+
 v2026.4.23
 ----------
 - Deployment:
