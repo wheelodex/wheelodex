@@ -1,10 +1,9 @@
 [Unit]
-Description=Register new wheels
+Description=Trigger Wheelodex jobs
 
 [Service]
 Type=oneshot
-ExecStart=/usr/local/bin/wheelodex process-orphan-wheels
-ExecStart=/usr/local/bin/wheelodex scan-changelog
+ExecStart=/usr/local/bin/wheelodex-runner
 ExecStopPost=/bin/sh -c 'if [ "$$SERVICE_RESULT" != success ]; then /usr/local/bin/mail-systemd-failure %n; fi'
 User={{wheelodex_user}}
 Group={{wheelodex_user}}
