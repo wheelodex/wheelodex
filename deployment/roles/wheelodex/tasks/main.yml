@@ -60,17 +60,40 @@
   ansible.builtin.import_tasks: new_code.yml
   when: wheelodex_wheel is defined
 
+- name: Install wheelodex-runner script
+  ansible.builtin.copy:
+    src: wheelodex-runner.py
+    dest: /usr/local/bin/wheelodex-runner
+    owner: root
+    mode: "0755"
+
 - name: Install systemd failure notification script
   ansible.builtin.template:
     src: mail-systemd-failure.sh
     dest: /usr/local/bin/mail-systemd-failure
+    owner: root
     mode: "0755"
 
-- name: Configure systemd jobs
-  ansible.builtin.template:
-    src: "{{ item }}"
-    dest: /etc/systemd/system/{{ item }}
-    mode: "0644"
+- name: Let wheelodex user sudo to start wheelodex jobs
+  ansible.builtin.lineinfile:
+    dest: /etc/sudoers.d/wheelodex
+    line: '{{ wheelodex_user }} ALL= NOPASSWD: /bin/systemctl start {{ item }}'
+    validate: 'visudo -cf %s'
+    mode: "0440"
+    owner: root
+    group: root
+    create: true
+    backup: true
+  with_items:
+    - wheelodex-process-orphan-wheels.service
+    - wheelodex-process-queue.service
+    - wheelodex-purge-old-versions.service
+    - wheelodex-scan-changelog.service
+
+- name: Remove old systemd jobs
+  ansible.builtin.file:
+    path: /etc/systemd/system/{{ item }}
+    state: absent
   with_items:
     - process-wheels.service
     - process-wheels.timer
@@ -79,24 +102,25 @@
   notify:
     - Reload systemd
 
-- name: Enable process-wheels timer
+- name: Configure systemd jobs
+  ansible.builtin.template:
+    src: "{{ item }}"
+    dest: /etc/systemd/system/{{ item }}
+    mode: "0644"
+  with_items:
+    - wheelodex-process-orphan-wheels.service
+    - wheelodex-process-queue.service
+    - wheelodex-purge-old-versions.service
+    - wheelodex-runner.service
+    - wheelodex-runner.timer
+    - wheelodex-scan-changelog.service
+  notify:
+    - Reload systemd
+
+- name: Enable & start wheelodex-runner timer
   ansible.builtin.systemd:
-    name: process-wheels.timer
+    name: wheelodex-runner.timer
     enabled: true
-
-- name: Enable register-wheels timer
-  ansible.builtin.systemd:
-    name: register-wheels.timer
-    enabled: true
-
-- name: Start process-wheels timer
-  ansible.builtin.systemd:
-    name: process-wheels.timer
-    state: started
-
-- name: Start register-wheels timer
-  ansible.builtin.systemd:
-    name: register-wheels.timer
     state: started
 
 - name: Ensure wheelodex services aren't restarted on package upgrades
@@ -105,5 +129,5 @@
     content:
       # Prevent wheelodex services from being restarted on package upgrades
       # <https://discourse.ubuntu.com/t/44671>
-      $nrconf{override_rc}{qr(^(process-wheels|register-wheels)\.service$)} = 0;
+      $nrconf{override_rc}{qr(^wheelodex-.*\.service$)} = 0;
     mode: "0644"
