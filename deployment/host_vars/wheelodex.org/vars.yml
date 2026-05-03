@@ -13,13 +13,5 @@ wheelodex_server_names:
   - www.wheelodex.org
   - wheelodex.org
 
-# 14:00, 22:00
-wheelodex_register_wheels_per_day: 2
-wheelodex_register_wheels_start: 14
-
-# 6:00
-wheelodex_process_wheels_per_day: 1
-wheelodex_process_wheels_start: 6
-
 wheelodex_uwsgi_processes: 4
 wheelodex_uwsgi_threads: 2
