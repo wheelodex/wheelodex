@@ -53,6 +53,11 @@
     - start-maintenance
     - stop-maintenance
 
+- name: Determine dpkg architecture
+  ansible.builtin.command: dpkg --print-architecture
+  changed_when: false
+  register: nginx_arch
+
 - name: Determine latest release of Anubis
   ansible.builtin.uri:
     url: https://api.github.com/repos/TecharoHQ/anubis/releases/latest
@@ -61,8 +66,7 @@
 
 - name: Install Anubis
   ansible.builtin.apt:
-    # TODO: Properly fill in architecture from `ansible_facts["machine"]`, mapping "x86_64" to "amd64"
-    deb: https://github.com/TecharoHQ/anubis/releases/download/{{ nginx_anubis_latest.json.tag_name }}/anubis_{{ nginx_anubis_latest.json.tag_name.lstrip("v") }}_amd64.deb
+    deb: https://github.com/TecharoHQ/anubis/releases/download/{{ nginx_anubis_latest.json.tag_name }}/anubis_{{ nginx_anubis_latest.json.tag_name.lstrip("v") }}_{{ nginx_arch.stdout }}.deb
   notify:
     - Restart Anubis
 
