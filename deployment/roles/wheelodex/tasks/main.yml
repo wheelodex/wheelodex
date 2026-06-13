@@ -99,8 +99,7 @@
     - process-wheels.timer
     - register-wheels.service
     - register-wheels.timer
-  notify:
-    - Reload systemd
+  register: wheelodex_rmold
 
 - name: Configure systemd jobs
   ansible.builtin.template:
@@ -114,8 +113,14 @@
     - wheelodex-runner.service
     - wheelodex-runner.timer
     - wheelodex-scan-changelog.service
-  notify:
-    - Reload systemd
+  register: wheelodex_addunits
+
+# This has to run before we can enable the timer, so using a handler isn't an
+# option here.
+- name: Reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
+  when: wheelodex_rmold is changed or wheelodex_addunits is changed
 
 - name: Enable & start wheelodex-runner timer
   ansible.builtin.systemd:
