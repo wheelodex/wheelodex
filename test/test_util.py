@@ -81,7 +81,7 @@ WHEEL_PREFERENCES = [
 
 @pytest.mark.parametrize(
     "lower,higher",
-    zip(WHEEL_PREFERENCES, WHEEL_PREFERENCES[1:]),
+    list(zip(WHEEL_PREFERENCES, WHEEL_PREFERENCES[1:])),
 )
 def test_wheel_sort_key(lower: str, higher: str) -> None:
     assert wheel_sort_key(lower) < wheel_sort_key(higher)
@@ -113,7 +113,7 @@ VERSIONS_NO_DOTS = [
 
 @pytest.mark.parametrize(
     "lower,higher",
-    zip(VERSIONS_NO_DOTS, VERSIONS_NO_DOTS[1:]),
+    list(zip(VERSIONS_NO_DOTS, VERSIONS_NO_DOTS[1:])),
 )
 def test_version_no_dot(lower: str, higher: str) -> None:
     assert VersionNoDot(lower) < VersionNoDot(higher)
