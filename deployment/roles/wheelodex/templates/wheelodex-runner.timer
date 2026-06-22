@@ -1,0 +1,10 @@
+[Unit]
+Description=Run wheelodex-runner periodically
+
+[Timer]
+Unit=wheelodex-runner.service
+# Every thirty minutes:
+OnCalendar=*-*-* *:00,30:00
+
+[Install]
+WantedBy=timers.target
