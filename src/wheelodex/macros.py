@@ -159,7 +159,7 @@ def markdown_inline(src: str) -> Markup:
 
 @web.app_template_filter()
 def nsmallest(iterable: Iterable[T], n: int) -> list[T]:
-    return heapq.nsmallest(n, iterable)
+    return heapq.nsmallest(n, iterable)  # type: ignore[type-var]
 
 
 @web.app_template_filter()
