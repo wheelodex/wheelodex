@@ -1,6 +1,7 @@
 from __future__ import annotations
 from collections.abc import Iterator, Sequence
 from operator import attrgetter
+from pathlib import Path
 from traceback import format_exception
 from typing import TypeVar
 from click.testing import CliRunner, Result
@@ -43,7 +44,7 @@ def get_all(cls: type[T]) -> Sequence[T]:
     return db.session.scalars(db.select(cls)).all()
 
 
-def test_load_entry_points() -> None:
+def test_load_entry_points(tmp_path: Path) -> None:
     assert get_all(EntryPointGroup) == []
     db.session.add(EntryPointGroup(name="describe.me"))
     db.session.add(
@@ -68,36 +69,31 @@ def test_load_entry_points() -> None:
         )
     )
     runner = CliRunner()
-    with runner.isolated_filesystem():
-        with open("test.ini", "w") as fp:
-            print(
-                """\
-[describe.me]
-summary = This is a summary.
-description = This is a description.
-    [This link is part of the description.](http://example.com)
-
-[DESCRIBE.ME]
-SUMMARY = This is a new, different entry point group.
-
-[empty]
-
-[wipe.me]
-summary =
-description =
-
-[partial.override]
-summary = New Summary
-""",
-                file=fp,
-            )
-        # This should match the commit at the end of the command, allowing
-        # everything done in this test to be rolled back by `tmpdb`:
-        ### XXX: db.session.begin(subtransactions=True)
-        r = runner.invoke(
-            main, ["load-entry-points", "test.ini"], standalone_mode=False
-        )
-        assert r.exit_code == 0, show_result(r)
+    (tmp_path / "test.ini").write_text(
+        "[describe.me]\n"
+        "summary = This is a summary.\n"
+        "description = This is a description.\n"
+        "   [This link is part of the description.](http://example.com)\n"
+        "\n"
+        "[DESCRIBE.ME]\n"
+        "SUMMARY = This is a new, different entry point group.\n"
+        "\n"
+        "[empty]\n"
+        "\n"
+        "[wipe.me]\n"
+        "summary =\n"
+        "description =\n"
+        "\n"
+        "[partial.override]\n"
+        "summary = New Summary\n"
+    )
+    # This should match the commit at the end of the command, allowing
+    # everything done in this test to be rolled back by `tmpdb`:
+    ### XXX: db.session.begin(subtransactions=True)
+    r = runner.invoke(
+        main, ["load-entry-points", str(tmp_path / "test.ini")], standalone_mode=False
+    )
+    assert r.exit_code == 0, show_result(r)
     groups = sorted(get_all(EntryPointGroup), key=attrgetter("name"))
     assert len(groups) == 6
     assert groups[0].name == "DESCRIBE.ME"
