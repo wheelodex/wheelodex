@@ -22,12 +22,6 @@ wheelodex_config_options: {}
 # wheelodex_mailgun_smtp_username:  # required; no default
 # wheelodex_mailgun_smtp_password:  # required; no default
 
-wheelodex_register_wheels_per_day: 3
-wheelodex_register_wheels_start: 0
-
-wheelodex_process_wheels_per_day: 1
-wheelodex_process_wheels_start: 6
-
 wheelodex_backup_db: true
 wheelodex_dbdump_path: /var/backups/wheelodex/postgres
 
