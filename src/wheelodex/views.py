@@ -107,7 +107,9 @@ def rdepends_leaders() -> ResponseValue:
     q = db.session.execute(
         db.select(
             Project,
-            db.func.count(DependencyRelation.source_project_id.distinct()).label("qty"),
+            db.func.count(db.distinct(DependencyRelation.source_project_id)).label(
+                "qty"
+            ),
         )
         .join(DependencyRelation, Project.id == DependencyRelation.project_id)
         .group_by(Project)

@@ -230,7 +230,8 @@ class Project(MappedAsDataclass, Model):
         this `Project`, ordered by name.
         """
         subq = (
-            db.select(Project.id.distinct().label("id"))
+            db.select(Project.id.label("id"))
+            .distinct()
             .join(
                 DependencyRelation, Project.id == DependencyRelation.source_project_id
             )
@@ -248,7 +249,7 @@ class Project(MappedAsDataclass, Model):
         """Returns the number of `Project`\\s that depend on this `Project`"""
         r = db.session.scalar(
             db.select(
-                db.func.count(DependencyRelation.source_project_id.distinct())
+                db.func.count(db.distinct(DependencyRelation.source_project_id))
             ).where(DependencyRelation.project_id == self.id)
         )
         assert isinstance(r, int)
