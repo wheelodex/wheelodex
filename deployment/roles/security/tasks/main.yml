@@ -13,7 +13,7 @@
     dest: /etc/fail2ban/{{ item }}
     mode: "0644"
     backup: true
-  with_items:
+  loop:
     - fail2ban.d/dbpurgeage.local
     - jail.d/defaults.local
     - jail.d/recidive.local
@@ -37,7 +37,7 @@
     to_port: "{{ item }}"
     proto: any
     direction: in
-  with_items:
+  loop:
     - "22"
     - "80"
     - "443"

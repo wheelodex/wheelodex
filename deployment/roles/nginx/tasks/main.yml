@@ -49,7 +49,7 @@
     src: "{{ item }}.sh"
     dest: /usr/local/bin/{{ item }}
     mode: "0755"
-  with_items:
+  loop:
     - start-maintenance
     - stop-maintenance
 

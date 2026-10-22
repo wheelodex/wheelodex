@@ -71,7 +71,7 @@
     src: "{{ item }}"
     dest: /etc/systemd/system/{{ item }}
     mode: "0644"
-  with_items:
+  loop:
     - process-wheels.service
     - process-wheels.timer
     - register-wheels.service
