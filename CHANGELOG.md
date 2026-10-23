@@ -3,6 +3,7 @@ In Development
 - Support Python 3.15
 - Deployment:
     - Prevent postgresql from being restarted on dependency upgrades
+- Include current item number and max item number in long-running logs
 
 v2026.4.23
 ----------

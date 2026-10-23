@@ -14,6 +14,7 @@ from flask_sqlalchemy.session import Session
 from sqlalchemy.orm import scoped_session, with_parent
 from .app import emit_json_log
 from .models import OrphanWheel, Project, Version, Wheel, WheelData, db
+from .util import with_progress
 
 log = logging.getLogger(__name__)
 
@@ -57,12 +58,14 @@ def purge_old_versions() -> None:
     purged = 0
     kept = 0
     try:
-        for p in list(
-            db.session.scalars(
-                db.select(Project)
-                .join(Version)
-                .group_by(Project)
-                .having(db.func.count(Version.id) > 1)
+        for p, prog in with_progress(
+            list(
+                db.session.scalars(
+                    db.select(Project)
+                    .join(Version)
+                    .group_by(Project)
+                    .having(db.func.count(Version.id) > 1)
+                )
             )
         ):
             seen_latest = False
@@ -88,25 +91,28 @@ def purge_old_versions() -> None:
                 if not seen_latest and vorphan:
                     log.debug(
                         "Project %s: keeping latest version as it has orphan wheels:"
-                        " %s",
+                        " %s [%s]",
                         p.display_name,
                         v.display_name,
+                        prog,
                     )
                     keep = True
                 seen_latest = True
                 if vwheels and latest_wheel is None:
                     log.debug(
-                        "Project %s: keeping latest version with wheels: %s",
+                        "Project %s: keeping latest version with wheels: %s [%s]",
                         p.display_name,
                         v.display_name,
+                        prog,
                     )
                     latest_wheel = v
                     keep = True
                 if vdata and latest_data is None:
                     log.debug(
-                        "Project %s: keeping latest version with data: %s",
+                        "Project %s: keeping latest version with data: %s [%s]",
                         p.display_name,
                         v.display_name,
+                        prog,
                     )
                     latest_data = v
                     keep = True
@@ -114,14 +120,15 @@ def purge_old_versions() -> None:
                     kept += 1
                 else:
                     log.info(
-                        "Project %s: deleting version %s",
+                        "Project %s: deleting version %s [%s]",
                         p.display_name,
                         v.display_name,
+                        prog,
                     )
                     db.session.delete(v)
                     purged += 1
             if datetime.now(timezone.utc) - last_commit >= timedelta(hours=1):
-                log.info("Committing ...")
+                log.info("Committing ... [%s]", prog)
                 db.session.commit()
                 last_commit = datetime.now(timezone.utc)
     except Exception:

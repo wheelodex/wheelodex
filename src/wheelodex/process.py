@@ -11,7 +11,7 @@ import requests
 from wheel_inspect import inspect_wheel
 from .app import emit_json_log
 from .models import Wheel, db
-from .util import USER_AGENT
+from .util import USER_AGENT, with_progress
 
 log = logging.getLogger(__name__)
 
@@ -37,16 +37,21 @@ def process_queue(max_wheel_size: int | None = None) -> None:
     with TemporaryDirectory() as tmpdir, requests.Session() as s:
         s.headers["User-Agent"] = USER_AGENT
         try:
-            for whl in Wheel.to_process(max_wheel_size=max_wheel_size):
+            for whl, prog in with_progress(
+                Wheel.to_process(max_wheel_size=max_wheel_size)
+            ):
                 fpath = Path(tmpdir, whl.filename)
                 try:
-                    log.info("Downloading %s from %s ...", whl.filename, whl.url)
+                    log.info(
+                        "Downloading %s from %s ... [%s]", whl.filename, whl.url, prog
+                    )
                     download(s, whl.url, fpath)
                     about = process_wheel(
                         path=fpath,
                         size=whl.size,
                         md5=whl.md5,
                         sha256=whl.sha256,
+                        prog=prog,
                     )
                     whl.set_data(about)
                     # Some errors in inserting data aren't raised until we
@@ -88,7 +93,7 @@ def process_queue(max_wheel_size: int | None = None) -> None:
             log.info("END process_queue")
 
 
-def process_wheel(path: Path, size: int, md5: str, sha256: str) -> dict:
+def process_wheel(path: Path, size: int, md5: str, sha256: str, prog: str) -> dict:
     """
     Process the wheel at ``path``.  The wheel is analyzed with
     `inspect_wheel()`, and its size & digests are checked against ``size``,
@@ -96,13 +101,14 @@ def process_wheel(path: Path, size: int, md5: str, sha256: str) -> dict:
 
     :return: the results of the call to `inspect_wheel()`
     """
-    log.info("Inspecting %s ...", path.name)
+    log.info("Inspecting %s ... [%s]", path.name, prog)
     about: dict[str, Any] = inspect_wheel(path)
     if about["file"]["size"] != size:
         log.error(
-            "Wheel %s: size mismatch: PyPI reports %d, got %d",
+            "Wheel %s: size mismatch: PyPI reports %d, got %d [%s]",
             size,
             about["file"]["size"],
+            prog,
         )
         raise ValueError(
             f'Size mismatch: PyPI reports {size}, got {about["file"]["size"]}'
@@ -110,16 +116,17 @@ def process_wheel(path: Path, size: int, md5: str, sha256: str) -> dict:
     for alg, expected in [("md5", md5), ("sha256", sha256)]:
         if expected != about["file"]["digests"][alg]:
             log.error(
-                "Wheel %s: %s hash mismatch: PyPI reports %s, got %s",
+                "Wheel %s: %s hash mismatch: PyPI reports %s, got %s [%s]",
                 alg,
                 expected,
                 about["file"]["digests"][alg],
+                prog,
             )
             raise ValueError(
                 f"{alg} hash mismatch: PyPI reports {expected},"
                 f' got {about["file"]["digests"][alg]}'
             )
-    log.info("Finished inspecting %s", path.name)
+    log.info("Finished inspecting %s [%s]", path.name, prog)
     return about
 
 

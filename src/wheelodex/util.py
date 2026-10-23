@@ -1,9 +1,9 @@
 from __future__ import annotations
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from datetime import datetime
 import platform
 import re
-from typing import Any
+from typing import Any, TypeVar
 from packaging.version import Version
 from pydantic import BaseModel
 import requests
@@ -18,6 +18,8 @@ USER_AGENT = "wheelodex/{} ({}) requests/{} {}/{}".format(
     platform.python_implementation(),
     platform.python_version(),
 )
+
+T = TypeVar("T")
 
 
 class JsonWheelPyPI(BaseModel):
@@ -88,3 +90,13 @@ def glob2like(s: str) -> str:
             return "\\" + x
 
     return re.sub(r"(\x5C.|[?*%_])", subber, s)
+
+
+def with_progress(items: Sequence[T]) -> Iterable[tuple[T, str]]:
+    qty = len(items)
+    current = 0
+    for it in items:
+        current += 1
+        pct = current * 100 // qty
+        prog = f"{current} / {qty} ({pct})"
+        yield (it, prog)

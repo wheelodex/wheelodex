@@ -15,7 +15,7 @@ from .changelog import (
 from .dbutil import remove_wheel
 from .models import OrphanWheel, Project, PyPISerial
 from .pypi_api import PyPIAPI
-from .util import latest_version
+from .util import latest_version, with_progress
 
 log = logging.getLogger(__name__)
 
@@ -46,8 +46,8 @@ def scan_pypi() -> None:
         serial = pypi.changelog_last_serial()
         log.info("changlog_last_serial() = %d", serial)
         PyPISerial.set(serial)
-        for pkg in pypi.list_packages():
-            log.info("Adding wheels for project %r", pkg)
+        for pkg, prog in with_progress(pypi.list_packages()):
+            log.info("Adding wheels for project %r [%s]", pkg, prog)
             project = Project.ensure(pkg)
             data = pypi.project_data(pkg)
             if data is None or not data.releases:
@@ -75,7 +75,7 @@ def scan_pypi() -> None:
                         sha256=asset.digests.sha256,
                         uploaded=asset.upload_time,
                     )
-            log.info("%s: %d wheels added", pkg, qty_queued)
+            log.info("%s: %d wheels added [%s]", pkg, qty_queued, prog)
     except Exception:
         ok = False
         raise
@@ -127,12 +127,14 @@ def scan_changelog(since: int) -> None:
 
     try:
         ps = PyPISerial.ensure(since)
-        for event in pypi.changelog_since_serial(since):
-            log.debug("Got event from changelog: %r", event)
+        for event, prog in with_progress(pypi.changelog_since_serial(since)):
+            log.debug("Got event from changelog: %r [%s]", event, prog)
             ps.serial = max(ps.serial, event.serial)
             match event:
                 case FileCreated() if event.is_wheel():
-                    log.info("Event %s: wheel %s added", event.id, event.filename)
+                    log.info(
+                        "Event %s: wheel %s added [%s]", event.id, event.filename, prog
+                    )
                     # New wheels should more often than not belong to the latest
                     # version of the project, and if they don't, they can be pruned
                     # out later.  There's likely little to nothing to be gained by
@@ -142,7 +144,7 @@ def scan_changelog(since: int) -> None:
                     v = Project.ensure(event.project).ensure_version(event.version)
                     data = pypi.asset_data(event.project, event.version, event.filename)
                     if data is not None:
-                        log.info("Asset %s: adding", event.filename)
+                        log.info("Asset %s: adding [%s]", event.filename, prog)
                         v.ensure_wheel(
                             filename=data.filename,
                             url=data.url,
@@ -154,24 +156,40 @@ def scan_changelog(since: int) -> None:
                         wheels_added += 1
                     else:
                         log.info(
-                            "Asset %s not found in JSON API; will check later",
+                            "Asset %s not found in JSON API; will check later [%s]",
                             event.filename,
+                            prog,
                         )
                         OrphanWheel.register(v, event.filename, event.timestamp)
                         orphans_added += 1
 
                 case FileRemoved() if event.is_wheel():
-                    log.info("Event %s: wheel %s removed", event.id, event.filename)
+                    log.info(
+                        "Event %s: wheel %s removed [%s]",
+                        event.id,
+                        event.filename,
+                        prog,
+                    )
                     remove_wheel(event.filename)
                     wheels_removed += 1
 
                 case ProjectCreated():
-                    log.info("Event %s: project %r created", event.id, event.project)
+                    log.info(
+                        "Event %s: project %r created [%s]",
+                        event.id,
+                        event.project,
+                        prog,
+                    )
                     Project.ensure(event.project)
                     projects_added += 1
 
                 case ProjectRemoved():
-                    log.info("Event %s: project %r removed", event.id, event.project)
+                    log.info(
+                        "Event %s: project %r removed [%s]",
+                        event.id,
+                        event.project,
+                        prog,
+                    )
                     if (p := Project.get_or_none(event.project)) is not None:
                         p.remove()
                     projects_removed += 1
@@ -179,10 +197,11 @@ def scan_changelog(since: int) -> None:
                 case VersionCreated():
                     assert event.version is not None
                     log.info(
-                        "Event %s: version %r of project %r released",
+                        "Event %s: version %r of project %r released [%s]",
                         event.id,
                         event.version,
                         event.project,
+                        prog,
                     )
                     Project.ensure(event.project).ensure_version(event.version)
                     versions_added += 1
@@ -190,17 +209,20 @@ def scan_changelog(since: int) -> None:
                 case VersionRemoved():
                     assert event.version is not None
                     log.info(
-                        "Event %s: version %r of project %r removed",
+                        "Event %s: version %r of project %r removed [%s]",
                         event.id,
                         event.version,
                         event.project,
+                        prog,
                     )
                     if (p := Project.get_or_none(event.project)) is not None:
                         p.remove_version(event.version)
                     versions_removed += 1
 
                 case _:
-                    log.debug("Event %s: %r: ignoring", event.id, event.action)
+                    log.debug(
+                        "Event %s: %r: ignoring [%s]", event.id, event.action, prog
+                    )
 
     except Exception:
         ok = False

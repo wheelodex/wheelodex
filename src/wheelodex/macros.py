@@ -4,15 +4,13 @@ from __future__ import annotations
 from collections.abc import Iterable, Iterator
 import heapq
 import re
-from typing import TypeVar
 from urllib.parse import urlparse
 from cmarkgfm import markdown_to_html
 from flask import url_for
 from markupsafe import Markup
 from packaging.utils import canonicalize_name as normalize
+from .util import T
 from .views import web
-
-T = TypeVar("T")
 
 
 @web.app_template_filter()
