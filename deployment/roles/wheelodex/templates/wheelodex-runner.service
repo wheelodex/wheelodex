@@ -2,7 +2,7 @@
 Description=Trigger Wheelodex jobs
 
 [Service]
-Type=oneshot
+Type=exec
 ExecStart=/usr/local/bin/wheelodex-runner
 ExecStopPost=/bin/sh -c 'if [ "$$SERVICE_RESULT" != success ]; then /usr/local/bin/mail-systemd-failure %n; fi'
 User={{wheelodex_user}}

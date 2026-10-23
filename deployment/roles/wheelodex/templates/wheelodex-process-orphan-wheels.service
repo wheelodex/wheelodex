@@ -2,7 +2,7 @@
 Description=Process orphan wheels
 
 [Service]
-Type=oneshot
+Type=exec
 ExecStart=/usr/local/bin/wheelodex process-orphan-wheels
 ExecStopPost=/bin/sh -c 'if [ "$$SERVICE_RESULT" != success ]; then /usr/local/bin/mail-systemd-failure %n; fi'
 User={{wheelodex_user}}
