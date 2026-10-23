@@ -95,8 +95,14 @@ def glob2like(s: str) -> str:
 def with_progress(items: Sequence[T]) -> Iterable[tuple[T, str]]:
     qty = len(items)
     current = 0
+    start = datetime.now().astimezone()
     for it in items:
+        if current:
+            now = datetime.now().astimezone()
+            eta = str((now - start) / current * (qty - current))
+        else:
+            eta = "--:--:--"
         current += 1
         pct = current * 100 / qty
-        prog = f"{current:,} / {qty:,} ({pct:.1f}%)"
+        prog = f"{current:,} / {qty:,} ({pct:.1f}%; ETA: {eta})"
         yield (it, prog)
