@@ -97,6 +97,6 @@ def with_progress(items: Sequence[T]) -> Iterable[tuple[T, str]]:
     current = 0
     for it in items:
         current += 1
-        pct = current * 100 // qty
-        prog = f"{current} / {qty} ({pct})"
+        pct = current * 100 / qty
+        prog = f"{current:,} / {qty:,} ({pct:.1f}%)"
         yield (it, prog)
