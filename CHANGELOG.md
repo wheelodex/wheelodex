@@ -1,5 +1,5 @@
-In Development
---------------
+v2026.10.23
+-----------
 - Support Python 3.15
 - Deployment:
     - Prevent postgresql from being restarted on dependency upgrades
