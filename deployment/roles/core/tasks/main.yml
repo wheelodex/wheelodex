@@ -55,6 +55,14 @@
     dest: /etc/apt/apt.conf.d/99local
     mode: "0644"
 
+- name: Prevent postgresql from being restarted on package upgrades
+  ansible.builtin.copy:
+    dest: /etc/needrestart/conf.d/postgresql.conf
+    content: |
+      $nrconf{override_rc}{qr(^postgresql@.*\.service$)} = 0;
+    owner: root
+    mode: "0644"
+
 - name: Create journald.conf.d
   ansible.builtin.file:
     path: /etc/systemd/journald.conf.d
