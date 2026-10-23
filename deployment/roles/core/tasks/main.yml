@@ -59,7 +59,7 @@
   ansible.builtin.copy:
     dest: /etc/needrestart/conf.d/postgresql.conf
     content: |
-      $nrconf{override_rc}{qr(^postgresql@.*\.service$)} = 0;
+      $nrconf{override_rc}{qr(^postgresql(?:@.*)?\.service$)} = 0;
     owner: root
     mode: "0644"
 
